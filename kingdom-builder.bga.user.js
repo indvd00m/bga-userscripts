@@ -27,14 +27,9 @@ var kingdomBuilderBgaUserscriptData = {
     dojo: null,
     game: null,
     terrains: ['Grass', 'Canyon', 'Desert', 'Flower', 'Forest'],
-    terrainsPlayed: {
-        Grass: 0,
-        Canyon: 0,
-        Desert: 0,
-        Flower: 0,
-        Forest: 0
-    },
+    terrainsPlayed: {},
     terrainsPlayedCount: 0,
+    terrainsStackSize: 25,
     lastShowTerrainPlayerId: 0,
 
     // Init Pythia
@@ -45,8 +40,13 @@ var kingdomBuilderBgaUserscriptData = {
             !window.parent.gameui.gamedatas.board || !window.parent.gameui.gamedatas.fplayers) {
             return;
         }
+
+        // init state
         this.dojo = window.parent.dojo;
         this.game = window.parent.gameui.gamedatas;
+        this.terrains.forEach(terrain => {
+            this.terrainsPlayed[terrain] = 0;
+        });
 
         // Connect event handlers to follow game progress
         this.dojo.subscribe("showTerrain", this, "processShowTerrain");
@@ -80,7 +80,7 @@ var kingdomBuilderBgaUserscriptData = {
         const terrainsProbability = JSON.parse(JSON.stringify(this.terrainsPlayed));
         this.terrains.forEach(terrain => {
             const playedCount = terrainsProbability[terrain];
-            terrainsProbability[terrain] = (this.terrains.length - playedCount) / (25 - this.terrainsPlayedCount);
+            terrainsProbability[terrain] = (this.terrains.length - playedCount) / (this.terrainsStackSize - this.terrainsPlayedCount);
         });
         console.log('terrainsProbability: ' + JSON.stringify(terrainsProbability));
     }
