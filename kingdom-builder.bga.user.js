@@ -19,6 +19,11 @@
 
 console.log('I am an example userscript for kingdom builder from file system');
 
+const BGA_PLAYER_BOARDS_ID = "player_boards";
+const BGA_PLAYER_BOARD_CLASS = "player-board";
+const STATISTICS_PANEL_ID = "userscript_statistics_panel";
+const STATISTICS_PANEL_CLASS = "userscript_statistics_panel_class";
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -28,12 +33,13 @@ var kingdomBuilderBgaUserscriptData = {
     game: null,
     terrains: ['Grass', 'Canyon', 'Desert', 'Flower', 'Forest'],
     terrainsPlayed: {},
+    terrainsProbability: {},
     terrainsPlayedCount: 0,
     terrainsStackSize: 25,
     lastShowTerrainPlayerId: 0,
 
     // Init Pythia
-    init: function() {
+    init: function () {
         // Check if the site was loaded correctly
         if (!window.parent || !window.parent.dojo || !window.parent.gameui.gamedatas ||
             !window.parent.gameui.gamedatas.playerorder || !window.parent.gameui.gamedatas.playerorder[0] ||
@@ -46,16 +52,20 @@ var kingdomBuilderBgaUserscriptData = {
         this.game = window.parent.gameui.gamedatas;
         this.terrains.forEach(terrain => {
             this.terrainsPlayed[terrain] = 0;
+            this.terrainsProbability[terrain] = 0;
         });
 
         // Connect event handlers to follow game progress
         this.dojo.subscribe("showTerrain", this, "processShowTerrain");
 
+        this.renderContainers();
+        this.renderStatisticsPanel();
+
         return this;
     },
 
     // Check what came to main player in the new hand
-    processShowTerrain: function(data) {
+    processShowTerrain: function (data) {
         console.log("showTerrain", JSON.stringify(data));
 
         // Input check
@@ -77,12 +87,36 @@ var kingdomBuilderBgaUserscriptData = {
         console.log('terrainsPlayed: ' + JSON.stringify(this.terrainsPlayed));
         console.log(`terrainsPlayedCount: ${this.terrainsPlayedCount}`);
 
-        const terrainsProbability = JSON.parse(JSON.stringify(this.terrainsPlayed));
         this.terrains.forEach(terrain => {
-            const playedCount = terrainsProbability[terrain];
-            terrainsProbability[terrain] = (this.terrains.length - playedCount) / (this.terrainsStackSize - this.terrainsPlayedCount);
+            const playedCount = this.terrainsPlayed[terrain];
+            this.terrainsProbability[terrain] = (this.terrains.length - playedCount) / (this.terrainsStackSize - this.terrainsPlayedCount);
         });
-        console.log('terrainsProbability: ' + JSON.stringify(terrainsProbability));
+        console.log('terrainsProbability: ' + JSON.stringify(this.terrainsProbability));
+
+        this.renderStatisticsPanel();
+    },
+
+    renderContainers: function () {
+        this.dojo.place("<div id='" + STATISTICS_PANEL_ID + "'"
+            + " class='" + BGA_PLAYER_BOARD_CLASS + "'"
+            + "style='font-size: 70%;'"
+            + "></div>",
+            BGA_PLAYER_BOARDS_ID,
+            "first");
+    },
+
+    renderStatisticsPanel: function () {
+        var html = "<div class='" + STATISTICS_PANEL_CLASS + "'>";
+        html += `All terrain cards played: ${this.terrainsPlayedCount} `;
+        this.terrains.slice()
+            .sort((t1, t2) => this.terrainsPlayed[t1] - this.terrainsPlayed[t2])
+            .forEach(terrain => {
+                const probability = (Math.round(this.terrainsProbability[terrain] * 100) / 100).toFixed(2)
+                html += "<div>"
+                    + `${terrain} played ${this.terrainsPlayed[terrain]} times, probability: ${probability}`
+                    + "</div>";
+            })
+        this.dojo.place(html, STATISTICS_PANEL_ID, "only");
     }
 
 };
