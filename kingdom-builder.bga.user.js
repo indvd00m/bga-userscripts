@@ -21,6 +21,7 @@ console.log('I am an example userscript for kingdom builder from file system');
 
 const BGA_PLAYER_BOARDS_ID = "player_boards";
 const BGA_PLAYER_BOARD_CLASS = "player-board";
+const BGA_TERRAIN_BACK = "back";
 const STATISTICS_PANEL_ID = "userscript_statistics_panel";
 const STATISTICS_PANEL_CLASS = "userscript_statistics_panel_class";
 
@@ -58,13 +59,21 @@ var kingdomBuilderBgaUserscriptData = {
         // Connect event handlers to follow game progress
         this.dojo.subscribe("showTerrain", this, "processShowTerrain");
 
+
         this.renderContainers();
-        this.renderStatisticsPanel();
+
+        this.processFirstTerrain();
 
         return this;
     },
 
-    // Check what came to main player in the new hand
+    processFirstTerrain: function () {
+        const firstTerrainIndex =
+            parseInt(this.game.fplayers.map(p => p.terrain).find(t => t !== BGA_TERRAIN_BACK));
+        const terrainName = this.terrains[firstTerrainIndex];
+        this.processTerrain(terrainName);
+    },
+
     processShowTerrain: function (data) {
         console.log("showTerrain", JSON.stringify(data));
 
@@ -82,6 +91,10 @@ var kingdomBuilderBgaUserscriptData = {
 
         this.lastShowTerrainPlayerId = data.args.pId;
         const terrainName = this.terrains[parseInt(data.args.terrain)];
+        this.processTerrain(terrainName);
+    },
+
+    processTerrain: function (terrainName) {
         this.terrainsPlayed[terrainName]++;
         this.terrainsPlayedCount++;
         console.log('terrainsPlayed: ' + JSON.stringify(this.terrainsPlayed));
