@@ -119,7 +119,11 @@ var kingdomBuilderBgaUserscriptData = {
 
         this.terrains.forEach(terrain => {
             const playedCount = this.terrainsPlayed[terrain];
-            this.terrainsProbability[terrain] = (this.terrains.length - playedCount) / (this.terrainsStackSize - this.terrainsPlayedCount);
+            let probability = 0;
+            if (this.terrainsStackSize > this.terrainsPlayedCount) {
+                probability = (this.terrains.length - playedCount) / (this.terrainsStackSize - this.terrainsPlayedCount)
+            }
+            this.terrainsProbability[terrain] = probability;
         });
         console.log('terrainsProbability: ' + JSON.stringify(this.terrainsProbability));
 
