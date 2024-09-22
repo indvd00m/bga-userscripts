@@ -22,6 +22,7 @@ console.log('I am an example userscript for kingdom builder from file system');
 const BGA_PLAYER_BOARDS_ID = "player_boards";
 const BGA_PLAYER_BOARD_CLASS = "player-board";
 const BGA_TERRAIN_BACK = "back";
+const BGA_START_SETTLEMENTS_COUNT = 40;
 const STATISTICS_PANEL_ID = "userscript_statistics_panel";
 const STATISTICS_PANEL_CLASS = "userscript_statistics_panel_class";
 
@@ -73,6 +74,10 @@ var kingdomBuilderBgaUserscriptData = {
         this.logIsFull = this.isFullLog(log);
         if (this.logIsFull) {
             console.log(`Found full log with ${log.length} actions`);
+            if (this.isFirstTurn()) {
+                console.log('this is first turn');
+                this.processAnotherCurrentPlayerFirstTerrain();
+            }
             const openedTerrains = this.findShownTerrains(log);
             openedTerrains.forEach(t => {
                 this.processTerrain(t);
@@ -105,6 +110,27 @@ var kingdomBuilderBgaUserscriptData = {
             const terrainName = this.terrains[parseInt(terrainIndex)];
             this.processTerrain(terrainName);
         })
+    },
+
+    processAnotherCurrentPlayerFirstTerrain: function () {
+        const activePlayerId = parseInt(this.game.gamestate.active_player);
+        this.game.fplayers
+            .filter(p => parseInt(p.id) !== this.myPlayerId)
+            .filter(p => parseInt(p.id) === activePlayerId)
+            .map(p => p.terrain)
+            .filter(t => t !== BGA_TERRAIN_BACK)
+            .forEach(terrainIndex => {
+                const terrainName = this.terrains[parseInt(terrainIndex)];
+                this.processTerrain(terrainName);
+            });
+    },
+
+    isFirstTurn: function () {
+        playersWithStartSettlementsCount = this.game.fplayers
+            .filter(p => p.settlements === BGA_START_SETTLEMENTS_COUNT)
+            .length;
+        return playersWithStartSettlementsCount === this.game.fplayers.length
+            || playersWithStartSettlementsCount === this.game.fplayers.length - 1;
     },
 
     processShowTerrain: function (data) {
