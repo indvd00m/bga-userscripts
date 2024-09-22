@@ -38,6 +38,7 @@ var kingdomBuilderBgaUserscriptData = {
     terrainsPlayedCount: 0,
     terrainsStackSize: 25,
     lastShowTerrainPlayerId: 0,
+    myPlayerId: -1,
 
     // Init Pythia
     init: function () {
@@ -51,10 +52,11 @@ var kingdomBuilderBgaUserscriptData = {
         // init state
         this.dojo = window.parent.dojo;
         this.game = window.parent.gameui.gamedatas;
-        this.terrains.forEach(terrain => {
-            this.terrainsPlayed[terrain] = 0;
-            this.terrainsProbability[terrain] = 0;
-        });
+        const myPlayer = this.game.fplayers.find(p => p.name === window.parent.gameui.current_player_name);
+        if (myPlayer) {
+            this.myPlayerId = parseInt(myPlayer.id);
+        }
+        this.resetTerrainsStatistics();
 
         // Connect event handlers to follow game progress
         this.dojo.subscribe("showTerrain", this, "processShowTerrain");
@@ -62,16 +64,24 @@ var kingdomBuilderBgaUserscriptData = {
 
         this.renderContainers();
 
-        this.processFirstTerrain();
+        this.processFirstTerrains();
 
         return this;
     },
 
-    processFirstTerrain: function () {
-        const firstTerrainIndex =
-            parseInt(this.game.fplayers.map(p => p.terrain).find(t => t !== BGA_TERRAIN_BACK));
-        const terrainName = this.terrains[firstTerrainIndex];
-        this.processTerrain(terrainName);
+    resetTerrainsStatistics: function () {
+        this.terrainsPlayedCount = 0;
+        this.terrains.forEach(terrain => {
+            this.terrainsPlayed[terrain] = 0;
+            this.terrainsProbability[terrain] = 0;
+        });
+    },
+
+    processFirstTerrains: function () {
+        this.game.fplayers.map(p => p.terrain).filter(t => t !== BGA_TERRAIN_BACK).forEach(terrainIndex => {
+            const terrainName = this.terrains[parseInt(terrainIndex)];
+            this.processTerrain(terrainName);
+        })
     },
 
     processShowTerrain: function (data) {
@@ -84,8 +94,12 @@ var kingdomBuilderBgaUserscriptData = {
 
         console.log(JSON.stringify(data.args));
 
-        if (this.lastShowTerrainPlayerId === data.args.pId) {
-            console.log(`Skip player id processing: ${data.args.pId}`);
+        if (BGA_TERRAIN_BACK === data.args.terrain) {
+            console.log('Skip back terrain processing');
+            return;
+        }
+        if (this.myPlayerId === parseInt(data.args.pId) && data.args.i18n == null) {
+            console.log('Skip my turn second processing');
             return;
         }
 
@@ -95,6 +109,9 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     processTerrain: function (terrainName) {
+        if (this.terrainsPlayedCount === this.terrainsStackSize) {
+            this.resetTerrainsStatistics();
+        }
         this.terrainsPlayed[terrainName]++;
         this.terrainsPlayedCount++;
         console.log('terrainsPlayed: ' + JSON.stringify(this.terrainsPlayed));
