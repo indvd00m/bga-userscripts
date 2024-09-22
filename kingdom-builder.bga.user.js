@@ -36,6 +36,7 @@ var kingdomBuilderBgaUserscriptData = {
     terrainsPlayed: {},
     terrainsProbability: {},
     terrainsPlayedCount: 0,
+    logIsFull: false,
     terrainsStackSize: 25,
     lastShowTerrainPlayerId: 0,
     myPlayerId: -1,
@@ -64,8 +65,28 @@ var kingdomBuilderBgaUserscriptData = {
 
         this.renderContainers();
 
-        this.processFirstTerrains();
-        this.lastShowTerrainPlayerId = parseInt(this.game.gamestate.active_player);
+        const activePlayerId = parseInt(this.game.gamestate.active_player);
+        this.lastShowTerrainPlayerId = activePlayerId;
+
+        const log = window.parent.gameui.notifqueue.logs_to_load;
+        this.logIsFull = this.isFullLog(log);
+        if (this.logIsFull) {
+            console.log(`Found full log with ${log.length} actions`);
+            const openedTerrains = this.findOpenedTerrains(log);
+            if (openedTerrains.length > 0) {
+                if (activePlayerId !== this.myPlayerId) {
+                    this.processMyCurrentTerrain();
+                }
+                openedTerrains.forEach(t => {
+                    this.processTerrain(t);
+                });
+            } else {
+                this.processFirstTerrains();
+            }
+        } else {
+            console.log(`Found incomplete log with ${log.length} actions`);
+            this.processFirstTerrains();
+        }
 
         return this;
     },
@@ -80,6 +101,13 @@ var kingdomBuilderBgaUserscriptData = {
 
     processFirstTerrains: function () {
         this.game.fplayers.map(p => p.terrain).filter(t => t !== BGA_TERRAIN_BACK).forEach(terrainIndex => {
+            const terrainName = this.terrains[parseInt(terrainIndex)];
+            this.processTerrain(terrainName);
+        })
+    },
+
+    processMyCurrentTerrain: function () {
+        this.game.fplayers.filter(p => parseInt(p.id) === this.myPlayerId).map(p => p.terrain).filter(t => t !== BGA_TERRAIN_BACK).forEach(terrainIndex => {
             const terrainName = this.terrains[parseInt(terrainIndex)];
             this.processTerrain(terrainName);
         })
@@ -139,6 +167,79 @@ var kingdomBuilderBgaUserscriptData = {
         this.renderStatisticsPanel();
     },
 
+    isFullLog: function (log) {
+        if (log == null || log.length === 0) {
+            return false;
+        }
+        return parseInt(log[0].move_id) === 1;
+    },
+
+    findOpenedTerrains: function (log) {
+        const openedTerrains = [];
+        if (log == null) {
+            return openedTerrains;
+        }
+        const actions = log.filter(e => e.data && e.data.length).flatMap(e => e.data).filter(a => a.args);
+        console.log(`History (${actions.length}):`)
+        let terrainDetected = false;
+        let terrainsCount = 0;
+        let prevAction = null;
+        actions.forEach(action => {
+            if (this.isUserChanged(action, prevAction)) {
+                terrainDetected = false;
+            }
+            const args = action.args;
+            let terrainText = null;
+            let mandatoryAction = this.isMandatoryAction(action, prevAction);
+            if (mandatoryAction && !terrainDetected) {
+                terrainText = args.terrainName;
+                terrainDetected = true;
+                terrainsCount++;
+                const terrainName = this.terrains.find(t => terrainText.toLowerCase().includes(t.toLowerCase()));
+                console.log(`detected ${terrainsCount} terrain: ${terrainName}`);
+                openedTerrains.push(terrainName);
+            }
+            console.log(`${mandatoryAction ? '!' : ' '}${action.move_id} player ${args.player_id} ${args.originalType} ${args.terrainName} ${args.location_name}`);
+            prevAction = action;
+        });
+        return openedTerrains;
+    },
+
+    isUserChanged: function (action, prevAction) {
+        if (prevAction == null) {
+            return true;
+        }
+        if (action.args == null || prevAction.args == null) {
+            return false;
+        }
+        if (action.args.player_id == null || prevAction.args.player_id == null) {
+            return false;
+        }
+        return action.args.player_id != prevAction.args.player_id;
+    },
+
+    isMandatoryAction: function (action, prevAction) {
+        const args = action.args;
+        if (args.originalType === 'build') {
+            if (prevAction != null) {
+                const prevArgs = prevAction.args;
+                if (prevArgs.originalType === 'useTile') {
+                    switch (prevArgs.location_name) {
+                        case 'harbor':
+                        case 'paddock':
+                        case 'barn':
+                            return true;
+                        default:
+                            return false;
+                    }
+                }
+                return true;
+            }
+            return true;
+        }
+        return false;
+    },
+
     renderContainers: function () {
         this.dojo.place("<div id='" + STATISTICS_PANEL_ID + "'"
             + " class='" + BGA_PLAYER_BOARD_CLASS + "'"
@@ -150,13 +251,14 @@ var kingdomBuilderBgaUserscriptData = {
 
     renderStatisticsPanel: function () {
         var html = "<div class='" + STATISTICS_PANEL_CLASS + "'>";
-        html += `All terrain cards played: ${this.terrainsPlayedCount} `;
+        html += `Log is${this.logIsFull ? ' ' : ' not '}full, `;
+        html += `all terrain cards played: ${this.terrainsPlayedCount} `;
         this.terrains.slice()
             .sort((t1, t2) => this.terrainsPlayed[t1] - this.terrainsPlayed[t2])
             .forEach(terrain => {
-                const probability = (Math.round(this.terrainsProbability[terrain] * 100) / 100).toFixed(2)
+                const probability = (Math.round(this.terrainsProbability[terrain] * 100 * 100) / 100).toFixed(0)
                 html += "<div>"
-                    + `${terrain} played ${this.terrainsPlayed[terrain]} times, probability: ${probability}`
+                    + `${terrain} played ${this.terrainsPlayed[terrain]} times, probability: ${probability}%`
                     + "</div>";
             })
         this.dojo.place(html, STATISTICS_PANEL_ID, "only");
