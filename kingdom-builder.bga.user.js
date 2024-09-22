@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name LOR bga-kingdom-builder
+// @name bga-kingdom-builder
 // @description Автоматический подсчет игровых параметров
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
