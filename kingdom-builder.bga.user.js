@@ -74,14 +74,11 @@ var kingdomBuilderBgaUserscriptData = {
         this.logIsFull = this.isFullLog(log);
         if (this.logIsFull) {
             console.log(`Found full log with ${log.length} actions`);
-            if (this.isFirstTurn()) {
-                console.log('this is first turn');
-                this.processAnotherCurrentPlayerFirstTerrain();
-            }
             const openedTerrains = this.findShownTerrains(log);
             openedTerrains.forEach(t => {
                 this.processTerrain(t);
             });
+            this.processAnotherCurrentPlayerTerrain(log);
         } else {
             console.log(`Found incomplete log with ${log.length} actions`);
             this.processFirstTerrains();
@@ -112,13 +109,15 @@ var kingdomBuilderBgaUserscriptData = {
         })
     },
 
-    processAnotherCurrentPlayerFirstTerrain: function () {
+    processAnotherCurrentPlayerTerrain: function (log) {
         const activePlayerId = parseInt(this.game.gamestate.active_player);
-        this.game.fplayers
+        const playersWithoutActions = this.game.fplayers
             .filter(p => parseInt(p.id) !== this.myPlayerId)
             .filter(p => parseInt(p.id) === activePlayerId)
+            .filter(p => !this.isPlayerLastAction(log, parseInt(p.id)))
+        console.log(`Found another active players without actions: ${playersWithoutActions.map(p => p.name).join(',')}`);
+        playersWithoutActions
             .map(p => p.terrain)
-            .filter(t => t !== BGA_TERRAIN_BACK)
             .forEach(terrainIndex => {
                 const terrainName = this.terrains[parseInt(terrainIndex)];
                 this.processTerrain(terrainName);
@@ -193,6 +192,20 @@ var kingdomBuilderBgaUserscriptData = {
             return false;
         }
         return parseInt(log[0].move_id) === 1;
+    },
+
+    isPlayerLastAction: function (log, playerId) {
+        if (log == null || log.length === 0) {
+            return false;
+        }
+        const actions = log.filter(e => e.data && e.data.length).flatMap(e => e.data).filter(a => a.args);
+        for (let i = actions.length - 1; i >= 0; i--) {
+            const action = actions[i];
+            if (action.args.player_id) {
+                return playerId === action.args.player_id;
+            }
+        }
+        return false;
     },
 
     findShownTerrains: function (log) {
