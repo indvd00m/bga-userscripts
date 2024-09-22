@@ -65,6 +65,7 @@ var kingdomBuilderBgaUserscriptData = {
         this.renderContainers();
 
         this.processFirstTerrains();
+        this.lastShowTerrainPlayerId = parseInt(this.game.gamestate.active_player);
 
         return this;
     },
@@ -94,16 +95,24 @@ var kingdomBuilderBgaUserscriptData = {
 
         console.log(JSON.stringify(data.args));
 
+        const pId = parseInt(data.args.pId);
+        const prevLastShowTerrainPlayerId = this.lastShowTerrainPlayerId;
+        this.lastShowTerrainPlayerId = pId;
+
         if (BGA_TERRAIN_BACK === data.args.terrain) {
             console.log('Skip back terrain processing');
             return;
         }
-        if (this.myPlayerId === parseInt(data.args.pId) && data.args.i18n == null) {
+        if (this.myPlayerId === pId && data.args.i18n == null) {
             console.log('Skip my turn second processing');
             return;
         }
+        if (this.myPlayerId !== pId && prevLastShowTerrainPlayerId === pId) {
+            console.log(`Skip undoing of player ${pId}`);
+            return;
+        }
 
-        this.lastShowTerrainPlayerId = data.args.pId;
+        this.lastShowTerrainPlayerId = pId;
         const terrainName = this.terrains[parseInt(data.args.terrain)];
         this.processTerrain(terrainName);
     },
