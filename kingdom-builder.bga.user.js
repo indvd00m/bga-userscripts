@@ -3,7 +3,7 @@
 // @description Автоматический подсчет игровых параметров
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 0.2.1
+// @version 0.2.2-dev
 // @match https://boardgamearena.com/*/kingdombuilder*
 // ==/UserScript==
 
