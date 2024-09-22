@@ -36,6 +36,7 @@ var kingdomBuilderBgaUserscriptData = {
     terrainsPlayed: {},
     terrainsProbability: {},
     terrainsPlayedCount: 0,
+    turnsCount: 0,
     logIsFull: false,
     terrainsStackSize: 25,
     lastShowTerrainPlayerId: 0,
@@ -72,17 +73,10 @@ var kingdomBuilderBgaUserscriptData = {
         this.logIsFull = this.isFullLog(log);
         if (this.logIsFull) {
             console.log(`Found full log with ${log.length} actions`);
-            const openedTerrains = this.findOpenedTerrains(log);
-            if (openedTerrains.length > 0) {
-                if (activePlayerId !== this.myPlayerId) {
-                    this.processMyCurrentTerrain();
-                }
-                openedTerrains.forEach(t => {
-                    this.processTerrain(t);
-                });
-            } else {
-                this.processFirstTerrains();
-            }
+            const openedTerrains = this.findShownTerrains(log);
+            openedTerrains.forEach(t => {
+                this.processTerrain(t);
+            });
         } else {
             console.log(`Found incomplete log with ${log.length} actions`);
             this.processFirstTerrains();
@@ -151,6 +145,7 @@ var kingdomBuilderBgaUserscriptData = {
         }
         this.terrainsPlayed[terrainName]++;
         this.terrainsPlayedCount++;
+        this.turnsCount++;
         console.log('terrainsPlayed: ' + JSON.stringify(this.terrainsPlayed));
         console.log(`terrainsPlayedCount: ${this.terrainsPlayedCount}`);
 
@@ -174,7 +169,7 @@ var kingdomBuilderBgaUserscriptData = {
         return parseInt(log[0].move_id) === 1;
     },
 
-    findOpenedTerrains: function (log) {
+    findShownTerrains: function (log) {
         const openedTerrains = [];
         if (log == null) {
             return openedTerrains;
@@ -184,38 +179,58 @@ var kingdomBuilderBgaUserscriptData = {
         let terrainDetected = false;
         let terrainsCount = 0;
         let prevAction = null;
+        let lastPlayerId = null;
         actions.forEach(action => {
-            if (this.isUserChanged(action, prevAction)) {
+            if (this.isUserChanged(action, lastPlayerId) && !this.isMyAction(action)) {
+                console.log('user changed');
                 terrainDetected = false;
             }
             const args = action.args;
-            let terrainText = null;
             let mandatoryAction = this.isMandatoryAction(action, prevAction);
-            if (mandatoryAction && !terrainDetected) {
-                terrainText = args.terrainName;
+            if (args.originalType === 'showTerrain') {
                 terrainDetected = true;
                 terrainsCount++;
-                const terrainName = this.terrains.find(t => terrainText.toLowerCase().includes(t.toLowerCase()));
+                const terrainIndex = parseInt(args.terrain);
+                const terrainName = this.terrains[terrainIndex];
+                console.log(`detected ${terrainsCount} terrain: ${terrainName}`);
+                openedTerrains.push(terrainName);
+            } else if (mandatoryAction && !terrainDetected) {
+                terrainDetected = true;
+                terrainsCount++;
+                const terrainName = this.terrains.find(t => args.terrainName.toLowerCase().includes(t.toLowerCase()));
                 console.log(`detected ${terrainsCount} terrain: ${terrainName}`);
                 openedTerrains.push(terrainName);
             }
             console.log(`${mandatoryAction ? '!' : ' '}${action.move_id} player ${args.player_id} ${args.originalType} ${args.terrainName} ${args.location_name}`);
+            if (args.player_id) {
+                lastPlayerId = args.player_id;
+            }
             prevAction = action;
         });
         return openedTerrains;
     },
 
-    isUserChanged: function (action, prevAction) {
-        if (prevAction == null) {
+    isUserChanged: function (action, lastPlayerId) {
+        if (action.args == null) {
+            return false;
+        }
+        if (action.args.player_id == null) {
+            return false;
+        }
+        if (lastPlayerId == null) {
             return true;
         }
-        if (action.args == null || prevAction.args == null) {
+        return action.args.player_id != lastPlayerId;
+    },
+
+    isMyAction: function (action) {
+        if (action.args == null) {
             return false;
         }
-        if (action.args.player_id == null || prevAction.args.player_id == null) {
+        if (action.args.player_id == null) {
             return false;
         }
-        return action.args.player_id != prevAction.args.player_id;
+        return action.args.player_id == this.myPlayerId;
     },
 
     isMandatoryAction: function (action, prevAction) {
@@ -251,8 +266,8 @@ var kingdomBuilderBgaUserscriptData = {
 
     renderStatisticsPanel: function () {
         var html = "<div class='" + STATISTICS_PANEL_CLASS + "'>";
-        html += `Log is${this.logIsFull ? ' ' : ' not '}full, `;
-        html += `all terrain cards played: ${this.terrainsPlayedCount} `;
+        html += `Found ${this.logIsFull ? 'full' : 'incomplete'} log with ${this.turnsCount} turns `;
+        html += `and ${this.terrainsPlayedCount} played terrain cards`;
         this.terrains.slice()
             .sort((t1, t2) => this.terrainsPlayed[t1] - this.terrainsPlayed[t2])
             .forEach(terrain => {
