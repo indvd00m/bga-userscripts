@@ -43,7 +43,6 @@ var kingdomBuilderBgaUserscriptData = {
     lastShowTerrainPlayerId: 0,
     myPlayerId: -1,
 
-    // Init Pythia
     init: function () {
         // Check if the site was loaded correctly
         if (!window.parent || !window.parent.dojo || !window.parent.gameui.gamedatas ||
@@ -74,13 +73,16 @@ var kingdomBuilderBgaUserscriptData = {
         this.logIsFull = this.isFullLog(log);
         if (this.logIsFull) {
             console.log(`Found full log with ${log.length} actions`);
-            const openedTerrains = this.findShownTerrains(log);
+        } else {
+            console.log(`Found incomplete log with ${log.length} actions`);
+        }
+        const openedTerrains = this.findShownTerrains(log);
+        if (openedTerrains.length) {
             openedTerrains.forEach(t => {
                 this.processTerrain(t);
             });
             this.processAnotherCurrentPlayerTerrain(log);
         } else {
-            console.log(`Found incomplete log with ${log.length} actions`);
             this.processFirstTerrains();
         }
 
