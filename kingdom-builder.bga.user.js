@@ -452,7 +452,28 @@ var kingdomBuilderBgaUserscriptData = {
         };
         this.calculateAdjacentStats(id, stats);
         this.calculateHermits(id, stats);
+        this.calculateFarmers(id, stats);
         return stats;
+    },
+
+    calculateFarmers: function (id, stats) {
+        const areaSettlements = [0, 0, 0, 0];
+        const playerSettlements = objectValues(this.settlements).filter(s => s.player_id === id);
+        playerSettlements.forEach(s => {
+            if (s.x < QUADRANT_WIDTH && s.y < QUADRANT_HEIGHT) {
+                areaSettlements[0]++;
+            } else if (s.x >= QUADRANT_WIDTH && s.y < QUADRANT_HEIGHT) {
+                areaSettlements[1]++;
+            } else if (s.x < QUADRANT_WIDTH && s.y >= QUADRANT_HEIGHT) {
+                areaSettlements[2]++;
+            } else if (s.x >= QUADRANT_WIDTH && s.y >= QUADRANT_HEIGHT) {
+                areaSettlements[3]++;
+            }
+        });
+        stats['objectives']['Farmers'] = {
+            score: Math.min.apply(null, areaSettlements) * 3,
+            areaSettlements: areaSettlements
+        };
     },
 
     calculateHermits: function (id, stats) {
