@@ -426,7 +426,7 @@ var kingdomBuilderBgaUserscriptData = {
             settlementsByCoord[`${s.y}-${s.x}`] = s;
         });
         const adjacentEmptyTerrainCharsCounts = {};
-        Maps.POSSIBLE_CHARS.split('').forEach(c => adjacentEmptyTerrainCharsCounts[c] = 0);
+        Maps.POSSIBLE_CHARS.split('').forEach(c => adjacentEmptyTerrainCharsCounts[c] = {});
         const playerSettlements = this.game.board.settlements.filter(s => s.player_id === id + '');
         playerSettlements.forEach(s => {
             const x = parseInt(s.y);
@@ -437,9 +437,14 @@ var kingdomBuilderBgaUserscriptData = {
                 if (gex.x < 0 || gex.x >= this.map.width || gex.y < 0 || gex.y >= this.map.height) {
                     continue;
                 }
-                if (settlementsByCoord[`${gex.x}-${gex.y}`] == null) {
+                const sCoord = `${gex.x}-${gex.y}`;
+                if (settlementsByCoord[sCoord] == null) {
                     const c = this.map.getChar(gex.x, gex.y);
-                    adjacentEmptyTerrainCharsCounts[c]++;
+                    if (adjacentEmptyTerrainCharsCounts[c][sCoord] == null) {
+                        adjacentEmptyTerrainCharsCounts[c][sCoord] = 1;
+                    } else {
+                        adjacentEmptyTerrainCharsCounts[c][sCoord]++;
+                    }
                 }
             }
         });
