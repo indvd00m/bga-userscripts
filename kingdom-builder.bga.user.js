@@ -477,31 +477,62 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     calculateHermits: function (id, stats) {
-        let areaNumber = 1;
+        let areas = [{
+            number: 1,
+            adjacentLocations: {},
+            size: 0,
+        }];
         const processedSettlements = {};
         const playerSettlements = objectValues(this.settlements).filter(s => s.player_id === id);
         playerSettlements.forEach(s => {
-            if (this.processNextHermit(s, processedSettlements, areaNumber)) {
-                areaNumber++;
+            if (this.processNextHermit(s, processedSettlements, areas[areas.length - 1])) {
+                const nextNumber = areas.length + 1;
+                areas.push({
+                    number: nextNumber,
+                    adjacentLocations: {},
+                    size: 0,
+                });
             }
         });
 
+        areas = areas.filter(a => a.size > 0);
+
         stats['objectives']['Hermits'] = {
-            score: areaNumber - 1
+            score: areas.length
+        };
+
+        let merchantsScore = 0;
+        const processedLocations = {};
+        areas.forEach(a => {
+            const locationKeys = objectKeys(a.adjacentLocations).filter(key => !processedLocations[key]);
+            merchantsScore += locationKeys.length > 1 ? locationKeys.length * 4 : 0;
+            locationKeys.forEach(l => processedLocations[l] = l);
+        });
+
+        stats['objectives']['Merchants'] = {
+            score: merchantsScore
         };
     },
 
-    processNextHermit: function (settlement, processedSettlements, areaNumber) {
+    processNextHermit: function (settlement, processedSettlements, area) {
         const key = `${settlement.x}-${settlement.y}`;
         if (!processedSettlements[key]) {
-            processedSettlements[key] = areaNumber;
-            const adjacentGexes = Maps.getAdjacentGexes(settlement.x, settlement.y);
+            processedSettlements[key] = area;
+            area.size++;
+            const adjacentGexes = Maps.getAdjacentGexes(settlement.x, settlement.y)
+                .filter(g => g.x >= 0 && g.y >= 0 && g.x < QUADRANT_WIDTH * 2 && g.y < QUADRANT_HEIGHT * 2);
+            adjacentGexes.forEach(g => {
+                const char = this.map.getChar(g.x, g.y);
+                if (char === '0' || char === '!') {
+                    area.adjacentLocations[`${g.x}-${g.y}`] = char;
+                }
+            });
             const playerAdjacentSettlements = adjacentGexes
                 .filter(g => processedSettlements[`${g.x}-${g.y}`] == null)
                 .filter(g => this.settlements[`${g.x}-${g.y}`])
                 .map(g => this.settlements[`${g.x}-${g.y}`])
                 .filter(s => s.player_id === settlement.player_id);
-            playerAdjacentSettlements.forEach(s => this.processNextHermit(s, processedSettlements, areaNumber));
+            playerAdjacentSettlements.forEach(s => this.processNextHermit(s, processedSettlements, area));
             return true;
         }
         return false;
