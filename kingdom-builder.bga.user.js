@@ -458,7 +458,27 @@ var kingdomBuilderBgaUserscriptData = {
         this.calculateAreasObjectives(id, stats);
         this.calculateFarmers(id, stats);
         this.calculateDiscoverers(id, stats);
+        this.calculateKnights(id, stats);
         return stats;
+    },
+
+    calculateKnights: function (id, stats) {
+        const yCounts = {};
+        const playerSettlements = objectValues(this.settlements).filter(s => s.player_id === id);
+        playerSettlements.forEach(s => {
+            if (yCounts[s.y] == null) {
+                yCounts[s.y] = 0;
+            }
+            yCounts[s.y]++;
+        });
+        let maxLineCount = 0;
+        const linesCount = objectValues(yCounts);
+        if (linesCount.length) {
+            maxLineCount = Math.max.apply(null, linesCount);
+        }
+        stats['objectives']['Knights'] = {
+            score: maxLineCount * 2
+        };
     },
 
     calculateDiscoverers: function (id, stats) {
