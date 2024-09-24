@@ -28,7 +28,94 @@ const STATISTICS_PANEL_CLASS = "userscript_statistics_panel_class";
 
 const QUADRANT_WIDTH = 10;
 const QUADRANT_HEIGHT = 10;
-const QUADRANT_PATTERN = new RegExp(`^(.{${QUADRANT_WIDTH}}\n){${QUADRANT_HEIGHT - 1}}.{${QUADRANT_WIDTH}}$`);
+
+class Canvas {
+
+    #width = -1;
+    #height = -1;
+    #text = '';
+    #pattern;
+
+    constructor(width, height, text) {
+        this.#width = width;
+        this.#height = height;
+        this.#text = text;
+        this.#pattern = new RegExp(`^(.{${width}}\n){${height - 1}}.{${width}}$`);
+        this.validate();
+    }
+
+    get width() {
+        return this.#width;
+    }
+
+    get height() {
+        return this.#height;
+    }
+
+    get text() {
+        return this.#text;
+    }
+
+    rows() {
+        return this.#text.split(/\n/);
+    }
+
+    rotate180() {
+        const rows = this.rows();
+        let rotated = '';
+        rows.reverse().forEach(l => {
+            rotated += l.trimEnd().split('').reverse().join('') + '\n';
+        });
+        return new Canvas(this.width, this.height, rotated.trimEnd());
+    }
+
+    validate() {
+        if (!this.#pattern.test(this.#text)) {
+            throw new Error(`Text ${this.text} does not match to canvas pattern ${this.#pattern}`);
+        }
+    }
+
+    getChar(x, y) {
+        if (x < 0 || x >= this.width) {
+            throw new Error(`Unbound exception: ${x}`);
+        }
+        if (y < 0 || y >= this.height) {
+            throw new Error(`Unbound exception: ${y}`);
+        }
+        const index = y * (this.width + 1) + x;
+        return this.text.charAt(index);
+    }
+
+    static merge(c1, c2, c3, c4) {
+        c1.validate();
+        c2.validate();
+        c3.validate();
+        c4.validate();
+
+        const width = c1.width;
+        const height = c1.height;
+        if (width !== c2.width || width !== c3.width || width !== c4.width) {
+            throw new Error('Width of canvases must be equal to each other!');
+        }
+        if (height !== c2.height || height !== c3.height || height !== c4.height) {
+            throw new Error('Height of canvases must be equal to each other!');
+        }
+
+        const rows1 = c1.rows();
+        const rows2 = c2.rows();
+        const rows3 = c3.rows();
+        const rows4 = c4.rows();
+
+        let map = '';
+        for (let i = 0; i < height; i++) {
+            map += rows1[i].trimEnd() + rows2[i].trimEnd() + '\n';
+        }
+        for (let i = 0; i < width; i++) {
+            map += rows3[i].trimEnd() + rows4[i].trimEnd() + '\n';
+        }
+        return new Canvas(width * 2, height * 2, map.trimEnd());
+    }
+}
 
 class Maps {
 
@@ -45,7 +132,7 @@ class Maps {
      * 0 - location place
      */
 
-    static BASE_QUADRANT_01 =
+    static BASE_QUADRANT_01 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'CDDDDDDDDD\n' +
         'CCCDDDDDCD\n' +
         'MMMDMM0DDC\n' +
@@ -55,9 +142,9 @@ class Maps {
         'GG0RLLWLLR\n' +
         'GGRRLLG!RR\n' +
         'GGGRRWGGRR\n' +
-        'GGGFWGGRRR';
+        'GGGFWGGRRR');
 
-    static BASE_QUADRANT_02 =
+    static BASE_QUADRANT_02 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'DDCWWRRRGG\n' +
         'D!CWRRR0GG\n' +
         'CCCLLLRCLL\n' +
@@ -67,9 +154,9 @@ class Maps {
         'GGGRLLWWDD\n' +
         'GGRRMWWWDW\n' +
         'GMRRWWWWWW\n' +
-        'RRRWWWWWWW';
+        'RRRWWWWWWW');
 
-    static BASE_QUADRANT_03 =
+    static BASE_QUADRANT_03 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'GGGRRWGRRR\n' +
         'GGG!RWGRRR\n' +
         'GLLGRRWGGR\n' +
@@ -79,9 +166,9 @@ class Maps {
         'CCCMGLLLDD\n' +
         'CC!DMDLLCC\n' +
         'WWWDDDDMCC\n' +
-        'WWWWDDDDDC';
+        'WWWWDDDDDC');
 
-    static BASE_QUADRANT_04 =
+    static BASE_QUADRANT_04 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'GGRRRWGRRL\n' +
         'GLRRWGRRLL\n' +
         'GLLRWGGLLL\n' +
@@ -91,9 +178,9 @@ class Maps {
         'CCWWWGDDDC\n' +
         'WWGGWW0CMC\n' +
         'WD!GWMWCCC\n' +
-        'WDDWWWWCCC';
+        'WDDWWWWCCC');
 
-    static BASE_QUADRANT_05 =
+    static BASE_QUADRANT_05 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'RRRRMMGMCC\n' +
         'RMRRLGMMMC\n' +
         'LLRLLLGGWM\n' +
@@ -103,9 +190,9 @@ class Maps {
         'DDCDDWL!GC\n' +
         'CC0DWLLLGG\n' +
         'DCWWWRRLGG\n' +
-        'DCCWRRRGGG';
+        'DCCWRRRGGG');
 
-    static BASE_QUADRANT_06 =
+    static BASE_QUADRANT_06 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'DDCWWRRGGG\n' +
         'DCWLLRRRGG\n' +
         'DDWLLDD0LG\n' +
@@ -115,9 +202,9 @@ class Maps {
         'WRCRWGCCDC\n' +
         'W!CLW0DDCW\n' +
         'WWCLWWWDDW\n' +
-        'WWWWWWWWWW';
+        'WWWWWWWWWW');
 
-    static BASE_QUADRANT_07 =
+    static BASE_QUADRANT_07 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'CCCDDWDDDD\n' +
         'MMCDDWDDDD\n' +
         'MMCMMWDD0L\n' +
@@ -127,9 +214,9 @@ class Maps {
         'C0RRWLLLLL\n' +
         'GGRWG!GLGR\n' +
         'GGRRWGGGGR\n' +
-        'GGRRWGGGRR';
+        'GGRRWGGGRR');
 
-    static BASE_QUADRANT_08 =
+    static BASE_QUADRANT_08 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'LDDMMDDCCC\n' +
         'LLDDDMMCCC\n' +
         'LLLLLLLMMM\n' +
@@ -139,9 +226,9 @@ class Maps {
         'DL0CWRR0CG\n' +
         'DDCWRRGGGG\n' +
         'DDDWRRRGGG\n' +
-        'DDWWRRRGGG';
+        'DDWWRRRGGG');
 
-    static BASE_QUADRANT_09 =
+    static BASE_QUADRANT_09 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'WWGGWWWLLL\n' +
         'WGGRWWWLLL\n' +
         'WWWGRWWDDL\n' +
@@ -151,9 +238,9 @@ class Maps {
         'RR0CCCGGMG\n' +
         'RCCCCG0DDG\n' +
         'CMCCCLLLDD\n' +
-        'CCCLLLLDDD';
+        'CCCLLLLDDD');
 
-    static BASE_QUADRANT_10 =
+    static BASE_QUADRANT_10 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'GGGWWWMCCC\n' +
         'GGWRDWWWCC\n' +
         'GMWR0DDDWM\n' +
@@ -163,9 +250,9 @@ class Maps {
         'LLWGCCCLLL\n' +
         'DWGGC!RRLL\n' +
         'DDWWGRRMRR\n' +
-        'DDDWWRMRRR';
+        'DDDWWRMRRR');
 
-    static BASE_QUADRANT_11 =
+    static BASE_QUADRANT_11 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'CCCWWWWDDD\n' +
         'CCCW0LDDMD\n' +
         'CCCCCCLDMD\n' +
@@ -175,9 +262,9 @@ class Maps {
         'RRLLDMLGGL\n' +
         'RRMLMR!GGG\n' +
         'RMRRRRWWGG\n' +
-        'RRRRWWWGGG';
+        'RRRRWWWGGG');
 
-    static BASE_QUADRANT_12 =
+    static BASE_QUADRANT_12 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'DDDDDDDGGG\n' +
         'DDDMDLLLGG\n' +
         'DMDDDLWLGR\n' +
@@ -187,45 +274,8 @@ class Maps {
         'CCC0RWWLMC\n' +
         'GCGGRWLCCC\n' +
         'GGGGRRRRCM\n' +
-        'GGGRRRRRMM';
+        'GGGRRRRRMM');
 
-    static form2x2Map(q1, q2, q3, q4) {
-        this.validateQuadrant(q1);
-        this.validateQuadrant(q2);
-        this.validateQuadrant(q3);
-        this.validateQuadrant(q4);
-
-        const rows1 = q1.split(/\n/);
-        const rows2 = q2.split(/\n/);
-        const rows3 = q3.split(/\n/);
-        const rows4 = q4.split(/\n/);
-
-        let map = '';
-        for (let i = 0; i < QUADRANT_HEIGHT; i++) {
-            map += rows1[i].trimEnd() + rows2[i].trimEnd() + '\n';
-        }
-        for (let i = 0; i < QUADRANT_HEIGHT; i++) {
-            map += rows3[i].trimEnd() + rows4[i].trimEnd() + '\n';
-        }
-        return map.trimEnd();
-    }
-
-    static rotate180(q) {
-        this.validateQuadrant(q);
-
-        const rows = q.split(/\n/);
-        let rotated = '';
-        rows.reverse().forEach(l => {
-            rotated += l.trimEnd().split('').reverse().join('') + '\n';
-        });
-        return rotated.trimEnd();
-    }
-
-    static validateQuadrant(q) {
-        if (!QUADRANT_PATTERN.test(q)) {
-            throw new Error(`Quadrant ${q} does not match to pattern ${QUADRANT_PATTERN}`)
-        }
-    }
 }
 
 
