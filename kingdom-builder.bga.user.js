@@ -327,9 +327,20 @@ function objectKeys(object) {
     return Object.keys(object);
 }
 
+function objectValues(object) {
+    return Object.values(object);
+}
+
+/**
+ *
+ * X and Y coordinates at bga adaptation for some reason is inverted!
+ *
+ */
+
 var kingdomBuilderBgaUserscriptData = {
     dojo: null,
     game: null,
+    settlements: {},
     terrains: ['Grass', 'Canyon', 'Desert', 'Flower', 'Forest'],
     terrainsPlayed: {},
     terrainsProbability: {},
@@ -354,6 +365,15 @@ var kingdomBuilderBgaUserscriptData = {
         // init state
         this.dojo = window.parent.dojo;
         this.game = window.parent.gameui.gamedatas;
+        this.game.board.settlements.forEach(s => {
+            const x = parseInt(s.y);
+            const y = parseInt(s.x);
+            this.settlements[`${x}-${y}`] = {
+                player_id: parseInt(s.player_id),
+                x: x,
+                y: y
+            };
+        })
         const myPlayer = this.game.fplayers.find(p => p.name === window.parent.gameui.current_player_name);
         if (myPlayer) {
             this.myPlayerId = parseInt(myPlayer.id);
@@ -362,6 +382,9 @@ var kingdomBuilderBgaUserscriptData = {
 
         // Connect event handlers to follow game progress
         this.dojo.subscribe("showTerrain", this, "processShowTerrain");
+        this.dojo.subscribe("build", this, "processBuild");
+        this.dojo.subscribe("move", this, "processMove");
+        this.dojo.subscribe("cancel", this, "processCancel");
 
 
         this.renderContainers();
@@ -395,13 +418,17 @@ var kingdomBuilderBgaUserscriptData = {
         }
 
         // players stats
+        this.recalculateAllPlayerStats();
+        this.renderPlayerUserscriptPanels();
+
+        return this;
+    },
+
+    recalculateAllPlayerStats: function () {
         this.game.fplayers.forEach(p => {
             const id = parseInt(p.id);
             this.playersStats[id + ''] = this.calculatePlayerStats(id);
         })
-        this.renderPlayerUserscriptPanels();
-
-        return this;
     },
 
     parseMap: function () {
@@ -425,27 +452,21 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     calculateAdjacentStats: function (id) {
-        const settlementsByCoord = {};
-        this.game.board.settlements.forEach(s => {
-            settlementsByCoord[`${s.y}-${s.x}`] = s;
-        });
         const adjacentEmptyTerrainCharsGexes = {};
         Maps.POSSIBLE_CHARS.split('').forEach(c => adjacentEmptyTerrainCharsGexes[c] = {});
         const adjacentEmptyTerrainCharsSettlementsCount = {};
         Maps.POSSIBLE_CHARS.split('').forEach(c => adjacentEmptyTerrainCharsSettlementsCount[c] = {});
-        const playerSettlements = this.game.board.settlements.filter(s => s.player_id === id + '');
+        const playerSettlements = objectValues(this.settlements).filter(s => s.player_id === id);
         playerSettlements.forEach(s => {
-            const x = parseInt(s.y);
-            const y = parseInt(s.x);
-            const sSettlementCoord = `${x}-${y}`;
-            const gexes = Maps.getAdjacentGexes(x, y);
+            const sSettlementCoord = `${s.x}-${s.y}`;
+            const gexes = Maps.getAdjacentGexes(s.x, s.y);
             for (let i = 0; i < gexes.length; i++) {
                 const gex = gexes[i];
                 if (gex.x < 0 || gex.x >= this.map.width || gex.y < 0 || gex.y >= this.map.height) {
                     continue;
                 }
                 const sAdjCoord = `${gex.x}-${gex.y}`;
-                if (settlementsByCoord[sAdjCoord] == null) {
+                if (this.settlements[sAdjCoord] == null) {
                     const c = this.map.getChar(gex.x, gex.y);
                     if (adjacentEmptyTerrainCharsGexes[c][sAdjCoord] == null) {
                         adjacentEmptyTerrainCharsGexes[c][sAdjCoord] = 1;
@@ -587,6 +608,64 @@ var kingdomBuilderBgaUserscriptData = {
         this.lastShowTerrainPlayerId = pId;
         const terrainName = this.terrains[parseInt(data.args.terrain)];
         this.processTerrain(terrainName);
+    },
+
+    processBuild: function (data) {
+        console.log("build", JSON.stringify(data));
+
+        // Input check
+        if (!data || !data.args || !data.args.player_id || data.args.x == null || data.args.y == null) {
+            return;
+        }
+        const x = parseInt(data.args.y);
+        const y = parseInt(data.args.x);
+        this.settlements[`${x}-${y}`] = {
+            player_id: parseInt(data.args.player_id),
+            x: x,
+            y: y
+        };
+        this.recalculateAllPlayerStats();
+        this.renderPlayerUserscriptPanels();
+    },
+
+    processMove: function (data) {
+        console.log("move", JSON.stringify(data));
+        // Input check
+        if (!data || !data.args || !data.args.player_id || !data.args.from || data.args.x == null || data.args.y == null) {
+            return;
+        }
+        const prevX = parseInt(data.args.from.y);
+        const prevY = parseInt(data.args.from.x);
+        const newX = parseInt(data.args.y);
+        const newY = parseInt(data.args.x);
+        delete this.settlements[`${prevX}-${prevY}`];
+        this.settlements[`${newX}-${newY}`] = {
+            player_id: parseInt(data.args.player_id),
+            x: newX,
+            y: newY
+        };
+        this.recalculateAllPlayerStats();
+        this.renderPlayerUserscriptPanels();
+    },
+
+    processCancel: function (data) {
+        console.log("cancel", JSON.stringify(data));
+        // Input check
+        if (!data || !data.args || !data.args.board) {
+            return;
+        }
+        this.settlements = {};
+        data.args.board.settlements.forEach(s => {
+            const x = parseInt(s.y);
+            const y = parseInt(s.x);
+            this.settlements[`${x}-${y}`] = {
+                player_id: parseInt(s.player_id),
+                x: x,
+                y: y
+            };
+        })
+        this.recalculateAllPlayerStats();
+        this.renderPlayerUserscriptPanels();
     },
 
     processTerrain: function (terrainName) {
