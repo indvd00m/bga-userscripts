@@ -21,6 +21,8 @@ console.log('I am an example userscript for kingdom builder from file system');
 
 const BGA_PLAYER_BOARDS_ID = "player_boards";
 const BGA_PLAYER_BOARD_CLASS = "player-board";
+const BGA_PLAYER_BOARD_ID_PREFIX = "overall_player_board_";
+const USERSCRIPT_PLAYER_BOARD_ID_PREFIX = "userscript_player_board_";
 const BGA_TERRAIN_BACK = "back";
 const BGA_START_SETTLEMENTS_COUNT = 40;
 const STATISTICS_PANEL_ID = "userscript_statistics_panel";
@@ -301,6 +303,7 @@ var kingdomBuilderBgaUserscriptData = {
     myPlayerId: -1,
     map: new Canvas(1, 1, ' '),
     isRenderAsciiMap: true,
+    playersStats: {},
 
     init: function () {
         // Check if the site was loaded correctly
@@ -353,6 +356,13 @@ var kingdomBuilderBgaUserscriptData = {
             this.renderAsciiMap();
         }
 
+        // players stats
+        this.game.fplayers.forEach(p => {
+            const id = parseInt(p.id);
+            this.playersStats[id + ''] = this.calculatePlayerStats(id);
+        })
+        this.renderPlayerUserscriptPanels();
+
         return this;
     },
 
@@ -368,6 +378,12 @@ var kingdomBuilderBgaUserscriptData = {
 
         const map = Canvas.merge(q1, q2, q3, q4);
         return map;
+    },
+
+    calculatePlayerStats: function (id) {
+        return {
+            test: 5
+        };
     },
 
     renderAsciiMap: function () {
@@ -631,6 +647,15 @@ var kingdomBuilderBgaUserscriptData = {
             + "></div>",
             BGA_PLAYER_BOARDS_ID,
             "first");
+
+        this.game.fplayers.forEach(p => {
+            const id = parseInt(p.id);
+            this.dojo.place("<div id='" + (USERSCRIPT_PLAYER_BOARD_ID_PREFIX + id) + "'"
+                + "style='font-size: 70%;'"
+                + "></div>",
+                BGA_PLAYER_BOARD_ID_PREFIX + id,
+                "last");
+        })
     },
 
     renderStatisticsPanel: function () {
@@ -646,6 +671,15 @@ var kingdomBuilderBgaUserscriptData = {
                     + "</div>";
             })
         this.dojo.place(html, STATISTICS_PANEL_ID, "only");
+    },
+
+    renderPlayerUserscriptPanels: function () {
+        this.game.fplayers.forEach(p => {
+            const id = parseInt(p.id);
+            var html = "<div>";
+            html += `Stats for user ${id}: ${JSON.stringify(this.playersStats[id + ''])}`;
+            this.dojo.place(html, USERSCRIPT_PLAYER_BOARD_ID_PREFIX + id, "only");
+        });
     }
 
 };
