@@ -351,7 +351,7 @@ var kingdomBuilderBgaUserscriptData = {
     lastShowTerrainPlayerId: 0,
     myPlayerId: -1,
     map: new Canvas(1, 1, ' '),
-    isRenderAsciiMap: false,
+    isRenderAsciiMap: true,
     playersStats: {},
 
     init: function () {
@@ -446,12 +446,15 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     calculatePlayerStats: function (id) {
-        return {
-            stats: this.calculateAdjacentStats(id)
+        const stats = {
+            adjacentCounts: {},
+            objectives: {}
         };
+        this.calculateAdjacentStats(id, stats);
+        return stats;
     },
 
-    calculateAdjacentStats: function (id) {
+    calculateAdjacentStats: function (id, stats) {
         const adjacentEmptyTerrainCharsGexes = {};
         Maps.POSSIBLE_CHARS.split('').forEach(c => adjacentEmptyTerrainCharsGexes[c] = {});
         const adjacentEmptyTerrainCharsSettlementsCount = {};
@@ -481,24 +484,24 @@ var kingdomBuilderBgaUserscriptData = {
                 }
             }
         });
-        const adjacentCounts = {
-            Grass: objectKeys(adjacentEmptyTerrainCharsGexes['G']).length,
-            Canyon: objectKeys(adjacentEmptyTerrainCharsGexes['C']).length,
-            Desert: objectKeys(adjacentEmptyTerrainCharsGexes['D']).length,
-            Flower: objectKeys(adjacentEmptyTerrainCharsGexes['L']).length,
-            Forest: objectKeys(adjacentEmptyTerrainCharsGexes['R']).length,
-        }
-        const objectivesStats = {
-            Fishers: objectKeys(adjacentEmptyTerrainCharsSettlementsCount['W']).length,
-            Miners: objectKeys(adjacentEmptyTerrainCharsSettlementsCount['M']).length,
-            Workers: objectKeys(adjacentEmptyTerrainCharsSettlementsCount['!']).length
-                + objectKeys(adjacentEmptyTerrainCharsSettlementsCount['0']).length,
-        }
-        return {
-            adjacentCounts: adjacentCounts,
-            objectivesStats: objectivesStats
-            // adjacentCoords: adjacentEmptyTerrainCharsGexes
+
+        stats['adjacentCounts']['Grass'] = objectKeys(adjacentEmptyTerrainCharsGexes['G']).length;
+        stats['adjacentCounts']['Canyon'] = objectKeys(adjacentEmptyTerrainCharsGexes['C']).length;
+        stats['adjacentCounts']['Desert'] = objectKeys(adjacentEmptyTerrainCharsGexes['D']).length;
+        stats['adjacentCounts']['Flower'] = objectKeys(adjacentEmptyTerrainCharsGexes['L']).length;
+        stats['adjacentCounts']['Forest'] = objectKeys(adjacentEmptyTerrainCharsGexes['R']).length;
+
+        stats['objectives']['Fishermen'] = {
+            score: objectKeys(adjacentEmptyTerrainCharsSettlementsCount['W']).length
         };
+        stats['objectives']['Miners'] = {
+            score: objectKeys(adjacentEmptyTerrainCharsSettlementsCount['M']).length
+        };
+        stats['objectives']['Workers'] = {
+            score: objectKeys(adjacentEmptyTerrainCharsSettlementsCount['!']).length
+                + objectKeys(adjacentEmptyTerrainCharsSettlementsCount['0']).length
+        };
+        // stats['adjacentCoords'] = adjacentEmptyTerrainCharsGexes;
     },
 
     renderAsciiMap: function () {
