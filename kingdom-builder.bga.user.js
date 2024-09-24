@@ -28,6 +28,7 @@ const STATISTICS_PANEL_CLASS = "userscript_statistics_panel_class";
 
 const BGA_QUADRANT_CLASS_NAME_PATTERN = /^quadrant-(?<index>\d+)$/;
 const BGA_QUADRANT_FLIPPED_CLASS_NAME = 'flipped';
+const BGA_CELL_CONTAINER_ID_PREFIX = 'cell-container';
 
 const QUADRANT_WIDTH = 10;
 const QUADRANT_HEIGHT = 10;
@@ -299,6 +300,7 @@ var kingdomBuilderBgaUserscriptData = {
     lastShowTerrainPlayerId: 0,
     myPlayerId: -1,
     map: new Canvas(1, 1, ' '),
+    isRenderAsciiMap: true,
 
     init: function () {
         // Check if the site was loaded correctly
@@ -345,7 +347,11 @@ var kingdomBuilderBgaUserscriptData = {
 
         // map
         this.map = this.parseMap();
+        console.log('Map in ASCII format:');
         console.log(this.map.text);
+        if (this.isRenderAsciiMap) {
+            this.renderAsciiMap();
+        }
 
         return this;
     },
@@ -364,14 +370,47 @@ var kingdomBuilderBgaUserscriptData = {
         return map;
     },
 
+    renderAsciiMap: function () {
+        for (let x = 0; x < this.map.width; x++) {
+            for (let y = 0; y < this.map.height; y++) {
+                const char = this.map.getChar(x, y);
+                const cellId = `${BGA_CELL_CONTAINER_ID_PREFIX}-${y}-${x}`;
+                this.dojo.place("<span "
+                    + "style='font-size: 70%; font-weight: bolder; position: absolute; left: 50%; top: 50%; " +
+                    "transform: translate(-50%, -50%); z-index: 10;'"
+                    + ">" + char + "</span>",
+                    cellId,
+                    "last");
+            }
+        }
+    },
+
+    renderAsciiMap: function () {
+        for (let x = 0; x < this.map.width; x++) {
+            for (let y = 0; y < this.map.height; y++) {
+                const char = this.map.getChar(x, y);
+                const cellId = `${BGA_CELL_CONTAINER_ID_PREFIX}-${y}-${x}`;
+                this.dojo.place("<span "
+                    + "style='font-size: 70%; font-weight: bolder; position: absolute; left: 50%; top: 50%; " +
+                    "transform: translate(-50%, -50%); z-index: 10;'"
+                    + ">" + char + "</span>",
+                    cellId,
+                    "last");
+            }
+        }
+    },
+
     quadrantElementToCanvas: function (quadrantElement) {
         const classes = Array.from(quadrantElement.classList);
         const className = classes.find(c => BGA_QUADRANT_CLASS_NAME_PATTERN.test(c));
         const index = parseInt(BGA_QUADRANT_CLASS_NAME_PATTERN.exec(className).groups['index']);
         const number = index + 1;
         const postfix = (number + '').padStart(2, '0');
-        const quadrantCanvas = Maps[`BASE_QUADRANT_${postfix}`];
-        if (quadrantElement.classList.contains(BGA_QUADRANT_FLIPPED_CLASS_NAME)) {
+        const quadrantName = `BASE_QUADRANT_${postfix}`;
+        const quadrantCanvas = Maps[quadrantName];
+        let rotated = quadrantElement.classList.contains(BGA_QUADRANT_FLIPPED_CLASS_NAME);
+        console.log(`Found quadrant ${quadrantName}${rotated ? ' (rotated)' : ''}`);
+        if (rotated) {
             return quadrantCanvas.rotate180();
         } else {
             return quadrantCanvas;
