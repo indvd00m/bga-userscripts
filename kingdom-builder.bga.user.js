@@ -451,7 +451,39 @@ var kingdomBuilderBgaUserscriptData = {
             objectives: {}
         };
         this.calculateAdjacentStats(id, stats);
+        this.calculateHermits(id, stats);
         return stats;
+    },
+
+    calculateHermits: function (id, stats) {
+        let areaNumber = 1;
+        const processedSettlements = {};
+        const playerSettlements = objectValues(this.settlements).filter(s => s.player_id === id);
+        playerSettlements.forEach(s => {
+            if (this.processNextHermit(s, processedSettlements, areaNumber)) {
+                areaNumber++;
+            }
+        });
+
+        stats['objectives']['Hermits'] = {
+            score: areaNumber - 1
+        };
+    },
+
+    processNextHermit: function (settlement, processedSettlements, areaNumber) {
+        const key = `${settlement.x}-${settlement.y}`;
+        if (!processedSettlements[key]) {
+            processedSettlements[key] = areaNumber;
+            const adjacentGexes = Maps.getAdjacentGexes(settlement.x, settlement.y);
+            const playerAdjacentSettlements = adjacentGexes
+                .filter(g => processedSettlements[`${g.x}-${g.y}`] == null)
+                .filter(g => this.settlements[`${g.x}-${g.y}`])
+                .map(g => this.settlements[`${g.x}-${g.y}`])
+                .filter(s => s.player_id === settlement.player_id);
+            playerAdjacentSettlements.forEach(s => this.processNextHermit(s, processedSettlements, areaNumber));
+            return true;
+        }
+        return false;
     },
 
     calculateAdjacentStats: function (id, stats) {
