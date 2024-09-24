@@ -26,6 +26,10 @@ const BGA_START_SETTLEMENTS_COUNT = 40;
 const STATISTICS_PANEL_ID = "userscript_statistics_panel";
 const STATISTICS_PANEL_CLASS = "userscript_statistics_panel_class";
 
+const QUADRANT_WIDTH = 10;
+const QUADRANT_HEIGHT = 10;
+const QUADRANT_PATTERN = new RegExp(`^(.{${QUADRANT_WIDTH}}\n){${QUADRANT_HEIGHT - 1}}.{${QUADRANT_WIDTH}}$`);
+
 class Maps {
 
     /**
@@ -184,6 +188,12 @@ class Maps {
         'GCGGRWLCCC\n' +
         'GGGGRRRRCM\n' +
         'GGGRRRRRMM';
+
+    static validateQuadrant(q) {
+        if (!QUADRANT_PATTERN.test(q)) {
+            throw new Error(`Quadrant ${q} does not match to pattern ${QUADRANT_PATTERN}`)
+        }
+    }
 }
 
 
