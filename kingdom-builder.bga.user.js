@@ -331,6 +331,10 @@ function objectValues(object) {
     return Object.values(object);
 }
 
+function onlyUnique(value, index, array) {
+    return array.indexOf(value) === index;
+}
+
 /**
  *
  * X and Y coordinates at bga adaptation for some reason is inverted!
@@ -453,7 +457,15 @@ var kingdomBuilderBgaUserscriptData = {
         this.calculateAdjacentObjectives(id, stats);
         this.calculateAreasObjectives(id, stats);
         this.calculateFarmers(id, stats);
+        this.calculateDiscoverers(id, stats);
         return stats;
+    },
+
+    calculateDiscoverers: function (id, stats) {
+        const playerSettlements = objectValues(this.settlements).filter(s => s.player_id === id);
+        stats['objectives']['Discoverers'] = {
+            score: playerSettlements.map(s => s.y).filter(onlyUnique).length
+        };
     },
 
     calculateFarmers: function (id, stats) {
