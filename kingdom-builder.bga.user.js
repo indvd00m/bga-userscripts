@@ -26,6 +26,167 @@ const BGA_START_SETTLEMENTS_COUNT = 40;
 const STATISTICS_PANEL_ID = "userscript_statistics_panel";
 const STATISTICS_PANEL_CLASS = "userscript_statistics_panel_class";
 
+class Maps {
+
+    /**
+     * Map legend:
+     * G - grass
+     * C - canyon
+     * D - desert
+     * L - flower
+     * R - forest
+     * W - water
+     * M - mountain
+     * ! - castle
+     * 0 - location place
+     */
+
+    static BASE_QUADRANT_01 =
+        'CDDDDDDDDD\n' +
+        'CCCDDDDDCD\n' +
+        'MMMDMM0DDC\n' +
+        'CMMMMMLLCC\n' +
+        'CCCMMWLLLC\n' +
+        'GCCCMLLWRC\n' +
+        'GG0RLLWLLR\n' +
+        'GGRRLLG!RR\n' +
+        'GGGRRWGGRR\n' +
+        'GGGFWGGRRR';
+
+    static BASE_QUADRANT_02 =
+        'DDCWWRRRGG\n' +
+        'D!CWRRR0GG\n' +
+        'CCCLLLRCLL\n' +
+        'CCLLWDDCCL\n' +
+        'CGGWLLDDCC\n' +
+        'GG0LWLWDDC\n' +
+        'GGGRLLWWDD\n' +
+        'GGRRMWWWDW\n' +
+        'GMRRWWWWWW\n' +
+        'RRRWWWWWWW';
+
+    static BASE_QUADRANT_03 =
+        'GGGRRWGRRR\n' +
+        'GGG!RWGRRR\n' +
+        'GLLGRRWGGR\n' +
+        'LLCGRWL0RR\n' +
+        'LLLCCWLLWW\n' +
+        'MMCGGWWWDD\n' +
+        'CCCMGLLLDD\n' +
+        'CC!DMDLLCC\n' +
+        'WWWDDDDMCC\n' +
+        'WWWWDDDDDC';
+
+    static BASE_QUADRANT_04 =
+        'GGRRRWGRRL\n' +
+        'GLRRWGRRLL\n' +
+        'GLLRWGGLLL\n' +
+        'LLRRWGMLDD\n' +
+        'CL!RWGDDDD\n' +
+        'CCRWGGMMDD\n' +
+        'CCWWWGDDDC\n' +
+        'WWGGWW0CMC\n' +
+        'WD!GWMWCCC\n' +
+        'WDDWWWWCCC';
+
+    static BASE_QUADRANT_05 =
+        'RRRRMMGMCC\n' +
+        'RMRRLGMMMC\n' +
+        'LLRLLLGGWM\n' +
+        'DLLLW0GWMM\n' +
+        'DDDDLWGWCC\n' +
+        'DCDDDWWCGC\n' +
+        'DDCDDWL!GC\n' +
+        'CC0DWLLLGG\n' +
+        'DCWWWRRLGG\n' +
+        'DCCWRRRGGG';
+
+    static BASE_QUADRANT_06 =
+        'DDCWWRRGGG\n' +
+        'DCWLLRRRGG\n' +
+        'DDWLLDD0LG\n' +
+        'WWWLGRLLLL\n' +
+        'WWWWGGGGLL\n' +
+        'WRRWGGCCDC\n' +
+        'WRCRWGCCDC\n' +
+        'W!CLW0DDCW\n' +
+        'WWCLWWWDDW\n' +
+        'WWWWWWWWWW';
+
+    static BASE_QUADRANT_07 =
+        'CCCDDWDDDD\n' +
+        'MMCDDWDDDD\n' +
+        'MMCMMWDD0L\n' +
+        'MCMMWMDLLL\n' +
+        'CCRRWMMCLL\n' +
+        'CRRWCCCMLL\n' +
+        'C0RRWLLLLL\n' +
+        'GGRWG!GLGR\n' +
+        'GGRRWGGGGR\n' +
+        'GGRRWGGGRR';
+
+    static BASE_QUADRANT_08 =
+        'LDDMMDDCCC\n' +
+        'LLDDDMMCCC\n' +
+        'LLLLLLLMMM\n' +
+        'WWL!GGRRMM\n' +
+        'LLWWGGGRRC\n' +
+        'LCCWGRRCCC\n' +
+        'DL0CWRR0CG\n' +
+        'DDCWRRGGGG\n' +
+        'DDDWRRRGGG\n' +
+        'DDWWRRRGGG';
+
+    static BASE_QUADRANT_09 =
+        'WWGGWWWLLL\n' +
+        'WGGRWWWLLL\n' +
+        'WWWGRWWDDL\n' +
+        'RRW!RWDMLL\n' +
+        'RRRWWWDDGG\n' +
+        'RRRRCDGGGG\n' +
+        'RR0CCCGGMG\n' +
+        'RCCCCG0DDG\n' +
+        'CMCCCLLLDD\n' +
+        'CCCLLLLDDD';
+
+    static BASE_QUADRANT_10 =
+        'GGGWWWMCCC\n' +
+        'GGWRDWWWCC\n' +
+        'GMWR0DDDWM\n' +
+        'LWRRCCDLLL\n' +
+        'LWGGCCDDML\n' +
+        'LW!GCCD0LL\n' +
+        'LLWGCCCLLL\n' +
+        'DWGGC!RRLL\n' +
+        'DDWWGRRMRR\n' +
+        'DDDWWRMRRR';
+
+    static BASE_QUADRANT_11 =
+        'CCCWWWWDDD\n' +
+        'CCCW0LDDMD\n' +
+        'CCCCCCLDMD\n' +
+        'CGGCCMLMDD\n' +
+        'CGGGDMMLLL\n' +
+        'RLG0DDLLLL\n' +
+        'RRLLDMLGGL\n' +
+        'RRMLMR!GGG\n' +
+        'RMRRRRWWGG\n' +
+        'RRRRWWWGGG';
+
+    static BASE_QUADRANT_12 =
+        'DDDDDDDGGG\n' +
+        'DDDMDLLLGG\n' +
+        'DMDDDLWLGR\n' +
+        'CLWD!WLRRR\n' +
+        'CLLWWWL0CR\n' +
+        'CLLLWWLCCC\n' +
+        'CCC0RWWLMC\n' +
+        'GCGGRWLCCC\n' +
+        'GGGGRRRRCM\n' +
+        'GGGRRRRRMM';
+}
+
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
