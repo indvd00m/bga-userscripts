@@ -189,6 +189,38 @@ class Maps {
         'GGGGRRRRCM\n' +
         'GGGRRRRRMM';
 
+    static form2x2Map(q1, q2, q3, q4) {
+        this.validateQuadrant(q1);
+        this.validateQuadrant(q2);
+        this.validateQuadrant(q3);
+        this.validateQuadrant(q4);
+
+        const rows1 = q1.split(/\n/);
+        const rows2 = q2.split(/\n/);
+        const rows3 = q3.split(/\n/);
+        const rows4 = q4.split(/\n/);
+
+        let map = '';
+        for (let i = 0; i < QUADRANT_HEIGHT; i++) {
+            map += rows1[i].trimEnd() + rows2[i].trimEnd() + '\n';
+        }
+        for (let i = 0; i < QUADRANT_HEIGHT; i++) {
+            map += rows3[i].trimEnd() + rows4[i].trimEnd() + '\n';
+        }
+        return map.trimEnd();
+    }
+
+    static rotate180(q) {
+        this.validateQuadrant(q);
+
+        const rows = q.split(/\n/);
+        let rotated = '';
+        rows.reverse().forEach(l => {
+            rotated += l.trimEnd().split('').reverse().join('') + '\n';
+        });
+        return rotated.trimEnd();
+    }
+
     static validateQuadrant(q) {
         if (!QUADRANT_PATTERN.test(q)) {
             throw new Error(`Quadrant ${q} does not match to pattern ${QUADRANT_PATTERN}`)
