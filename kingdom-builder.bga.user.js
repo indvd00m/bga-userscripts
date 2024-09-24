@@ -26,6 +26,9 @@ const BGA_START_SETTLEMENTS_COUNT = 40;
 const STATISTICS_PANEL_ID = "userscript_statistics_panel";
 const STATISTICS_PANEL_CLASS = "userscript_statistics_panel_class";
 
+const BGA_QUADRANT_CLASS_NAME_PATTERN = /^quadrant-(?<index>\d+)$/;
+const BGA_QUADRANT_FLIPPED_CLASS_NAME = 'flipped';
+
 const QUADRANT_WIDTH = 10;
 const QUADRANT_HEIGHT = 10;
 
@@ -295,6 +298,7 @@ var kingdomBuilderBgaUserscriptData = {
     terrainsStackSize: 25,
     lastShowTerrainPlayerId: 0,
     myPlayerId: -1,
+    map: new Canvas(1, 1, ' '),
 
     init: function () {
         // Check if the site was loaded correctly
@@ -339,7 +343,39 @@ var kingdomBuilderBgaUserscriptData = {
             this.processFirstTerrains();
         }
 
+        // map
+        this.map = this.parseMap();
+        console.log(this.map.text);
+
         return this;
+    },
+
+    parseMap: function () {
+        const quadrantElements = this.dojo.query('#grid-container .quadrant');
+        if (quadrantElements.length !== 4) {
+            throw new Error(`Unexpected quadrants count: ${quadrantElements.length}`);
+        }
+        const q1 = this.quadrantElementToCanvas(quadrantElements[0]);
+        const q2 = this.quadrantElementToCanvas(quadrantElements[1]);
+        const q3 = this.quadrantElementToCanvas(quadrantElements[2]);
+        const q4 = this.quadrantElementToCanvas(quadrantElements[3]);
+
+        const map = Canvas.merge(q1, q2, q3, q4);
+        return map;
+    },
+
+    quadrantElementToCanvas: function (quadrantElement) {
+        const classes = Array.from(quadrantElement.classList);
+        const className = classes.find(c => BGA_QUADRANT_CLASS_NAME_PATTERN.test(c));
+        const index = parseInt(BGA_QUADRANT_CLASS_NAME_PATTERN.exec(className).groups['index']);
+        const number = index + 1;
+        const postfix = (number + '').padStart(2, '0');
+        const quadrantCanvas = Maps[`BASE_QUADRANT_${postfix}`];
+        if (quadrantElement.classList.contains(BGA_QUADRANT_FLIPPED_CLASS_NAME)) {
+            return quadrantCanvas.rotate180();
+        } else {
+            return quadrantCanvas;
+        }
     },
 
     resetTerrainsStatistics: function () {
