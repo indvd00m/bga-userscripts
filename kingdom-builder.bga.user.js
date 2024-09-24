@@ -146,7 +146,7 @@ class Maps {
         'GG0RLLWLLR\n' +
         'GGRRLLG!RR\n' +
         'GGGRRWGGRR\n' +
-        'GGGFWGGRRR');
+        'GGGRWGGRRR');
 
     static BASE_QUADRANT_02 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'DDCWWRRRGG\n' +
@@ -199,7 +199,7 @@ class Maps {
     static BASE_QUADRANT_06 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'DDCWWRRGGG\n' +
         'DCWLLRRRGG\n' +
-        'DDWLLDD0LG\n' +
+        'DDWLLRR0LG\n' +
         'WWWLGRLLLL\n' +
         'WWWWGGGGLL\n' +
         'WRRWGGCCDC\n' +
