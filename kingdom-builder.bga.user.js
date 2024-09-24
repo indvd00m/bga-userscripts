@@ -323,6 +323,10 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function objectKeys(object) {
+    return Object.keys(object);
+}
+
 var kingdomBuilderBgaUserscriptData = {
     dojo: null,
     game: null,
@@ -416,41 +420,63 @@ var kingdomBuilderBgaUserscriptData = {
 
     calculatePlayerStats: function (id) {
         return {
-            canJumpTo: this.calculatePlayerJumpTerrains(id)
+            stats: this.calculateAdjacentStats(id)
         };
     },
 
-    calculatePlayerJumpTerrains: function (id) {
+    calculateAdjacentStats: function (id) {
         const settlementsByCoord = {};
         this.game.board.settlements.forEach(s => {
             settlementsByCoord[`${s.y}-${s.x}`] = s;
         });
-        const adjacentEmptyTerrainCharsCounts = {};
-        Maps.POSSIBLE_CHARS.split('').forEach(c => adjacentEmptyTerrainCharsCounts[c] = {});
+        const adjacentEmptyTerrainCharsGexes = {};
+        Maps.POSSIBLE_CHARS.split('').forEach(c => adjacentEmptyTerrainCharsGexes[c] = {});
+        const adjacentEmptyTerrainCharsSettlementsCount = {};
+        Maps.POSSIBLE_CHARS.split('').forEach(c => adjacentEmptyTerrainCharsSettlementsCount[c] = {});
         const playerSettlements = this.game.board.settlements.filter(s => s.player_id === id + '');
         playerSettlements.forEach(s => {
             const x = parseInt(s.y);
             const y = parseInt(s.x);
+            const sSettlementCoord = `${x}-${y}`;
             const gexes = Maps.getAdjacentGexes(x, y);
             for (let i = 0; i < gexes.length; i++) {
                 const gex = gexes[i];
                 if (gex.x < 0 || gex.x >= this.map.width || gex.y < 0 || gex.y >= this.map.height) {
                     continue;
                 }
-                const sCoord = `${gex.x}-${gex.y}`;
-                if (settlementsByCoord[sCoord] == null) {
+                const sAdjCoord = `${gex.x}-${gex.y}`;
+                if (settlementsByCoord[sAdjCoord] == null) {
                     const c = this.map.getChar(gex.x, gex.y);
-                    if (adjacentEmptyTerrainCharsCounts[c][sCoord] == null) {
-                        adjacentEmptyTerrainCharsCounts[c][sCoord] = 1;
+                    if (adjacentEmptyTerrainCharsGexes[c][sAdjCoord] == null) {
+                        adjacentEmptyTerrainCharsGexes[c][sAdjCoord] = 1;
                     } else {
-                        adjacentEmptyTerrainCharsCounts[c][sCoord]++;
+                        adjacentEmptyTerrainCharsGexes[c][sAdjCoord]++;
+                    }
+                    if (adjacentEmptyTerrainCharsSettlementsCount[c][sSettlementCoord] == null) {
+                        adjacentEmptyTerrainCharsSettlementsCount[c][sSettlementCoord] = 1;
+                    } else {
+                        adjacentEmptyTerrainCharsSettlementsCount[c][sSettlementCoord]++;
                     }
                 }
             }
         });
+        const adjacentCounts = {
+            Grass: objectKeys(adjacentEmptyTerrainCharsGexes['G']).length,
+            Canyon: objectKeys(adjacentEmptyTerrainCharsGexes['C']).length,
+            Desert: objectKeys(adjacentEmptyTerrainCharsGexes['D']).length,
+            Flower: objectKeys(adjacentEmptyTerrainCharsGexes['L']).length,
+            Forest: objectKeys(adjacentEmptyTerrainCharsGexes['R']).length,
+        }
+        const objectivesStats = {
+            Fishers: objectKeys(adjacentEmptyTerrainCharsSettlementsCount['W']).length,
+            Miners: objectKeys(adjacentEmptyTerrainCharsSettlementsCount['M']).length,
+            Workers: objectKeys(adjacentEmptyTerrainCharsSettlementsCount['!']).length
+                + objectKeys(adjacentEmptyTerrainCharsSettlementsCount['0']).length,
+        }
         return {
-            test: adjacentEmptyTerrainCharsCounts,
-            terrains: this.terrains
+            adjacentCounts: adjacentCounts,
+            objectivesStats: objectivesStats
+            // adjacentCoords: adjacentEmptyTerrainCharsGexes
         };
     },
 
@@ -730,7 +756,7 @@ var kingdomBuilderBgaUserscriptData = {
         this.game.fplayers.forEach(p => {
             const id = parseInt(p.id);
             var html = "<div>";
-            html += `Stats for user ${id}: ${JSON.stringify(this.playersStats[id + ''])}`;
+            html += `Stats for user ${id}: ${JSON.stringify(this.playersStats[id + ''], null, 2)}`;
             this.dojo.place(html, USERSCRIPT_PLAYER_BOARD_ID_PREFIX + id, "only");
         });
     }
