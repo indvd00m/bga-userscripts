@@ -450,8 +450,8 @@ var kingdomBuilderBgaUserscriptData = {
             adjacentCounts: {},
             objectives: {}
         };
-        this.calculateAdjacentStats(id, stats);
-        this.calculateHermits(id, stats);
+        this.calculateAdjacentObjectives(id, stats);
+        this.calculateAreasObjectives(id, stats);
         this.calculateFarmers(id, stats);
         return stats;
     },
@@ -476,7 +476,7 @@ var kingdomBuilderBgaUserscriptData = {
         };
     },
 
-    calculateHermits: function (id, stats) {
+    calculateAreasObjectives: function (id, stats) {
         let areas = [{
             number: 1,
             adjacentLocations: {},
@@ -485,7 +485,7 @@ var kingdomBuilderBgaUserscriptData = {
         const processedSettlements = {};
         const playerSettlements = objectValues(this.settlements).filter(s => s.player_id === id);
         playerSettlements.forEach(s => {
-            if (this.processNextHermit(s, processedSettlements, areas[areas.length - 1])) {
+            if (this.processNextArea(s, processedSettlements, areas[areas.length - 1])) {
                 const nextNumber = areas.length + 1;
                 areas.push({
                     number: nextNumber,
@@ -497,10 +497,12 @@ var kingdomBuilderBgaUserscriptData = {
 
         areas = areas.filter(a => a.size > 0);
 
+        // hermits
         stats['objectives']['Hermits'] = {
             score: areas.length
         };
 
+        // merchants
         let merchantsScore = 0;
         const processedLocations = {};
         areas.forEach(a => {
@@ -512,9 +514,16 @@ var kingdomBuilderBgaUserscriptData = {
         stats['objectives']['Merchants'] = {
             score: merchantsScore
         };
+
+        // citizens
+        const maxAreaSettlements = Math.max.apply(null, areas.map(a => a.size));
+        stats['objectives']['Citizens'] = {
+            score: Math.floor(maxAreaSettlements / 2),
+            settlements: maxAreaSettlements
+        };
     },
 
-    processNextHermit: function (settlement, processedSettlements, area) {
+    processNextArea: function (settlement, processedSettlements, area) {
         const key = `${settlement.x}-${settlement.y}`;
         if (!processedSettlements[key]) {
             processedSettlements[key] = area;
@@ -532,13 +541,13 @@ var kingdomBuilderBgaUserscriptData = {
                 .filter(g => this.settlements[`${g.x}-${g.y}`])
                 .map(g => this.settlements[`${g.x}-${g.y}`])
                 .filter(s => s.player_id === settlement.player_id);
-            playerAdjacentSettlements.forEach(s => this.processNextHermit(s, processedSettlements, area));
+            playerAdjacentSettlements.forEach(s => this.processNextArea(s, processedSettlements, area));
             return true;
         }
         return false;
     },
 
-    calculateAdjacentStats: function (id, stats) {
+    calculateAdjacentObjectives: function (id, stats) {
         const adjacentEmptyTerrainCharsGexes = {};
         Maps.POSSIBLE_CHARS.split('').forEach(c => adjacentEmptyTerrainCharsGexes[c] = {});
         const adjacentEmptyTerrainCharsSettlementsCount = {};
