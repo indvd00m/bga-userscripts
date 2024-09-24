@@ -35,6 +35,16 @@ const BGA_CELL_CONTAINER_ID_PREFIX = 'cell-container';
 const QUADRANT_WIDTH = 10;
 const QUADRANT_HEIGHT = 10;
 
+class Coord {
+    x = 0;
+    y = 0;
+
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
 class Canvas {
 
     #width = -1;
@@ -137,6 +147,8 @@ class Maps {
      * ! - castle
      * 0 - location place
      */
+
+    static POSSIBLE_CHARS = 'GCDLRWM!0';
 
     static BASE_QUADRANT_01 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
         'CDDDDDDDDD\n' +
@@ -282,6 +294,28 @@ class Maps {
         'GGGGRRRRCM\n' +
         'GGGRRRRRMM');
 
+    static getAdjacentGexes(x, y) {
+        if (y % 2 === 0) {
+            return [
+                new Coord(x - 1, y),
+                new Coord(x + 1, y),
+                new Coord(x, y - 1),
+                new Coord(x, y + 1),
+                new Coord(x - 1, y - 1),
+                new Coord(x - 1, y + 1)
+            ];
+        } else {
+            return [
+                new Coord(x - 1, y),
+                new Coord(x + 1, y),
+                new Coord(x, y - 1),
+                new Coord(x, y + 1),
+                new Coord(x + 1, y - 1),
+                new Coord(x + 1, y + 1)
+            ];
+        }
+    }
+
 }
 
 
@@ -382,23 +416,37 @@ var kingdomBuilderBgaUserscriptData = {
 
     calculatePlayerStats: function (id) {
         return {
-            test: 5
+            canJumpTo: this.calculatePlayerJumpTerrains(id)
         };
     },
 
-    renderAsciiMap: function () {
-        for (let x = 0; x < this.map.width; x++) {
-            for (let y = 0; y < this.map.height; y++) {
-                const char = this.map.getChar(x, y);
-                const cellId = `${BGA_CELL_CONTAINER_ID_PREFIX}-${y}-${x}`;
-                this.dojo.place("<span "
-                    + "style='font-size: 70%; font-weight: bolder; position: absolute; left: 50%; top: 50%; " +
-                    "transform: translate(-50%, -50%); z-index: 10;'"
-                    + ">" + char + "</span>",
-                    cellId,
-                    "last");
+    calculatePlayerJumpTerrains: function (id) {
+        const settlementsByCoord = {};
+        this.game.board.settlements.forEach(s => {
+            settlementsByCoord[`${s.y}-${s.x}`] = s;
+        });
+        const adjacentEmptyTerrainCharsCounts = {};
+        Maps.POSSIBLE_CHARS.split('').forEach(c => adjacentEmptyTerrainCharsCounts[c] = 0);
+        const playerSettlements = this.game.board.settlements.filter(s => s.player_id === id + '');
+        playerSettlements.forEach(s => {
+            const x = parseInt(s.y);
+            const y = parseInt(s.x);
+            const gexes = Maps.getAdjacentGexes(x, y);
+            for (let i = 0; i < gexes.length; i++) {
+                const gex = gexes[i];
+                if (gex.x < 0 || gex.x >= this.map.width || gex.y < 0 || gex.y >= this.map.height) {
+                    continue;
+                }
+                if (settlementsByCoord[`${gex.x}-${gex.y}`] == null) {
+                    const c = this.map.getChar(gex.x, gex.y);
+                    adjacentEmptyTerrainCharsCounts[c]++;
+                }
             }
-        }
+        });
+        return {
+            test: adjacentEmptyTerrainCharsCounts,
+            terrains: this.terrains
+        };
     },
 
     renderAsciiMap: function () {
