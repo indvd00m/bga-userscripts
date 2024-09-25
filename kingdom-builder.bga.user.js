@@ -1032,7 +1032,7 @@ var kingdomBuilderBgaUserscriptData = {
             html += ` Stack now contains${this.logIsFull ? '' : ' at least'} cards: `;
         }
 
-        html += `<div style="width: 100%; height: 80px; position: relative;">`;
+        html += `<div style="width: 100%; height: 80px; margin: 2.5px; position: relative;">`;
         for (let i = 0; i < this.terrains.length; i++) {
             const terrain = this.terrains[i];
             const remainsCount = 5 - this.terrainsPlayed[terrain];
@@ -1071,7 +1071,7 @@ var kingdomBuilderBgaUserscriptData = {
             }
 
             // objectives
-            html += `<div style="width: 100%; height: 35px; position: relative;">`;
+            html += `<div style="width: 100%; height: 35px; margin: 2.5px; position: relative;">`;
             const objectiveKeys = objectKeys(stats.objectives);
             for (let i = 0; i < objectiveKeys.length; i++) {
                 const objectiveName = objectiveKeys[i];
@@ -1108,7 +1108,7 @@ var kingdomBuilderBgaUserscriptData = {
             html += `</div>`;
 
             // jumping
-            html += `<div style="width: 100%; height: 60px; position: relative;">`;
+            html += `<div style="width: 100%; height: 60px; margin: 2.5px; position: relative;">`;
             for (let i = 0; i < this.terrains.length; i++) {
                 const terrain = this.terrains[i];
                 const adjacentCount = stats.adjacentCounts[terrain];
