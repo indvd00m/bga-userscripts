@@ -512,6 +512,7 @@ var kingdomBuilderBgaUserscriptData = {
         let areas = [{
             number: 1,
             adjacentLocations: {},
+            adjacentCastles: {},
             size: 0,
         }];
         const processedSettlements = {};
@@ -522,6 +523,7 @@ var kingdomBuilderBgaUserscriptData = {
                 areas.push({
                     number: nextNumber,
                     adjacentLocations: {},
+                    adjacentCastles: {},
                     size: 0,
                 });
             }
@@ -542,9 +544,15 @@ var kingdomBuilderBgaUserscriptData = {
             merchantsScore += locationKeys.length > 1 ? locationKeys.length * 4 : 0;
             locationKeys.forEach(l => processedLocations[l] = l);
         });
-
         stats['objectives']['Merchants'] = {
             score: merchantsScore
+        };
+
+        // castles
+        const allAdjacentCastles = {};
+        areas.flatMap(a => objectKeys(a.adjacentCastles)).forEach(key => allAdjacentCastles[key] = key);
+        stats['objectives']['Castles'] = {
+            score: objectKeys(allAdjacentCastles).length * 3
         };
 
         // citizens
@@ -564,6 +572,9 @@ var kingdomBuilderBgaUserscriptData = {
                 .filter(g => g.x >= 0 && g.y >= 0 && g.x < QUADRANT_WIDTH * 2 && g.y < QUADRANT_HEIGHT * 2);
             adjacentGexes.forEach(g => {
                 const char = this.map.getChar(g.x, g.y);
+                if (char === '!') {
+                    area.adjacentCastles[`${g.x}-${g.y}`] = char;
+                }
                 if (char === '0' || char === '!') {
                     area.adjacentLocations[`${g.x}-${g.y}`] = char;
                 }
