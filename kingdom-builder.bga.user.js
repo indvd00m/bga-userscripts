@@ -374,6 +374,8 @@ var kingdomBuilderBgaUserscriptData = {
         9: 'Lords',
         10: 'Farmers'
     },
+    terrainsImage: '',
+    showTextTerrainStat: false,
 
     init: function () {
         // Check if the site was loaded correctly
@@ -400,6 +402,9 @@ var kingdomBuilderBgaUserscriptData = {
             this.myPlayerId = parseInt(myPlayer.id);
         }
         this.resetTerrainsStatistics();
+
+        // images
+        this.detectImagesPaths();
 
         // Connect event handlers to follow game progress
         this.dojo.subscribe("showTerrain", this, "processShowTerrain");
@@ -443,6 +448,11 @@ var kingdomBuilderBgaUserscriptData = {
         this.renderPlayerUserscriptPanels();
 
         return this;
+    },
+
+    detectImagesPaths: function () {
+        this.terrainsImage = objectKeys(window.parent.gameui.images_loading_status)
+            .find(p => p.endsWith('/terrains.png'));
     },
 
     recalculateAllPlayerStats: function () {
@@ -1001,15 +1011,42 @@ var kingdomBuilderBgaUserscriptData = {
     renderStatisticsPanel: function () {
         var html = "<div class='" + STATISTICS_PANEL_CLASS + "'>";
         html += `Found ${this.logIsFull ? 'full' : 'incomplete'} log with ${this.turnsCount} turns `;
-        html += `and ${this.terrainsPlayedCount} played terrain cards`;
-        this.terrains.slice()
-            .sort((t1, t2) => this.terrainsPlayed[t1] - this.terrainsPlayed[t2])
-            .forEach(terrain => {
-                const probability = (Math.round(this.terrainsProbability[terrain] * 100 * 100) / 100).toFixed(0)
-                html += "<div>"
-                    + `${terrain} played ${this.terrainsPlayed[terrain]} times, probability: ${probability}%`
-                    + "</div>";
-            })
+        html += `and ${this.terrainsPlayedCount} played terrain cards.`;
+        if (this.showTextTerrainStat) {
+            this.terrains.slice()
+                .sort((t1, t2) => this.terrainsPlayed[t1] - this.terrainsPlayed[t2])
+                .forEach(terrain => {
+                    const probability = (Math.round(this.terrainsProbability[terrain] * 100 * 100) / 100).toFixed(0)
+                    html += "<div>"
+                        + `${terrain} played ${this.terrainsPlayed[terrain]} times, probability: ${probability}%`
+                        + "</div>";
+                })
+        } else {
+            html += ` Stack now contains${this.logIsFull ? '' : ' at least'} cards: `;
+        }
+
+        html += `<div style="width: 100%; height: 80px; position: relative;">`;
+        for (let i = 0; i < this.terrains.length; i++) {
+            const terrain = this.terrains[i];
+            const remainsCount = 5 - this.terrainsPlayed[terrain];
+            const probability = (Math.round(this.terrainsProbability[terrain] * 100 * 100) / 100).toFixed(0)
+            html += `<div style="position: absolute; left: ${20 * i}%; top: 0%; width: 20%; height: 100%; `;
+            html += `background-image: url(${this.terrainsImage}); background-repeat: no-repeat; background-size: 600%; `;
+            html += `background-position: ${(i + 1) * 20}%;`;
+            if (remainsCount <= 0) {
+                html += `filter: grayscale(100%);`;
+            }
+            html += `">`;
+            html += `<span style="font-size: 200%; font-weight: bolder; position: absolute; left: 50%; top: 50%; `;
+            html += `transform: translate(-50%, -50%); text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white;`;
+            html += `">${remainsCount}</span>`;
+            html += `<span style="font-size: 80%; position: absolute; left: 50%; top: 25%; `;
+            html += `transform: translate(-50%, -50%); text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white;`;
+            html += `">${probability}%</span>`;
+            html += `</div>`;
+        }
+        html += `</div>`;
+
         this.dojo.place(html, STATISTICS_PANEL_ID, "only");
     },
 
