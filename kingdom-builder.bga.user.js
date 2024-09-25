@@ -537,7 +537,8 @@ var kingdomBuilderBgaUserscriptData = {
             maxLineCount = Math.max.apply(null, linesCount);
         }
         stats['objectives']['Knights'] = {
-            score: maxLineCount * 2
+            score: maxLineCount * 2,
+            maxLineSettlementsCount: maxLineCount
         };
     },
 
@@ -611,8 +612,10 @@ var kingdomBuilderBgaUserscriptData = {
         // castle
         const allAdjacentCastles = {};
         areas.flatMap(a => objectKeys(a.adjacentCastles)).forEach(key => allAdjacentCastles[key] = key);
+        let adjacentCastlesCount = objectKeys(allAdjacentCastles).length;
         stats['objectives']['Castles'] = {
-            score: objectKeys(allAdjacentCastles).length * 3
+            score: adjacentCastlesCount * 3,
+            castlesCount: adjacentCastlesCount
         };
 
         // citizens
@@ -1142,6 +1145,10 @@ var kingdomBuilderBgaUserscriptData = {
                     info = JSON.stringify(objectiveStats.areaSettlements);
                 } else if (objectiveName === 'Citizens') {
                     info = JSON.stringify(objectiveStats.settlements);
+                } else if (objectiveName === 'Castles') {
+                    info = JSON.stringify(objectiveStats.castlesCount);
+                } else if (objectiveName === 'Knights') {
+                    info = JSON.stringify(objectiveStats.maxLineSettlementsCount);
                 }
                 if (info) {
                     html += `<span style="font-size: 90%; position: absolute; right: 1%; top: 1%; `;
