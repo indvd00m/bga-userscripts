@@ -5,6 +5,8 @@
 // @license Creative Commons Attribution 3.0 Unported
 // @version 0.3.1-dev
 // @match https://boardgamearena.com/*/kingdombuilder*
+// @match https://*.boardgamearena.com/*/kingdombuilder*
+// @grant none
 // ==/UserScript==
 
 // TODO: @updateUrl
@@ -346,6 +348,8 @@ var kingdomBuilderBgaUserscriptData = {
     game: null,
     settlements: {},
     terrains: ['Grass', 'Canyon', 'Desert', 'Flower', 'Forest'],
+    // unfortunetally we do not have language independent terrain name in actions history
+    terrainsRu: ['Трава', 'Каньон', 'Пустыня', 'Цвет', 'Лес'],
     terrainsPlayed: {},
     terrainsProbability: {},
     terrainsPlayedCount: 0,
@@ -357,6 +361,19 @@ var kingdomBuilderBgaUserscriptData = {
     map: new Canvas(1, 1, ' '),
     isRenderAsciiMap: true,
     playersStats: {},
+    objectivesIdToName: {
+        0: 'Castles',
+        1: 'Fishermen',
+        2: 'Merchants',
+        3: 'Discoverers',
+        4: 'Hermits',
+        5: 'Citizens',
+        6: 'Miners',
+        7: 'Workers',
+        8: 'Knights',
+        9: 'Lords',
+        10: 'Farmers'
+    },
 
     init: function () {
         // Check if the site was loaded correctly
@@ -455,10 +472,10 @@ var kingdomBuilderBgaUserscriptData = {
             objectives: {}
         };
         const objectiveNames = {};
-        this.game.objectives.map(o => o.name).forEach(n => objectiveNames[n] = n);
+        this.game.objectives.map(o => this.objectivesIdToName[o.id]).forEach(n => objectiveNames[n] = n);
         this.calculateAdjacentObjectives(id, stats);
         this.calculateKnights(id, stats);
-        if (objectiveNames['Hermits'] || objectiveNames['Merchants'] || objectiveNames['Castle'] || objectiveNames['Citizens']) {
+        if (objectiveNames['Hermits'] || objectiveNames['Merchants'] || objectiveNames['Castles'] || objectiveNames['Citizens']) {
             this.calculateAreasObjectives(id, stats);
         }
         if (objectiveNames['Farmers']) {
@@ -562,7 +579,7 @@ var kingdomBuilderBgaUserscriptData = {
         // castle
         const allAdjacentCastles = {};
         areas.flatMap(a => objectKeys(a.adjacentCastles)).forEach(key => allAdjacentCastles[key] = key);
-        stats['objectives']['Castle'] = {
+        stats['objectives']['Castles'] = {
             score: objectKeys(allAdjacentCastles).length * 3
         };
 
@@ -888,11 +905,22 @@ var kingdomBuilderBgaUserscriptData = {
                 console.log(`detected ${terrainsCount} terrain: ${terrainName}`);
                 openedTerrains.push(terrainName);
             } else if (mandatoryAction && !terrainDetected) {
-                terrainDetected = true;
-                terrainsCount++;
-                const terrainName = this.terrains.find(t => args.terrainName.toLowerCase().includes(t.toLowerCase()));
-                console.log(`detected ${terrainsCount} terrain: ${terrainName}`);
-                openedTerrains.push(terrainName);
+                let terrainName = this.terrains.find(t => args.terrainName.toLowerCase().includes(t.toLowerCase()));
+                if (terrainName == null) {
+                    // unfortunetally we do not have language independent terrain name in actions history
+                    const index = this.terrainsRu.findIndex(t => args.terrainName.toLowerCase().includes(t.toLowerCase()));
+                    if (index !== -1) {
+                        terrainName = this.terrains[index];
+                    }
+                }
+                if (terrainName != null) {
+                    terrainDetected = true;
+                    terrainsCount++;
+                    console.log(`detected ${terrainsCount} terrain: ${terrainName}`);
+                    openedTerrains.push(terrainName);
+                } else {
+                    console.log(`can not detect terrain: ${args.terrainName}`);
+                }
             }
             console.log(`${mandatoryAction ? '!' : ' '}${action.move_id} player ${args.player_id} ${args.originalType} ${args.terrainName} ${args.location_name}`);
             if (args.player_id) {
@@ -936,6 +964,10 @@ var kingdomBuilderBgaUserscriptData = {
                         case 'harbor':
                         case 'paddock':
                         case 'barn':
+                        // we do not have some language independent location name!
+                        case 'Гавань':
+                        case 'Загон':
+                        case 'Сарай':
                             return true;
                         default:
                             return false;

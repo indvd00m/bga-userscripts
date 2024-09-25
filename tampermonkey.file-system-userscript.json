@@ -5,6 +5,7 @@
 // @license Creative Commons Attribution 3.0 Unported
 // @version 0.0.1
 // @match https://boardgamearena.com/*/kingdombuilder*
+// @match https://*.boardgamearena.com/*/kingdombuilder*
 // @require file:///Users/indvd00m/dev/bga-userscripts/kingdom-builder.bga.user.js
 // ==/UserScript==
 
