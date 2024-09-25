@@ -24,7 +24,9 @@ console.log('I am an example userscript for kingdom builder from file system');
 const BGA_PLAYER_BOARDS_ID = "player_boards";
 const BGA_PLAYER_BOARD_CLASS = "player-board";
 const BGA_PLAYER_BOARD_ID_PREFIX = "overall_player_board_";
+const BGA_PLAYER_SCORE_ID_PREFIX = "player_score_";
 const USERSCRIPT_PLAYER_BOARD_ID_PREFIX = "userscript_player_board_";
+const USERSCRIPT_PLAYER_SCORE_ID_PREFIX = "userscript_player_score_";
 const BGA_TERRAIN_BACK = "back";
 const BGA_START_SETTLEMENTS_COUNT = 40;
 const STATISTICS_PANEL_ID = "userscript_statistics_panel";
@@ -337,6 +339,10 @@ function onlyUnique(value, index, array) {
     return array.indexOf(value) === index;
 }
 
+function add(accumulator, a) {
+    return accumulator + a;
+}
+
 /**
  *
  * X and Y coordinates at bga adaptation for some reason is inverted!
@@ -361,6 +367,7 @@ var kingdomBuilderBgaUserscriptData = {
     map: new Canvas(1, 1, ' '),
     isRenderAsciiMap: false,
     playersStats: {},
+    playersServerStats: {},
     objectivesIdToName: {
         0: 'Castles',
         1: 'Fishermen',
@@ -413,6 +420,7 @@ var kingdomBuilderBgaUserscriptData = {
         this.dojo.subscribe("build", this, "processBuild");
         this.dojo.subscribe("move", this, "processMove");
         this.dojo.subscribe("cancel", this, "processCancel");
+        this.dojo.subscribe("updateScores", this, "processUpdateScores");
 
 
         this.renderContainers();
@@ -446,6 +454,13 @@ var kingdomBuilderBgaUserscriptData = {
         }
 
         // players stats
+        objectKeys(this.game.players).forEach(sId => {
+            let id = parseInt(sId);
+            if (this.playersServerStats[id] == null) {
+                this.playersServerStats[id] = {};
+            }
+            this.playersServerStats[id].score = parseInt(this.game.players[sId].score);
+        })
         this.recalculateAllPlayerStats();
         this.renderPlayerUserscriptPanels();
 
@@ -483,7 +498,8 @@ var kingdomBuilderBgaUserscriptData = {
     calculatePlayerStats: function (id) {
         const stats = {
             adjacentCounts: {},
-            objectives: {}
+            objectives: {},
+            score: 0
         };
         const objectiveNames = {};
         this.game.objectives.map(o => this.objectivesIdToName[o.id]).forEach(n => objectiveNames[n] = n);
@@ -501,6 +517,8 @@ var kingdomBuilderBgaUserscriptData = {
 
         const toRemoveNames = objectKeys(stats.objectives).filter(n => !objectiveNames[n]);
         toRemoveNames.forEach(n => delete stats.objectives[n]);
+
+        stats.score = objectValues(stats.objectives).map(o => o.score).reduce(add, 0);
         return stats;
     },
 
@@ -794,6 +812,25 @@ var kingdomBuilderBgaUserscriptData = {
         this.processTerrain(terrainName);
     },
 
+    processUpdateScores: function (data) {
+        console.log("updateScores", JSON.stringify(data));
+
+        // Input check
+        if (!data || !data.args || !data.args.scores) {
+            return;
+        }
+
+        objectKeys(data.args.scores).forEach(sId => {
+            let id = parseInt(sId);
+            if (this.playersServerStats[id] == null) {
+                this.playersServerStats[id] = {};
+            }
+            this.playersServerStats[id].score = parseInt(data.args.scores[sId]);
+        })
+
+        this.renderPlayerUserscriptPanels();
+    },
+
     processBuild: function (data) {
         console.log("build", JSON.stringify(data));
 
@@ -1012,6 +1049,9 @@ var kingdomBuilderBgaUserscriptData = {
                 + "></div>",
                 BGA_PLAYER_BOARD_ID_PREFIX + id,
                 "last");
+            this.dojo.place("<span id='" + (USERSCRIPT_PLAYER_SCORE_ID_PREFIX + id) + "'>?</span>",
+                BGA_PLAYER_SCORE_ID_PREFIX + id,
+                "after");
         })
     },
 
@@ -1131,6 +1171,17 @@ var kingdomBuilderBgaUserscriptData = {
 
             html += `</div>`;
             this.dojo.place(html, USERSCRIPT_PLAYER_BOARD_ID_PREFIX + id, "only");
+
+            // score
+            const serverScore = this.playersServerStats[id].score;
+            const diff = stats.score - serverScore;
+            if (diff !== 0) {
+                this.dojo.place(
+                    `<span style="color: ${diff > 0 ? 'green' : 'red'};"> ${diff > 0 ? '+' : '-'}${diff}</span>`
+                    , USERSCRIPT_PLAYER_SCORE_ID_PREFIX + id, "only");
+            } else {
+                this.dojo.place('<span></span>', USERSCRIPT_PLAYER_SCORE_ID_PREFIX + id, "only");
+            }
         });
     }
 
