@@ -375,7 +375,9 @@ var kingdomBuilderBgaUserscriptData = {
         10: 'Farmers'
     },
     terrainsImage: '',
+    objectivesImage: '',
     showTextTerrainStat: false,
+    showTextPlayerStat: false,
 
     init: function () {
         // Check if the site was loaded correctly
@@ -453,6 +455,8 @@ var kingdomBuilderBgaUserscriptData = {
     detectImagesPaths: function () {
         this.terrainsImage = objectKeys(window.parent.gameui.images_loading_status)
             .find(p => p.endsWith('/terrains.png'));
+        this.objectivesImage = objectKeys(window.parent.gameui.images_loading_status)
+            .find(p => p.endsWith('/card-backgrounds.jpg'));
     },
 
     recalculateAllPlayerStats: function () {
@@ -1056,8 +1060,73 @@ var kingdomBuilderBgaUserscriptData = {
     renderPlayerUserscriptPanels: function () {
         this.game.fplayers.forEach(p => {
             const id = parseInt(p.id);
-            var html = "<div>";
-            html += `Stats for user ${id}: ${JSON.stringify(this.playersStats[id + ''], null, 2)}`;
+            const stats = this.playersStats[id + ''];
+
+            let html = '';
+
+            if (this.showTextPlayerStat) {
+                html += "<div>";
+                html += `Stats for user ${id}: ${JSON.stringify(stats, null, 2)}`;
+                html += `</div>`;
+            }
+
+            // objectives
+            html += `<div style="width: 100%; height: 35px; position: relative;">`;
+            const objectiveKeys = objectKeys(stats.objectives);
+            for (let i = 0; i < objectiveKeys.length; i++) {
+                const objectiveName = objectiveKeys[i];
+                const objectiveStats = stats.objectives[objectiveName];
+                const bgaId = parseInt(objectKeys(this.objectivesIdToName)
+                    .find(k => this.objectivesIdToName[k] === objectiveName));
+                const score = objectiveStats.score;
+                const widthPercent = 100 / objectiveKeys.length;
+                const positionX = (bgaId % 7) * (100 / 6);
+                const positionY = bgaId < 7 ? 0 : 100;
+                html += `<div style="position: absolute; left: ${widthPercent * i + widthPercent * 0.1}%; top: 0%; width: ${widthPercent * 0.80}%; height: 100%; `;
+                html += `background-image: url(${this.objectivesImage}); background-repeat: no-repeat; background-size: 700% 200%; `;
+                html += `background-position: ${positionX}% ${positionY}%; opacity: 80%;`;
+                if (score <= 0) {
+                    html += `filter: grayscale(100%);`;
+                }
+                html += `">`;
+                html += `<span style="font-size: 130%; font-weight: bolder; position: absolute; right: 1%; bottom: 1%; `;
+                html += `text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white;`;
+                html += `">${score}</span>`;
+                let info = '';
+                if (objectiveName === 'Farmers') {
+                    info = JSON.stringify(objectiveStats.areaSettlements);
+                } else if (objectiveName === 'Citizens') {
+                    info = JSON.stringify(objectiveStats.settlements);
+                }
+                if (info) {
+                    html += `<span style="font-size: 90%; position: absolute; right: 1%; top: 1%; `;
+                    html += `text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white;`;
+                    html += `">${info}</span>`;
+                }
+                html += `</div>`;
+            }
+            html += `</div>`;
+
+            // jumping
+            html += `<div style="width: 100%; height: 60px; position: relative;">`;
+            for (let i = 0; i < this.terrains.length; i++) {
+                const terrain = this.terrains[i];
+                const adjacentCount = stats.adjacentCounts[terrain];
+                html += `<div style="position: absolute; left: ${20 * i + 20 * 0.0375}%; top: 0%; width: ${20 * 0.75}%; height: 100%; `;
+                html += `background-image: url(${this.terrainsImage}); background-repeat: no-repeat; background-size: 600%; `;
+                html += `background-position: ${(i + 1) * 20}%;`;
+                if (adjacentCount > 0) {
+                    html += `filter: grayscale(100%);`;
+                }
+                html += `">`;
+                html += `<span style="font-size: 130%; font-weight: bolder; position: absolute; left: 50%; top: 50%; `;
+                html += `transform: translate(-50%, -50%); text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white;`;
+                html += `">${adjacentCount}${adjacentCount > 0 ? '+' : ''}</span>`;
+                html += `</div>`;
+            }
+            html += `</div>`;
+
+            html += `</div>`;
             this.dojo.place(html, USERSCRIPT_PLAYER_BOARD_ID_PREFIX + id, "only");
         });
     }
