@@ -454,11 +454,22 @@ var kingdomBuilderBgaUserscriptData = {
             adjacentCounts: {},
             objectives: {}
         };
+        const objectiveNames = {};
+        this.game.objectives.map(o => o.name).forEach(n => objectiveNames[n] = n);
         this.calculateAdjacentObjectives(id, stats);
-        this.calculateAreasObjectives(id, stats);
-        this.calculateFarmers(id, stats);
-        this.calculateDiscoverers(id, stats);
         this.calculateKnights(id, stats);
+        if (objectiveNames['Hermits'] || objectiveNames['Merchants'] || objectiveNames['Castle'] || objectiveNames['Citizens']) {
+            this.calculateAreasObjectives(id, stats);
+        }
+        if (objectiveNames['Farmers']) {
+            this.calculateFarmers(id, stats);
+        }
+        if (objectiveNames['Discoverers']) {
+            this.calculateDiscoverers(id, stats);
+        }
+
+        const toRemoveNames = objectKeys(stats.objectives).filter(n => !objectiveNames[n]);
+        toRemoveNames.forEach(n => delete stats.objectives[n]);
         return stats;
     },
 
@@ -548,10 +559,10 @@ var kingdomBuilderBgaUserscriptData = {
             score: merchantsScore
         };
 
-        // castles
+        // castle
         const allAdjacentCastles = {};
         areas.flatMap(a => objectKeys(a.adjacentCastles)).forEach(key => allAdjacentCastles[key] = key);
-        stats['objectives']['Castles'] = {
+        stats['objectives']['Castle'] = {
             score: objectKeys(allAdjacentCastles).length * 3
         };
 
