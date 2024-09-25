@@ -1029,7 +1029,7 @@ var kingdomBuilderBgaUserscriptData = {
                         + "</div>";
                 })
         } else {
-            html += ` Stack now contains${this.logIsFull ? '' : ' at least'} cards: `;
+            html += ` Stack now contains${this.logIsFull ? '' : ' no more than'} cards: `;
         }
 
         html += `<div style="width: 100%; height: 80px; margin: 2.5px; position: relative;">`;
@@ -1046,7 +1046,10 @@ var kingdomBuilderBgaUserscriptData = {
             html += `">`;
             html += `<span style="font-size: 200%; font-weight: bolder; position: absolute; left: 50%; top: 50%; `;
             html += `transform: translate(-50%, -50%); text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white;`;
-            html += `">${remainsCount}</span>`;
+            if (!this.logIsFull) {
+                html += `color: gray;`;
+            }
+            html += `">${remainsCount}${this.logIsFull ? '' : '-'}</span>`;
             html += `<span style="font-size: 80%; position: absolute; left: 50%; top: 25%; `;
             html += `transform: translate(-50%, -50%); text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white;`;
             html += `">${probability}%</span>`;
