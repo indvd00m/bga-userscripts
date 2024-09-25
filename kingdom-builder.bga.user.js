@@ -594,7 +594,10 @@ var kingdomBuilderBgaUserscriptData = {
         };
 
         // citizens
-        const maxAreaSettlements = Math.max.apply(null, areas.map(a => a.size));
+        let maxAreaSettlements = 0;
+        if (areas.length) {
+            maxAreaSettlements = Math.max.apply(null, areas.map(a => a.size));
+        }
         stats['objectives']['Citizens'] = {
             score: Math.floor(maxAreaSettlements / 2),
             settlements: maxAreaSettlements
