@@ -1077,7 +1077,8 @@ var kingdomBuilderBgaUserscriptData = {
             const terrain = this.terrains[i];
             const remainsCount = 5 - this.terrainsPlayed[terrain];
             const probability = (Math.round(this.terrainsProbability[terrain] * 100 * 100) / 100).toFixed(0)
-            html += `<div style="position: absolute; left: ${20 * i}%; top: 0%; width: 20%; height: 100%; `;
+            html += `<div style="position: absolute; left: ${20 * i + 10}%; top: 0%; width: 20%; height: 100%; `;
+            html += `transform: translate(-50%, 0%); max-height: 80px; max-width: 46px;`;
             html += `background-image: url(${this.terrainsImage}); background-repeat: no-repeat; background-size: 600%; `;
             html += `background-position: ${(i + 1) * 20}%;`;
             if (remainsCount <= 0) {
@@ -1125,7 +1126,8 @@ var kingdomBuilderBgaUserscriptData = {
                 const widthPercent = 100 / objectiveKeys.length;
                 const positionX = (bgaId % 7) * (100 / 6);
                 const positionY = bgaId < 7 ? 0 : 100;
-                html += `<div style="position: absolute; left: ${widthPercent * i + widthPercent * 0.1}%; top: 0%; width: ${widthPercent * 0.80}%; height: 100%; `;
+                html += `<div style="position: absolute; left: ${widthPercent * i + widthPercent * 0.5}%; top: 0%; width: ${widthPercent * 0.80}%; height: 100%; `;
+                html += `transform: translate(-50%, 0%); max-height: 35px; max-width: 46px;`;
                 html += `background-image: url(${this.objectivesImage}); background-repeat: no-repeat; background-size: 700% 200%; `;
                 html += `background-position: ${positionX}% ${positionY}%; opacity: 80%;`;
                 if (score <= 0) {
@@ -1155,7 +1157,8 @@ var kingdomBuilderBgaUserscriptData = {
             for (let i = 0; i < this.terrains.length; i++) {
                 const terrain = this.terrains[i];
                 const adjacentCount = stats.adjacentCounts[terrain];
-                html += `<div style="position: absolute; left: ${20 * i + 20 * 0.0375}%; top: 0%; width: ${20 * 0.75}%; height: 100%; `;
+                html += `<div style="position: absolute; left: ${20 * i + 20 * 0.5}%; top: 0%; width: ${20 * 0.75}%; height: 100%; `;
+                html += `transform: translate(-50%, 0%); max-height: 60px; max-width: 35px;`;
                 html += `background-image: url(${this.terrainsImage}); background-repeat: no-repeat; background-size: 600%; `;
                 html += `background-position: ${(i + 1) * 20}%;`;
                 if (adjacentCount > 0) {
