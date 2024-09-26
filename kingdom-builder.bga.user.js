@@ -1195,18 +1195,18 @@ var kingdomBuilderBgaUserscriptData = {
         if (this.showTextStack) {
             html += `Found ${this.logIsFull ? 'full' : 'incomplete'} log with ${this.turnsCount} turns `;
             html += `and ${this.terrainsPlayedCount} played terrain cards.`;
-        }
-        if (this.showTextTerrainStat) {
-            this.terrains.slice()
-                .sort((t1, t2) => this.terrainsPlayed[t1] - this.terrainsPlayed[t2])
-                .forEach(terrain => {
-                    const probability = (Math.round(this.terrainsProbability[terrain] * 100 * 100) / 100).toFixed(0)
-                    html += "<div>"
-                        + `${terrain} played ${this.terrainsPlayed[terrain]} times, probability: ${probability}%`
-                        + "</div>";
-                })
-        } else {
-            html += ` Stack now contains${this.logIsFull ? '' : ' no more than'} cards: `;
+            if (this.showTextTerrainStat) {
+                this.terrains.slice()
+                    .sort((t1, t2) => this.terrainsPlayed[t1] - this.terrainsPlayed[t2])
+                    .forEach(terrain => {
+                        const probability = (Math.round(this.terrainsProbability[terrain] * 100 * 100) / 100).toFixed(0)
+                        html += "<div>"
+                            + `${terrain} played ${this.terrainsPlayed[terrain]} times, probability: ${probability}%`
+                            + "</div>";
+                    })
+            } else {
+                html += ` Stack now contains${this.logIsFull ? '' : ' no more than'} cards: `;
+            }
         }
 
         html += `<div style="width: 100%; height: 80px; margin: 2.5px; position: relative;">`;
