@@ -1273,7 +1273,7 @@ var kingdomBuilderBgaUserscriptData = {
         html += `<div style="position: absolute; left: 75%; top: 0%; width: 20%; height: 100%; `;
         html += `transform: translate(-50%, 0%); max-height: 80px; max-width: 46px;`;
         html += `">`;
-        html += `<span style="font-size: 200%; font-weight: bolder; position: absolute; left: 50%; top: 50%; `;
+        html += `<span style="font-size: 350%; font-weight: bolder; position: absolute; left: 50%; top: 50%; `;
         html += `transform: translate(-50%, -50%); text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white;`;
         if (this.turnsToGameEnd <= 1) {
             html += `color: red;`;
