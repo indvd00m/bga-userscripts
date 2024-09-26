@@ -9,4 +9,4 @@
 // @require file:///Users/indvd00m/dev/bga-userscripts/kingdom-builder.bga.user.js
 // ==/UserScript==
 
-console.log("I am an example userscript for kingdom builder from panel");
+console.log("BGA userscript for kingdom builder from panel");

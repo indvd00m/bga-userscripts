@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name bga-kingdom-builder
-// @description Автоматический подсчет игровых параметров
+// @description Extended statistics for Kingdom Builder game at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
 // @version 0.5.1-dev
@@ -16,7 +16,7 @@
 
 // TODO: Rounds played
 
-console.log('I am an example userscript for kingdom builder from file system');
+console.log('BGA userscript for kingdom builder from file system');
 
 const BGA_PLAYER_BOARDS_ID = "player_boards";
 const BGA_PLAYER_BOARD_CLASS = "player-board";
