@@ -14,9 +14,6 @@
 // TODO: @grant
 // TODO: @exclude-match
 
-// TODO: Which terrain is adjacent to any player
-// TODO: Score for every objectives
-// TODO: How many rounds is left
 // TODO: Rounds played
 
 console.log('I am an example userscript for kingdom builder from file system');
