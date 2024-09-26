@@ -29,6 +29,7 @@ const USERSCRIPT_PLAYER_BOARD_ID_PREFIX = "userscript_player_board_";
 const USERSCRIPT_PLAYER_SCORE_ID_PREFIX = "userscript_player_score_";
 const BGA_TERRAIN_BACK = "back";
 const BGA_START_SETTLEMENTS_COUNT = 40;
+const BGA_MANDATORY_SETTLEMENTS_BUILD_COUNT = 3;
 const STATISTICS_PANEL_ID = "userscript_statistics_panel";
 const STATISTICS_PANEL_CLASS = "userscript_statistics_panel_class";
 
@@ -385,6 +386,24 @@ var kingdomBuilderBgaUserscriptData = {
     objectivesImage: '',
     showTextTerrainStat: false,
     showTextPlayerStat: false,
+    playersTiles: {},
+    locationTypes: ['Oracle', 'Farm', 'Tavern', 'Tower', 'Harbor', 'Paddock', 'Oasis', 'Barn', 'Caravan', 'Quarry', 'Village', 'Garden'],
+    locationTypesByBgaId: {
+        8: 'Oracle',
+        9: 'Farm',
+        10: 'Tavern',
+        11: 'Tower',
+        12: 'Harbor',
+        13: 'Paddock',
+        14: 'Oasis',
+        15: 'Barn',
+        16: 'Caravan',
+        17: 'Quarry',
+        18: 'Village',
+        19: 'Garden'
+    },
+    turnsToGameEnd: 0,
+    showTextStack: false,
 
     init: function () {
         // Check if the site was loaded correctly
@@ -421,6 +440,8 @@ var kingdomBuilderBgaUserscriptData = {
         this.dojo.subscribe("move", this, "processMove");
         this.dojo.subscribe("cancel", this, "processCancel");
         this.dojo.subscribe("updateScores", this, "processUpdateScores");
+        this.dojo.subscribe("obtainTile", this, "processObtainTile");
+        this.dojo.subscribe("loseTile", this, "processLoseTile");
 
 
         this.renderContainers();
@@ -464,6 +485,11 @@ var kingdomBuilderBgaUserscriptData = {
         this.recalculateAllPlayerStats();
         this.renderPlayerUserscriptPanels();
 
+        // tiles
+        this.initTiles(this.game.fplayers);
+        this.recalculateTurnsToGameEnd();
+        this.renderStatisticsPanel();
+
         return this;
     },
 
@@ -472,6 +498,68 @@ var kingdomBuilderBgaUserscriptData = {
             .find(p => p.endsWith('/terrains.png'));
         this.objectivesImage = objectKeys(window.parent.gameui.images_loading_status)
             .find(p => p.endsWith('/card-backgrounds.jpg'));
+    },
+
+    initTiles: function (players) {
+        players.forEach(p => {
+            // {"id":"1","status":"hand","location":"9","x":"1","y":"7","player_id":"84875203"}
+            const playerId = parseInt(p.id);
+            if (p.tiles) {
+                this.playersTiles[playerId] = p.tiles.map(t => {
+                    return {
+                        id: parseInt(t.id),
+                        status: t.status,
+                        type: this.locationTypesByBgaId[parseInt(t.location)],
+                        x: parseInt(t.y),
+                        y: parseInt(t.x)
+                    }
+                });
+            } else {
+                this.playersTiles[playerId] = [];
+            }
+        })
+    },
+
+    recalculateTurnsToGameEnd: function () {
+        console.log(`playersTiles: ${JSON.stringify(this.playersTiles)}`);
+
+        const allPlayerTurnsToGameEnd = this.game.fplayers.map(p => {
+            const playerId = parseInt(p.id);
+            const turnsToGameEnd = this.calculatePlayerTurnsToGameEnd(playerId);
+            return {
+                playerId: playerId,
+                turnsToGameEnd: turnsToGameEnd
+            }
+        });
+        this.turnsToGameEnd = Math.min.apply(null, allPlayerTurnsToGameEnd.map(o => o.turnsToGameEnd));
+    },
+
+    calculatePlayerTurnsToGameEnd: function (playerId) {
+        const playerSettlements = objectValues(this.settlements).filter(s => s.player_id === playerId);
+        const remainsSettlementsCount = BGA_START_SETTLEMENTS_COUNT - playerSettlements.length;
+        const productionTilesCount = this.playersTiles[playerId].filter(t => {
+            switch (t.type) {
+                case 'Oracle':
+                case 'Farm':
+                case 'Tavern':
+                case 'Tower':
+                case 'Oasis':
+                    return true;
+                case 'Harbor':
+                case 'Paddock':
+                case 'Barn':
+                    return false;
+                case 'Caravan':
+                case 'Quarry':
+                case 'Village':
+                case 'Garden':
+                    return false;
+                default:
+                    return false;
+            }
+        }).length;
+        const production = BGA_MANDATORY_SETTLEMENTS_BUILD_COUNT + productionTilesCount;
+        return Math.ceil(remainsSettlementsCount / production);
     },
 
     recalculateAllPlayerStats: function () {
@@ -834,6 +922,46 @@ var kingdomBuilderBgaUserscriptData = {
         this.renderPlayerUserscriptPanels();
     },
 
+    processObtainTile: function (data) {
+        console.log("obtainTile", JSON.stringify(data));
+
+        // Input check
+        if (!data || !data.args || !data.args.location_name || !data.args.location
+            || !data.args.status || !data.args.player_id || !data.args.id) {
+            return;
+        }
+        const args = data.args;
+        const playerId = parseInt(args.player_id);
+        this.playersTiles[playerId].push({
+            id: parseInt(args.id),
+            status: args.status,
+            type: this.locationTypesByBgaId[parseInt(args.location)],
+            x: parseInt(args.y),
+            y: parseInt(args.x)
+        });
+
+        this.recalculateTurnsToGameEnd();
+        this.renderStatisticsPanel();
+    },
+
+    processLoseTile: function (data) {
+        console.log("loseTile", JSON.stringify(data));
+
+        // Input check
+        if (!data || !data.args || !data.args) {
+            // {"i18n":["location_name"],"player_name":"<!--PNS--><span class=\"playername\" style=\"color:#0000ff;\">indvd00m</span><!--PNE-->",
+            // "location_name":"Barn","player_id":91988291,"id":"7"}
+            return;
+        }
+        const playerId = parseInt(data.args.player_id);
+        const locationId = parseInt(data.args.id);
+        const indexToRemove = this.playersTiles[playerId].findIndex(l => l.id === locationId);
+        this.playersTiles[playerId].splice(indexToRemove, 1);
+
+        this.recalculateTurnsToGameEnd();
+        this.renderStatisticsPanel();
+    },
+
     processBuild: function (data) {
         console.log("build", JSON.stringify(data));
 
@@ -849,6 +977,8 @@ var kingdomBuilderBgaUserscriptData = {
             y: y
         };
         this.recalculateAllPlayerStats();
+        this.recalculateTurnsToGameEnd();
+        this.renderStatisticsPanel();
         this.renderPlayerUserscriptPanels();
     },
 
@@ -875,7 +1005,7 @@ var kingdomBuilderBgaUserscriptData = {
     processCancel: function (data) {
         console.log("cancel", JSON.stringify(data));
         // Input check
-        if (!data || !data.args || !data.args.board) {
+        if (!data || !data.args || !data.args.board || !data.args.fplayers) {
             return;
         }
         this.settlements = {};
@@ -888,7 +1018,12 @@ var kingdomBuilderBgaUserscriptData = {
                 y: y
             };
         })
+
+        this.initTiles(data.args.fplayers);
+
         this.recalculateAllPlayerStats();
+        this.recalculateTurnsToGameEnd();
+        this.renderStatisticsPanel();
         this.renderPlayerUserscriptPanels();
     },
 
@@ -1060,8 +1195,10 @@ var kingdomBuilderBgaUserscriptData = {
 
     renderStatisticsPanel: function () {
         var html = "<div class='" + STATISTICS_PANEL_CLASS + "'>";
-        html += `Found ${this.logIsFull ? 'full' : 'incomplete'} log with ${this.turnsCount} turns `;
-        html += `and ${this.terrainsPlayedCount} played terrain cards.`;
+        if (this.showTextStack) {
+            html += `Found ${this.logIsFull ? 'full' : 'incomplete'} log with ${this.turnsCount} turns `;
+            html += `and ${this.terrainsPlayedCount} played terrain cards.`;
+        }
         if (this.showTextTerrainStat) {
             this.terrains.slice()
                 .sort((t1, t2) => this.terrainsPlayed[t1] - this.terrainsPlayed[t2])
@@ -1099,6 +1236,56 @@ var kingdomBuilderBgaUserscriptData = {
             html += `">${probability}%</span>`;
             html += `</div>`;
         }
+        html += `</div>`;
+
+        html += `<div style="width: 100%; height: 80px; margin: 2.5px; position: relative;">`;
+        const discardSize = this.terrainsPlayedCount;
+        const stackSize = this.terrainsStackSize - this.terrainsPlayedCount;
+        // stack
+        html += `<div style="position: absolute; left: 25%; top: 0%; width: 20%; height: 100%; `;
+        html += `transform: translate(-50%, 0%); max-height: 80px; max-width: 46px;`;
+        html += `background-image: url(${this.terrainsImage}); background-repeat: no-repeat; background-size: 600%; `;
+        html += `background-position: 0%;`;
+        if (stackSize <= 0) {
+            html += `filter: grayscale(100%);`;
+        }
+        html += `">`;
+        html += `<span style="font-size: 200%; font-weight: bolder; position: absolute; left: 50%; top: 50%; `;
+        html += `transform: translate(-50%, -50%); text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white;`;
+        if (!this.logIsFull) {
+            html += `color: gray;`;
+        }
+        html += `">${stackSize}${this.logIsFull ? '' : '-'}</span>`;
+        html += `</div>`;
+        // discard
+        html += `<div style="position: absolute; left: 50%; top: 0%; width: 20%; height: 100%; `;
+        html += `transform: translate(-50%, 0%); max-height: 80px; max-width: 46px;`;
+        html += `background-image: url(${this.terrainsImage}); background-repeat: no-repeat; background-size: 600%; `;
+        html += `background-position: 0%;`;
+        html += `filter: grayscale(100%);`;
+        html += `">`;
+        html += `<span style="font-size: 200%; font-weight: bolder; position: absolute; left: 50%; top: 50%; `;
+        html += `transform: translate(-50%, -50%); text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white;`;
+        if (!this.logIsFull) {
+            html += `color: gray;`;
+        }
+        html += `">${discardSize}${this.logIsFull ? '' : '+'}</span>`;
+        html += `</div>`;
+        // round
+        html += `<div style="position: absolute; left: 75%; top: 0%; width: 20%; height: 100%; `;
+        html += `transform: translate(-50%, 0%); max-height: 80px; max-width: 46px;`;
+        html += `">`;
+        html += `<span style="font-size: 200%; font-weight: bolder; position: absolute; left: 50%; top: 50%; `;
+        html += `transform: translate(-50%, -50%); text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white;`;
+        if (this.turnsToGameEnd <= 1) {
+            html += `color: red;`;
+        } else if (this.turnsToGameEnd <= 3) {
+            html += `color: #CC6600;`;
+        } else {
+            html += `color: blue;`;
+        }
+        html += `">${this.turnsToGameEnd}</span>`;
+        html += `</div>`;
         html += `</div>`;
 
         this.dojo.place(html, STATISTICS_PANEL_ID, "only");
