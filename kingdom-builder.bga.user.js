@@ -364,7 +364,7 @@ var kingdomBuilderBgaUserscriptData = {
     lastShowTerrainPlayerId: 0,
     myPlayerId: -1,
     map: new Canvas(1, 1, ' '),
-    isRenderAsciiMap: false,
+    isRenderAsciiMap: true,
     playersStats: {},
     playersServerStats: {},
     objectivesIdToName: {
@@ -797,10 +797,18 @@ var kingdomBuilderBgaUserscriptData = {
             for (let y = 0; y < this.map.height; y++) {
                 const char = this.map.getChar(x, y);
                 const cellId = `${BGA_CELL_CONTAINER_ID_PREFIX}-${y}-${x}`;
-                this.dojo.place("<span "
-                    + "style='font-size: 70%; font-weight: bolder; position: absolute; left: 50%; top: 50%; " +
-                    "transform: translate(-50%, -50%); z-index: 10;'"
-                    + ">" + char + "</span>",
+                this.dojo.place(`<span `
+                    + `style="font-size: 70%; font-weight: bolder; position: absolute; left: 50%; top: 50%; `
+                    + `transform: translate(-50%, -50%); z-index: 10; `
+                    + `text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white; `
+                    + `">${char}</span>`,
+                    cellId,
+                    "last");
+                this.dojo.place(`<span `
+                    + `style="font-size: 40%; font-weight: bolder; position: absolute; left: 50%; top: 75%; `
+                    + `transform: translate(-50%, -50%); z-index: 10; `
+                    + `text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white; `
+                    + `">${x}-${y}</span>`,
                     cellId,
                     "last");
             }
