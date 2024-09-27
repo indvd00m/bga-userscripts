@@ -688,8 +688,10 @@ var kingdomBuilderBgaUserscriptData = {
         const processedLocations = {};
         areas.forEach(a => {
             const locationKeys = objectKeys(a.adjacentLocations).filter(key => !processedLocations[key]);
-            merchantsScore += locationKeys.length > 1 ? locationKeys.length * 4 : 0;
-            locationKeys.forEach(l => processedLocations[l] = l);
+            if (locationKeys.length > 1) {
+                merchantsScore += locationKeys.length * 4;
+                locationKeys.forEach(l => processedLocations[l] = l);
+            }
         });
         stats['objectives']['Merchants'] = {
             score: merchantsScore
