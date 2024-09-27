@@ -1313,7 +1313,7 @@ var kingdomBuilderBgaUserscriptData = {
             }
 
             // objectives
-            html += `<div style="width: 100%; height: 35px; margin: 2.5px; position: relative;">`;
+            html += `<div style="width: 100%; height: 54px; margin: 2.5px; position: relative;">`;
             const objectiveKeys = objectKeys(stats.objectives);
             for (let i = 0; i < objectiveKeys.length; i++) {
                 const objectiveName = objectiveKeys[i];
@@ -1324,10 +1324,11 @@ var kingdomBuilderBgaUserscriptData = {
                 const widthPercent = 100 / objectiveKeys.length;
                 const positionX = (bgaId % 7) * (100 / 6);
                 const positionY = bgaId < 7 ? 0 : 100;
-                html += `<div style="position: absolute; left: ${widthPercent * i + widthPercent * 0.5}%; top: 0%; width: ${widthPercent * 0.80}%; height: 100%; `;
-                html += `transform: translate(-50%, 0%); max-height: 35px; max-width: 46px;`;
+                html += `<div style="position: absolute; left: ${widthPercent * i + widthPercent * 0.5}%; top: 0%; width: ${widthPercent}%; height: 100%; `;
+                html += `transform: translate(-50%, 0%); max-width: 55px; max-height: 49px; `;
                 html += `background-image: url(${this.objectivesImage}); background-repeat: no-repeat; background-size: 700% 200%; `;
                 html += `background-position: ${positionX}% ${positionY}%; opacity: 80%;`;
+                html += `border: 0.5px solid black; border-radius: 5px; `;
                 if (score <= 0) {
                     html += `filter: grayscale(100%);`;
                 }
