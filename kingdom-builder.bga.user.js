@@ -691,10 +691,16 @@ var kingdomBuilderBgaUserscriptData = {
         let merchantsScore = 0;
         const processedLocations = {};
         areas.forEach(a => {
-            const locationKeys = objectKeys(a.adjacentLocations).filter(key => !processedLocations[key]);
-            if (locationKeys.length > 1) {
-                merchantsScore += locationKeys.length * 4;
-                locationKeys.forEach(l => processedLocations[l] = l);
+            let adjacentLocationKeys = objectKeys(a.adjacentLocations);
+            const newLocationKeys = adjacentLocationKeys.filter(key => !processedLocations[key]);
+            const newLocationsCount = newLocationKeys.length;
+            let locationsCount = newLocationsCount;
+            if (newLocationKeys < adjacentLocationKeys) {
+                locationsCount++;
+            }
+            if (locationsCount > 1) {
+                merchantsScore += newLocationsCount * 4;
+                newLocationKeys.forEach(l => processedLocations[l] = l);
             }
         });
         stats['objectives']['Merchants'] = {
