@@ -478,7 +478,11 @@ var kingdomBuilderBgaUserscriptData = {
             if (this.playersServerStats[id] == null) {
                 this.playersServerStats[id] = {};
             }
-            this.playersServerStats[id].score = parseInt(this.game.players[sId].score);
+            let score = 0;
+            if (this.game.players[sId].score != null) {
+                score = parseInt(this.game.players[sId].score);
+            }
+            this.playersServerStats[id].score = score;
         })
         this.recalculateAllPlayerStats();
         this.renderPlayerUserscriptPanels();
