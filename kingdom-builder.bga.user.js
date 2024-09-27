@@ -3,7 +3,7 @@
 // @description Extended statistics for Kingdom Builder game at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 0.6.3-dev
+// @version 0.7.0
 
 // @match https://boardgamearena.com/*/kingdombuilder*
 // @match https://*.boardgamearena.com/*/kingdombuilder*
