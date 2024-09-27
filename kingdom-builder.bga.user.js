@@ -364,7 +364,7 @@ var kingdomBuilderBgaUserscriptData = {
     lastShowTerrainPlayerId: 0,
     myPlayerId: -1,
     map: new Canvas(1, 1, ' '),
-    isRenderAsciiMap: true,
+    isRenderAsciiMap: false,
     playersStats: {},
     playersServerStats: {},
     objectivesIdToName: {
