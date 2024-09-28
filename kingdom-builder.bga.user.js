@@ -762,6 +762,7 @@ var kingdomBuilderBgaUserscriptData = {
         const playerSettlements = objectValues(this.settlements).filter(s => s.player_id === id);
         playerSettlements.forEach(s => {
             const sSettlementCoord = `${s.x}-${s.y}`;
+            const sSettlementTerrainChar = this.map.getChar(s.x, s.y);
             const gexes = Maps.getAdjacentGexes(s.x, s.y);
             for (let i = 0; i < gexes.length; i++) {
                 const gex = gexes[i];
@@ -769,17 +770,28 @@ var kingdomBuilderBgaUserscriptData = {
                     continue;
                 }
                 const sAdjCoord = `${gex.x}-${gex.y}`;
+                const sAdjTerrainChar = this.map.getChar(gex.x, gex.y);
                 if (this.settlements[sAdjCoord] == null) {
-                    const c = this.map.getChar(gex.x, gex.y);
-                    if (adjacentEmptyTerrainCharsGexes[c][sAdjCoord] == null) {
-                        adjacentEmptyTerrainCharsGexes[c][sAdjCoord] = 1;
+                    if (adjacentEmptyTerrainCharsGexes[sAdjTerrainChar][sAdjCoord] == null) {
+                        adjacentEmptyTerrainCharsGexes[sAdjTerrainChar][sAdjCoord] = 1;
                     } else {
-                        adjacentEmptyTerrainCharsGexes[c][sAdjCoord]++;
+                        adjacentEmptyTerrainCharsGexes[sAdjTerrainChar][sAdjCoord]++;
                     }
-                    if (adjacentEmptyTerrainCharsSettlementsCount[c][sSettlementCoord] == null) {
-                        adjacentEmptyTerrainCharsSettlementsCount[c][sSettlementCoord] = 1;
+                    if (sSettlementTerrainChar === 'W' && sAdjTerrainChar === 'W') {
+                        // fishermen issue
+                        continue;
+                    }
+                    if (adjacentEmptyTerrainCharsSettlementsCount[sAdjTerrainChar][sSettlementCoord] == null) {
+                        adjacentEmptyTerrainCharsSettlementsCount[sAdjTerrainChar][sSettlementCoord] = 1;
                     } else {
-                        adjacentEmptyTerrainCharsSettlementsCount[c][sSettlementCoord]++;
+                        adjacentEmptyTerrainCharsSettlementsCount[sAdjTerrainChar][sSettlementCoord]++;
+                    }
+                } else if (sSettlementTerrainChar !== 'W' && sAdjTerrainChar === 'W') {
+                    // adjacent water gexes
+                    if (adjacentEmptyTerrainCharsSettlementsCount[sAdjTerrainChar][sSettlementCoord] == null) {
+                        adjacentEmptyTerrainCharsSettlementsCount[sAdjTerrainChar][sSettlementCoord] = 1;
+                    } else {
+                        adjacentEmptyTerrainCharsSettlementsCount[sAdjTerrainChar][sSettlementCoord]++;
                     }
                 }
             }
@@ -790,6 +802,7 @@ var kingdomBuilderBgaUserscriptData = {
         stats['adjacentCounts']['Desert'] = objectKeys(adjacentEmptyTerrainCharsGexes['D']).length;
         stats['adjacentCounts']['Flower'] = objectKeys(adjacentEmptyTerrainCharsGexes['L']).length;
         stats['adjacentCounts']['Forest'] = objectKeys(adjacentEmptyTerrainCharsGexes['R']).length;
+        stats['adjacentCounts']['Water'] = objectKeys(adjacentEmptyTerrainCharsGexes['W']).length;
 
         stats['objectives']['Fishermen'] = {
             score: objectKeys(adjacentEmptyTerrainCharsSettlementsCount['W']).length
