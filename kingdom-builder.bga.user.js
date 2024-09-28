@@ -4,10 +4,11 @@
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
 // @version 0.7.3-dev
-
 // @match https://boardgamearena.com/*/kingdombuilder*
 // @match https://*.boardgamearena.com/*/kingdombuilder*
 // @grant none
+// @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/kingdom-builder.bga.user.js
+// @downloadURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/kingdom-builder.bga.user.js
 // ==/UserScript==
 
 // TODO: @updateUrl
