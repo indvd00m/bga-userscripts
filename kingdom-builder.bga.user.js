@@ -11,7 +11,6 @@
 // @downloadURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/kingdom-builder.bga.user.js
 // ==/UserScript==
 
-// TODO: @updateUrl
 // TODO: @icon
 // TODO: @grant
 // TODO: @exclude-match
