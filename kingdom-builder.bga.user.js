@@ -565,10 +565,15 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     recalculateAllPlayerStats: function () {
-        this.game.fplayers.forEach(p => {
-            const id = parseInt(p.id);
-            this.playersStats[id + ''] = this.calculatePlayerStats(id);
+        const objectiveNames = {};
+        this.game.objectives.map(o => this.objectivesIdToName[o.id]).forEach(n => objectiveNames[n] = n);
+        const playerIds = this.game.fplayers.map(p => parseInt(p.id));
+        playerIds.forEach(id => {
+            this.playersStats[id + ''] = this.calculatePlayerStats(id, objectiveNames);
         })
+        if (objectiveNames['Lords']) {
+            this.calculateLords(playerIds, this.playersStats);
+        }
     },
 
     parseMap: function () {
@@ -585,14 +590,12 @@ var kingdomBuilderBgaUserscriptData = {
         return map;
     },
 
-    calculatePlayerStats: function (id) {
+    calculatePlayerStats: function (id, objectiveNames) {
         const stats = {
             adjacentCounts: {},
             objectives: {},
             score: 0
         };
-        const objectiveNames = {};
-        this.game.objectives.map(o => this.objectivesIdToName[o.id]).forEach(n => objectiveNames[n] = n);
         this.calculateAdjacentObjectives(id, stats);
         this.calculateKnights(id, stats);
         if (objectiveNames['Hermits'] || objectiveNames['Merchants'] || objectiveNames['Castles'] || objectiveNames['Citizens']) {
@@ -639,7 +642,7 @@ var kingdomBuilderBgaUserscriptData = {
         };
     },
 
-    calculateFarmers: function (id, stats) {
+    calculateAreaSettlements(id) {
         const areaSettlements = [0, 0, 0, 0];
         const playerSettlements = objectValues(this.settlements).filter(s => s.player_id === id);
         playerSettlements.forEach(s => {
@@ -653,10 +656,103 @@ var kingdomBuilderBgaUserscriptData = {
                 areaSettlements[3]++;
             }
         });
+        return areaSettlements;
+    },
+
+    calculateFarmers: function (id, stats) {
+        const areaSettlements = this.calculateAreaSettlements(id);
         stats['objectives']['Farmers'] = {
             score: Math.min.apply(null, areaSettlements) * 3,
             areaSettlements: areaSettlements
         };
+    },
+
+    calculateLords: function (playerIds, playersStats) {
+        const areasSettlements = playerIds.map(id => this.calculateAreaSettlements(id));
+        const quadrant1MaxCount = Math.max.apply(null, areasSettlements.map(s => s[0]));
+        const quadrant2MaxCount = Math.max.apply(null, areasSettlements.map(s => s[1]));
+        const quadrant3MaxCount = Math.max.apply(null, areasSettlements.map(s => s[2]));
+        const quadrant4MaxCount = Math.max.apply(null, areasSettlements.map(s => s[3]));
+        let quadrant1WithoutMaxCounts = areasSettlements.map(s => s[0]).filter(c => c !== quadrant1MaxCount);
+        let quadrant2WithoutMaxCounts = areasSettlements.map(s => s[1]).filter(c => c !== quadrant2MaxCount);
+        let quadrant3WithoutMaxCounts = areasSettlements.map(s => s[2]).filter(c => c !== quadrant3MaxCount);
+        let quadrant4WithoutMaxCounts = areasSettlements.map(s => s[3]).filter(c => c !== quadrant4MaxCount);
+        let quadrant1SecondMaxCount = 0;
+        if (quadrant1WithoutMaxCounts.length) {
+            quadrant1SecondMaxCount = Math.max.apply(null, quadrant1WithoutMaxCounts);
+        }
+        let quadrant2SecondMaxCount = 0;
+        if (quadrant2WithoutMaxCounts.length) {
+            quadrant2SecondMaxCount = Math.max.apply(null, quadrant2WithoutMaxCounts);
+        }
+        let quadrant3SecondMaxCount = 0;
+        if (quadrant3WithoutMaxCounts.length) {
+            quadrant3SecondMaxCount = Math.max.apply(null, quadrant3WithoutMaxCounts);
+        }
+        let quadrant4SecondMaxCount = 0;
+        if (quadrant4WithoutMaxCounts.length) {
+            quadrant4SecondMaxCount = Math.max.apply(null, quadrant4WithoutMaxCounts);
+        }
+        for (let i = 0; i < playerIds.length; i++) {
+            const id = playerIds[i];
+            let areaSettlements = areasSettlements[i];
+            let score1 = 0;
+            let score2 = 0;
+            let score3 = 0;
+            let score4 = 0;
+
+            // quadrant 1
+            if (quadrant1MaxCount > 0) {
+                if (areaSettlements[0] === quadrant1MaxCount) {
+                    score1 += 12;
+                }
+            }
+            if (quadrant1SecondMaxCount > 0) {
+                if (areaSettlements[0] === quadrant1SecondMaxCount) {
+                    score1 += 6;
+                }
+            }
+            // quadrant 2
+            if (quadrant2MaxCount > 0) {
+                if (areaSettlements[1] === quadrant2MaxCount) {
+                    score2 += 12;
+                }
+            }
+            if (quadrant2SecondMaxCount > 0) {
+                if (areaSettlements[1] === quadrant2SecondMaxCount) {
+                    score2 += 6;
+                }
+            }
+            // quadrant 3
+            if (quadrant3MaxCount > 0) {
+                if (areaSettlements[2] === quadrant3MaxCount) {
+                    score3 += 12;
+                }
+            }
+            if (quadrant3SecondMaxCount > 0) {
+                if (areaSettlements[2] === quadrant3SecondMaxCount) {
+                    score3 += 6;
+                }
+            }
+            // quadrant 4
+            if (quadrant4MaxCount > 0) {
+                if (areaSettlements[3] === quadrant4MaxCount) {
+                    score4 += 12;
+                }
+            }
+            if (quadrant4SecondMaxCount > 0) {
+                if (areaSettlements[3] === quadrant4SecondMaxCount) {
+                    score4 += 6;
+                }
+            }
+            const score = score1 + score2 + score3 + score4;
+            playersStats[id]['objectives']['Lords'] = {
+                areaSettlements: areaSettlements,
+                areaScores: [score1, score2, score3, score4],
+                score: score
+            }
+            playersStats[id].score += score;
+        }
     },
 
     calculateAreasObjectives: function (id, stats) {
@@ -1359,20 +1455,29 @@ var kingdomBuilderBgaUserscriptData = {
                 html += `<span style="font-size: 130%; font-weight: bolder; position: absolute; right: 1%; bottom: 1%; `;
                 html += `text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white;`;
                 html += `">${score}</span>`;
-                let info = '';
+                let info1 = '';
+                let info2 = '';
                 if (objectiveName === 'Farmers') {
-                    info = JSON.stringify(objectiveStats.areaSettlements);
+                    info1 = JSON.stringify(objectiveStats.areaSettlements);
+                } else if (objectiveName === 'Lords') {
+                    info1 = JSON.stringify(objectiveStats.areaSettlements);
+                    info2 = JSON.stringify(objectiveStats.areaScores);
                 } else if (objectiveName === 'Citizens') {
-                    info = JSON.stringify(objectiveStats.settlements);
+                    info1 = JSON.stringify(objectiveStats.settlements);
                 } else if (objectiveName === 'Castles') {
-                    info = JSON.stringify(objectiveStats.castlesCount);
+                    info1 = JSON.stringify(objectiveStats.castlesCount);
                 } else if (objectiveName === 'Knights') {
-                    info = JSON.stringify(objectiveStats.maxLineSettlementsCount);
+                    info1 = JSON.stringify(objectiveStats.maxLineSettlementsCount);
                 }
-                if (info) {
+                if (info1) {
                     html += `<span style="font-size: 90%; position: absolute; right: 1%; top: 1%; `;
-                    html += `text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white;`;
-                    html += `">${info}</span>`;
+                    html += `text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white; `;
+                    html += `">${info1}</span>`;
+                }
+                if (info2) {
+                    html += `<span style="font-size: 90%; position: absolute; right: 1%; top: 25%; `;
+                    html += `text-shadow: 1px 1px 2px white, 0 0 1em white, 0 0 0.2em white; `;
+                    html += `">${info2}</span>`;
                 }
                 html += `</div>`;
             }
