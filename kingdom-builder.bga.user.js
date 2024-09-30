@@ -17,7 +17,7 @@
 
 // TODO: Rounds played
 
-console.log('BGA userscript for kingdom builder from file system');
+console.log('BGA userscript for Kingdom Builder');
 
 const BGA_PLAYER_BOARDS_ID = "player_boards";
 const BGA_PLAYER_BOARD_CLASS = "player-board";
@@ -569,7 +569,7 @@ var kingdomBuilderBgaUserscriptData = {
         this.game.objectives.map(o => this.objectivesIdToName[o.id]).forEach(n => objectiveNames[n] = n);
         const playerIds = this.game.fplayers.map(p => parseInt(p.id));
         playerIds.forEach(id => {
-            this.playersStats[id + ''] = this.calculatePlayerStats(id, objectiveNames);
+            this.playersStats[id] = this.calculatePlayerStats(id, objectiveNames);
         })
         if (objectiveNames['Lords']) {
             this.calculateLords(playerIds, this.playersStats);
@@ -1421,7 +1421,7 @@ var kingdomBuilderBgaUserscriptData = {
     renderPlayerUserscriptPanels: function () {
         this.game.fplayers.forEach(p => {
             const id = parseInt(p.id);
-            const stats = this.playersStats[id + ''];
+            const stats = this.playersStats[id];
 
             let html = '';
 
