@@ -23,8 +23,10 @@ const BGA_PLAYER_BOARDS_ID = "player_boards";
 const BGA_PLAYER_BOARD_CLASS = "player-board";
 const BGA_PLAYER_BOARD_ID_PREFIX = "overall_player_board_";
 const BGA_PLAYER_SCORE_ID_PREFIX = "player_score_";
+const BGA_PLAYER_SETTLEMENTS_ID_PREFIX = "player-settlements-";
 const USERSCRIPT_PLAYER_BOARD_ID_PREFIX = "userscript_player_board_";
 const USERSCRIPT_PLAYER_SCORE_ID_PREFIX = "userscript_player_score_";
+const USERSCRIPT_PLAYER_SETTLEMENTS_ID_PREFIX = "userscript_player_settlements_";
 const BGA_TERRAIN_BACK = "back";
 const BGA_START_SETTLEMENTS_COUNT = 40;
 const BGA_MANDATORY_SETTLEMENTS_BUILD_COUNT = 3;
@@ -473,6 +475,7 @@ var kingdomBuilderBgaUserscriptData = {
         }
 
         // players stats
+        this.initTiles(this.game.fplayers);
         objectKeys(this.game.players).forEach(sId => {
             let id = parseInt(sId);
             if (this.playersServerStats[id] == null) {
@@ -486,9 +489,6 @@ var kingdomBuilderBgaUserscriptData = {
         })
         this.recalculateAllPlayerStats();
         this.renderPlayerUserscriptPanels();
-
-        // tiles
-        this.initTiles(this.game.fplayers);
         this.recalculateTurnsToGameEnd();
         this.renderStatisticsPanel();
 
@@ -539,6 +539,11 @@ var kingdomBuilderBgaUserscriptData = {
     calculatePlayerTurnsToGameEnd: function (playerId) {
         const playerSettlements = objectValues(this.settlements).filter(s => s.player_id === playerId);
         const remainsSettlementsCount = BGA_START_SETTLEMENTS_COUNT - playerSettlements.length;
+        const production = this.playersStats[playerId].maxProduction;
+        return Math.ceil(remainsSettlementsCount / production);
+    },
+
+    getPlayerMaxProduction: function (playerId) {
         const productionTilesCount = this.playersTiles[playerId].filter(t => {
             switch (t.type) {
                 case 'Oracle':
@@ -560,8 +565,7 @@ var kingdomBuilderBgaUserscriptData = {
                     return false;
             }
         }).length;
-        const production = BGA_MANDATORY_SETTLEMENTS_BUILD_COUNT + productionTilesCount;
-        return Math.ceil(remainsSettlementsCount / production);
+        return BGA_MANDATORY_SETTLEMENTS_BUILD_COUNT + productionTilesCount;
     },
 
     recalculateAllPlayerStats: function () {
@@ -594,7 +598,9 @@ var kingdomBuilderBgaUserscriptData = {
         const stats = {
             adjacentCounts: {},
             objectives: {},
-            score: 0
+            score: 0,
+            builtSettlementsCount: objectValues(this.settlements).filter(s => s.player_id === id),
+            maxProduction: this.getPlayerMaxProduction(id)
         };
         this.calculateAdjacentObjectives(id, stats);
         this.calculateKnights(id, stats);
@@ -1317,6 +1323,9 @@ var kingdomBuilderBgaUserscriptData = {
             this.dojo.place("<span id='" + (USERSCRIPT_PLAYER_SCORE_ID_PREFIX + id) + "'>?</span>",
                 BGA_PLAYER_SCORE_ID_PREFIX + id,
                 "after");
+            this.dojo.place("<span id='" + (USERSCRIPT_PLAYER_SETTLEMENTS_ID_PREFIX + id) + "'> ?</span>",
+                `${BGA_PLAYER_SETTLEMENTS_ID_PREFIX}${id}`,
+                "last");
         })
     },
 
@@ -1516,6 +1525,11 @@ var kingdomBuilderBgaUserscriptData = {
             } else {
                 this.dojo.place('<span></span>', USERSCRIPT_PLAYER_SCORE_ID_PREFIX + id, "only");
             }
+
+            // production
+            this.dojo.place(
+                `<span style="color: red;">&nbsp;-${stats.maxProduction}</span>`
+                , USERSCRIPT_PLAYER_SETTLEMENTS_ID_PREFIX + id, "only");
         });
     }
 
