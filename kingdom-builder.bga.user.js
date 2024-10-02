@@ -1530,6 +1530,9 @@ var kingdomBuilderBgaUserscriptData = {
             this.dojo.place(
                 `<span style="color: red;">&nbsp;-${stats.maxProduction}</span>`
                 , USERSCRIPT_PLAYER_SETTLEMENTS_ID_PREFIX + id, "only");
+
+            // fix bug with disappeared player settlements counter on ios
+            this.dojo.replaceClass(`${BGA_PLAYER_SETTLEMENTS_ID_PREFIX}${id}`, 'player-settlements', 'hex-grid-content');
         });
     }
 
