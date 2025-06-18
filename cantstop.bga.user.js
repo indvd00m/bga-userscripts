@@ -284,7 +284,12 @@ var cantStopBgaUserscriptData = {
             let move2 = possibleMove[1].move;
             {
                 const index2 = 0;
-                const probability1 = this.calculateSumColumnProbability(sum1, unsavedColumns);
+                let probability1;
+                if (possibleMove.both) {
+                    probability1 = this.calculateSumsColumnProbability([sum1, sum2], unsavedColumns)
+                } else {
+                    probability1 = this.calculateSumsColumnProbability([sum1], unsavedColumns)
+                }
                 movesProbabilities[index1][index2] = {
                     probability: probability1,
                     both: possibleMove.both,
@@ -294,7 +299,12 @@ var cantStopBgaUserscriptData = {
             }
             {
                 const index2 = 1;
-                const probability2 = this.calculateSumColumnProbability(sum2, unsavedColumns);
+                let probability2;
+                if (possibleMove.both) {
+                    probability2 = this.calculateSumsColumnProbability([sum1, sum2], unsavedColumns);
+                } else {
+                    probability2 = this.calculateSumsColumnProbability([sum2], unsavedColumns);
+                }
                 movesProbabilities[index1][index2] = {
                     probability: probability2,
                     both: possibleMove.both,
@@ -306,33 +316,19 @@ var cantStopBgaUserscriptData = {
         this.renderMovesProbabilities(movesProbabilities);
     },
 
-    calculateSumColumnProbability: function (sum, unsavedColumns) {
+    calculateSumsColumnProbability: function (sums, unsavedColumns) {
+        let columnNumbers = [];
         const unsavedColumnNumbers = objectKeys(unsavedColumns).map(s => parseInt(s));
+        unsavedColumnNumbers.forEach(unsavedColumnNumber => columnNumbers.push(unsavedColumnNumber));
+        sums.forEach(sum => columnNumbers.push(sum));
+        columnNumbers = columnNumbers.filter(onlyUnique);
         let probability;
-        if (unsavedColumnNumbers.length === 0) {
-            probability = this.calculateColumnsProbability(sum);
-        } else if (unsavedColumnNumbers.length === 1) {
-            const unsavedColumnNumber1 = unsavedColumnNumbers[0];
-            if (unsavedColumnNumber1 === sum) {
-                probability = this.calculateColumnsProbability(unsavedColumnNumber1);
-            } else {
-                probability = this.calculateColumnsProbability(unsavedColumnNumber1, sum);
-            }
-        } else if (unsavedColumnNumbers.length === 2) {
-            const unsavedColumnNumber1 = unsavedColumnNumbers[0];
-            const unsavedColumnNumber2 = unsavedColumnNumbers[1];
-            if (unsavedColumnNumber1 === sum && unsavedColumnNumber2 !== sum) {
-                probability = this.calculateColumnsProbability(unsavedColumnNumber1, unsavedColumnNumber2);
-            } else if (unsavedColumnNumber2 === sum && unsavedColumnNumber1 !== sum) {
-                probability = this.calculateColumnsProbability(unsavedColumnNumber1, unsavedColumnNumber2);
-            } else {
-                probability = this.calculateColumnsProbability(unsavedColumnNumber1, unsavedColumnNumber2, sum);
-            }
-        } else {
-            const unsavedColumnNumber1 = unsavedColumnNumbers[0];
-            const unsavedColumnNumber2 = unsavedColumnNumbers[1];
-            const unsavedColumnNumber3 = unsavedColumnNumbers[2];
-            probability = this.calculateColumnsProbability(unsavedColumnNumber1, unsavedColumnNumber2, unsavedColumnNumber3);
+        if (columnNumbers.length === 1) {
+            probability = this.calculateColumnsProbability(columnNumbers[0]);
+        } else if (columnNumbers.length === 2) {
+            probability = this.calculateColumnsProbability(columnNumbers[0], columnNumbers[1]);
+        } else if (columnNumbers.length === 3) {
+            probability = this.calculateColumnsProbability(columnNumbers[0], columnNumbers[1], columnNumbers[2]);
         }
         return probability;
     },
@@ -361,7 +357,7 @@ var cantStopBgaUserscriptData = {
             return 0;
         }
         if (sorted2 == null && sorted3 == null) {
-            return CANT_STOP_COLUMN_PROBABILITIES[sorted1];
+            return this.getMaxColumnProbability(sorted1);
         }
         if (sorted3 == null) {
             return this.getMaxColumnsProbability(sorted1, sorted2);
@@ -377,11 +373,24 @@ var cantStopBgaUserscriptData = {
         return CANT_STOP_COLUMNS_PROBABILITIES[`${formattedC1}-${formattedC2}-${formattedC3}`];
     },
 
-    getMaxColumnsProbability: function (c1, c2) {
-        return Math.max.apply(null, this.getPossibleColumnKeys(c1, c2).map(n => CANT_STOP_COLUMNS_PROBABILITIES[n]));
+    getMaxColumnProbability: function (c1) {
+        return Math.max.apply(null, this.getPossibleColumnKeys(c1).map(n => CANT_STOP_COLUMNS_PROBABILITIES[n]));
     },
 
-    getPossibleColumnKeys: function (c1, c2) {
+    getMaxColumnsProbability: function (c1, c2) {
+        return Math.max.apply(null, this.getPossibleColumnsKeys(c1, c2).map(n => CANT_STOP_COLUMNS_PROBABILITIES[n]));
+    },
+
+    getPossibleColumnKeys: function (c1) {
+        const formattedC1 = ('0' + c1).slice(-2);
+        const regexp1 = new RegExp(`${formattedC1}-\\d{2}-\\d{2}`);
+        const regexp2 = new RegExp(`\\d{2}-${formattedC1}-\\d{2}`);
+        const regexp3 = new RegExp(`\\d{2}-\\d{2}-${formattedC1}`);
+        return objectKeys(CANT_STOP_COLUMNS_PROBABILITIES)
+            .filter(n => regexp1.test(n) || regexp2.test(n) || regexp3.test(n));
+    },
+
+    getPossibleColumnsKeys: function (c1, c2) {
         const sorted = [c1, c2].sort((a, b) => a - b);
         const formattedC1 = ('0' + sorted[0]).slice(-2);
         const formattedC2 = ('0' + sorted[1]).slice(-2);
