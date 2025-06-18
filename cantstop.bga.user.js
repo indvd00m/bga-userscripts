@@ -401,13 +401,25 @@ var cantStopBgaUserscriptData = {
             .filter(n => regexp1.test(n) || regexp2.test(n) || regexp3.test(n));
     },
 
+    isVisibleMove(index1, index2, moveProbability) {
+        return moveProbability.move && (!moveProbability.both || index2 === 0);
+    },
+
     renderMovesProbabilities: function (movesProbabilities) {
         console.log(`renderMovesProbabilities ${JSON.stringify(movesProbabilities)}`);
-        const maxProbability = Math.max.apply(null, movesProbabilities.flatMap(a => a).map(mp => mp.probability));
+        let maxVisibleProbability = 0;
         for (let index1 = 0; index1 < movesProbabilities.length; index1++) {
             for (let index2 = 0; index2 < movesProbabilities[index1].length; index2++) {
                 const moveProbability = movesProbabilities[index1][index2];
-                this.renderMoveProbability(index1, index2, moveProbability.move && (!moveProbability.both || index2 === 0), moveProbability.probability, moveProbability.probability === maxProbability);
+                if (this.isVisibleMove(index1, index2, moveProbability) && moveProbability.probability > maxVisibleProbability) {
+                    maxVisibleProbability = moveProbability.probability;
+                }
+            }
+        }
+        for (let index1 = 0; index1 < movesProbabilities.length; index1++) {
+            for (let index2 = 0; index2 < movesProbabilities[index1].length; index2++) {
+                const moveProbability = movesProbabilities[index1][index2];
+                this.renderMoveProbability(index1, index2, this.isVisibleMove(index1, index2, moveProbability), moveProbability.probability, moveProbability.probability === maxVisibleProbability);
             }
         }
     },
