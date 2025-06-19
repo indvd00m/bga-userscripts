@@ -36,6 +36,7 @@ const CANT_STOP_COLUMN_PROBABILITIES = [
     23.30, // [11]
     13.19, // [12]
 ]
+// https://boardgamegeek.com/thread/3520744/article/46180952#46180952
 const CANT_STOP_COLUMNS_PROBABILITIES = {
     '02-03-04': 52.16,
     '02-03-05': 58.41,
