@@ -18,6 +18,7 @@
 console.log('BGA userscript for Can\'t Stop');
 
 const USERSCRIPT_LOAD_TIMEOUT_MS = 5000;
+const CANT_STOP_MAX_CHIPS_COUNT = 3;
 const DICE_SELECT_ID_PREFIX = "dice_select_";
 const PROBABILITY_PANEL_ID_PREFIX = "dice_probability_";
 const PROBABILITY_PANEL_CLASS = "dice_probability_cell";
@@ -1581,75 +1582,55 @@ var cantStopBgaUserscriptData = {
             let sum2 = dice2[0] + dice2[1];
             let move1 = possibleMove[0].move;
             let move2 = possibleMove[1].move;
+            const possibleOutcomeValuesCount = this.getPossibleOutcomesValues().length;
             {
                 const index2 = 0;
                 let columns = [];
                 objectKeys(unsavedColumns).forEach((c) => columns.push(parseInt(c)));
-                let probability1;
                 if (possibleMove.both) {
-                    probability1 = this.calculateSumsColumnProbability([sum1, sum2], unsavedColumns)
                     columns.push(sum1);
                     columns.push(sum2);
                 } else {
-                    probability1 = this.calculateSumsColumnProbability([sum1], unsavedColumns)
                     columns.push(sum1);
                 }
                 columns = columns.filter(onlyUnique);
-                const spProbability = this.getDesiredOutcomesCountFromArray(columns) / this.getPossibleOutcomesValues().length;
-                const spExpectation = spProbability === 1 ? 1000 : 1 / (1 - spProbability);
+                const pProbability = this.getCommonDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
+                const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
+                const spExpectation = spProbability === 1 ? Infinity : 1 / (1 - spProbability);
                 movesProbabilities[index1][index2] = {
-                    probability: probability1,
+                    progressProbability: pProbability,
                     saveProgressProbability: spProbability,
                     saveProgressExpectation: spExpectation,
                     both: possibleMove.both,
                     move: move1,
                 };
-                console.log(`${index1},${index2} with dice ${JSON.stringify(dice1)} and sum ${sum1} has probability ${probability1}`);
+                console.log(`${index1},${index2} with dice ${JSON.stringify(dice1)} and sum ${sum1} has probability ${pProbability}`);
             }
             {
                 const index2 = 1;
                 let columns = [];
                 objectKeys(unsavedColumns).forEach((c) => columns.push(parseInt(c)));
-                let probability2;
                 if (possibleMove.both) {
-                    probability2 = this.calculateSumsColumnProbability([sum1, sum2], unsavedColumns);
                     columns.push(sum1);
                     columns.push(sum2);
                 } else {
-                    probability2 = this.calculateSumsColumnProbability([sum2], unsavedColumns);
                     columns.push(sum2);
                 }
                 columns = columns.filter(onlyUnique);
-                const spProbability = this.getDesiredOutcomesCountFromArray(columns) / this.getPossibleOutcomesValues().length;
-                const spExpectation = spProbability === 1 ? 1000 : 1 / (1 - spProbability);
+                const pProbability = this.getCommonDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
+                const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
+                const spExpectation = spProbability === 1 ? Infinity : 1 / (1 - spProbability);
                 movesProbabilities[index1][index2] = {
-                    probability: probability2,
+                    progressProbability: pProbability,
                     saveProgressProbability: spProbability,
                     saveProgressExpectation: spExpectation,
                     both: possibleMove.both,
                     move: move2,
                 };
-                console.log(`${index1},${index2} with dice ${JSON.stringify(dice2)} and sum ${sum2} has probability ${probability2}`);
+                console.log(`${index1},${index2} with dice ${JSON.stringify(dice2)} and sum ${sum2} has probability ${pProbability}`);
             }
         }
         this.renderMovesProbabilities(movesProbabilities);
-    },
-
-    calculateSumsColumnProbability: function (sums, unsavedColumns) {
-        let columnNumbers = [];
-        const unsavedColumnNumbers = objectKeys(unsavedColumns).map(s => parseInt(s));
-        unsavedColumnNumbers.forEach(unsavedColumnNumber => columnNumbers.push(unsavedColumnNumber));
-        sums.forEach(sum => columnNumbers.push(sum));
-        columnNumbers = columnNumbers.filter(onlyUnique);
-        let probability;
-        if (columnNumbers.length === 1) {
-            probability = this.calculateColumnsProbability(columnNumbers[0]);
-        } else if (columnNumbers.length === 2) {
-            probability = this.calculateColumnsProbability(columnNumbers[0], columnNumbers[1]);
-        } else if (columnNumbers.length === 3) {
-            probability = this.calculateColumnsProbability(columnNumbers[0], columnNumbers[1], columnNumbers[2]);
-        }
-        return probability;
     },
 
     getUnsavedColumns: function () {
@@ -1689,39 +1670,6 @@ var cantStopBgaUserscriptData = {
         return closedColumns;
     },
 
-    calculateColumnsProbability: function (c1, c2, c3) {
-        const sorted = [c1, c2, c3].sort((a, b) => a - b);
-        const sorted1 = sorted[0];
-        const sorted2 = sorted[1];
-        const sorted3 = sorted[2];
-        if (sorted1 == null && sorted2 == null && sorted3 == null) {
-            return 0;
-        }
-        if (sorted2 == null && sorted3 == null) {
-            return this.getMaxColumnProbability(sorted1);
-        }
-        if (sorted3 == null) {
-            return this.getMaxColumnsProbability(sorted1, sorted2);
-        }
-        return this.getColumnsProbability(sorted1, sorted2, sorted3);
-    },
-
-    getColumnsProbability: function (c1, c2, c3) {
-        const sorted = [c1, c2, c3].sort((a, b) => a - b);
-        const formattedC1 = ('0' + sorted[0]).slice(-2);
-        const formattedC2 = ('0' + sorted[1]).slice(-2);
-        const formattedC3 = ('0' + sorted[2]).slice(-2);
-        return CANT_STOP_COLUMNS_PROBABILITIES[`${formattedC1}-${formattedC2}-${formattedC3}`];
-    },
-
-    getMaxColumnProbability: function (c1) {
-        return Math.max.apply(null, this.getPossibleColumnKeys(c1).map(n => CANT_STOP_COLUMNS_PROBABILITIES[n]));
-    },
-
-    getMaxColumnsProbability: function (c1, c2) {
-        return Math.max.apply(null, this.getPossibleColumnsKeys(c1, c2).map(n => CANT_STOP_COLUMNS_PROBABILITIES[n]));
-    },
-
     getPossibleColumnKeys: function (c1) {
         const formattedC1 = ('0' + c1).slice(-2);
         const regexp1 = new RegExp(`${formattedC1}-\\d{2}-\\d{2}`);
@@ -1747,7 +1695,10 @@ var cantStopBgaUserscriptData = {
     },
 
     getPossibleOutcomesValues() {
-        return objectValues(POSSIBLE_OUTCOMES);
+        const start = Date.now();
+        const values = objectValues(POSSIBLE_OUTCOMES);
+        console.log(`time=${Date.now() - start}ms`);
+        return values;
     },
 
     getCommonDesiredOutcomesCount() {
@@ -1755,32 +1706,44 @@ var cantStopBgaUserscriptData = {
         return this.getCommonDesiredOutcomesCountFromArray(args);
     },
 
-    getDesiredOutcomesCount() {
+    getOpenDesiredOutcomesCount() {
         const args = [].slice.call(arguments);
-        return this.getDesiredOutcomesCountFromArray(args);
+        return this.getOpenDesiredOutcomesCountFromArray(args);
     },
 
     getCommonDesiredOutcomesCountFromArray(args) {
         return this.getPossibleOutcomesValues().filter(sums => args.some(a => sums.includes(a))).length;
     },
 
-    getDesiredOutcomesCountFromArray(args) {
+    getOpenDesiredOutcomesCountFromArray(args) {
         const closedColumnNumbers = objectKeys(this.getClosedColumns());
         return this.getPossibleOutcomesValues()
             .filter(
                 sums => args.some(a => sums.includes(a))
-                    || args.length < 3 && !sums.every(s => closedColumnNumbers.includes(s))
+                    || args.length < CANT_STOP_MAX_CHIPS_COUNT && !sums.every(s => closedColumnNumbers.includes(s))
             ).length;
     },
 
     renderMovesProbabilities: function (movesProbabilities) {
         console.log(`renderMovesProbabilities ${JSON.stringify(movesProbabilities)}`);
-        let maxVisibleProbability = 0;
+        let maxVisibleSaveProgressProbability = 0;
         for (let index1 = 0; index1 < movesProbabilities.length; index1++) {
             for (let index2 = 0; index2 < movesProbabilities[index1].length; index2++) {
                 const moveProbability = movesProbabilities[index1][index2];
-                if (this.isVisibleMove(index1, index2, moveProbability) && moveProbability.saveProgressProbability > maxVisibleProbability) {
-                    maxVisibleProbability = moveProbability.saveProgressProbability;
+                if (this.isVisibleMove(index1, index2, moveProbability) && moveProbability.saveProgressProbability > maxVisibleSaveProgressProbability) {
+                    maxVisibleSaveProgressProbability = moveProbability.saveProgressProbability;
+                }
+            }
+        }
+        let maxVisibleProgressProbability = 0;
+        for (let index1 = 0; index1 < movesProbabilities.length; index1++) {
+            for (let index2 = 0; index2 < movesProbabilities[index1].length; index2++) {
+                const moveProbability = movesProbabilities[index1][index2];
+                if (
+                    this.isVisibleMove(index1, index2, moveProbability)
+                    && moveProbability.saveProgressProbability === maxVisibleSaveProgressProbability
+                    && moveProbability.progressProbability > maxVisibleProgressProbability) {
+                    maxVisibleProgressProbability = moveProbability.progressProbability;
                 }
             }
         }
@@ -1792,16 +1755,22 @@ var cantStopBgaUserscriptData = {
                     index2,
                     this.isVisibleMove(index1, index2, moveProbability),
                     moveProbability,
-                    moveProbability.saveProgressProbability === maxVisibleProbability);
+                    moveProbability.saveProgressProbability === maxVisibleSaveProgressProbability,
+                    moveProbability.progressProbability === maxVisibleProgressProbability
+                );
             }
         }
     },
 
-    renderMoveProbability: function (index1, index2, visible, moveProbability, maxProbability) {
-        const formattedProbability = Math.round((moveProbability.saveProgressProbability * 100 + Number.EPSILON) * 100) / 100;
-        const formattedExpectation = Math.round((moveProbability.saveProgressExpectation + Number.EPSILON) * 100) / 100;
-        const probabilityElement = `<div style='font-size: 70%;${maxProbability ? 'font-weight: bolder; color:' +
-            ' green;' : ''}'>${visible ? `${formattedProbability}% x${formattedExpectation}` : ''}</div>`;
+    renderMoveProbability: function (index1, index2, visible, moveProbability, maxVisibleSaveProgressProbability, maxVisibleProgressProbability) {
+        const formattedProgressProbability = this.formatDecimal(moveProbability.progressProbability * 100, 2);
+        const formattedSaveProgressProbability = this.formatDecimal(moveProbability.saveProgressProbability * 100, 2);
+        const formattedSaveProgressExpectation = this.formatDecimal(moveProbability.saveProgressExpectation, 2);
+        const saveProgressProbabilityElement =
+            `<div style='${maxVisibleSaveProgressProbability ? 'font-weight: bolder; color: green;' : ''}'>P(A)=${formattedSaveProgressProbability}% E[X]=${formattedSaveProgressExpectation}</div>`;
+        const progressProbabilityElement = `<div style='${maxVisibleProgressProbability ? 'font-weight: bolder;' +
+            ' color: green;' : ''}'>P(⧡)=${formattedProgressProbability}%</div>`;
+        const probabilityElement = `<div style='font-size: 70%; font-family: monospace;'>${visible ? `${saveProgressProbabilityElement} ${progressProbabilityElement}` : ''}</div>`;
         this.dojo.place(probabilityElement, `${PROBABILITY_PANEL_ID_PREFIX}${index1}_${index2}`, 'only');
     },
 
@@ -1812,6 +1781,15 @@ var cantStopBgaUserscriptData = {
             const probabilityElement = `<div id="${probabilityElementId}" class="${PROBABILITY_PANEL_CLASS}"></div>`;
             this.dojo.place(probabilityElement, buttonSelectElement, 'after');
         })
+    },
+
+    formatDecimal: function (value, precision) {
+        if (value === Infinity) {
+            return '∞';
+        } else {
+            const multiplier = Math.pow(10, precision);
+            return Math.round((value + Number.EPSILON) * multiplier) / multiplier;
+        }
     },
 
 };
