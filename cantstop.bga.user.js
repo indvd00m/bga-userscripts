@@ -284,9 +284,9 @@ var cantStopBgaUserscriptData = {
         const formattedSaveProgressProbability = this.formatDecimal(moveProbability.saveProgressProbability * 100, 2);
         const formattedSaveProgressExpectation = this.formatDecimal(moveProbability.saveProgressExpectation, 2);
         const saveProgressProbabilityElement =
-            `<div style='${maxVisibleSaveProgressProbability ? 'font-weight: bolder; color: green;' : ''}'>P(A)=${formattedSaveProgressProbability}% E[X]=${formattedSaveProgressExpectation}</div>`;
+            `<div style='${maxVisibleSaveProgressProbability ? `font-weight: bolder; color: ${moveProbability.saveProgressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(A)=${formattedSaveProgressProbability}% E[X]=${formattedSaveProgressExpectation}</div>`;
         const progressProbabilityElement = `<div style='${maxVisibleProgressProbability ? 'font-weight: bolder;' +
-            ' color: green;' : ''}'>P(⧡)=${formattedProgressProbability}%</div>`;
+            ` color: ${moveProbability.progressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(⧡)=${formattedProgressProbability}%</div>`;
         const probabilityElement = `<div style='font-size: 70%; font-family: monospace;'>${visible ? `${saveProgressProbabilityElement} ${progressProbabilityElement}` : ''}</div>`;
         this.dojo.place(probabilityElement, `${PROBABILITY_PANEL_ID_PREFIX}${index1}_${index2}`, 'only');
     },
