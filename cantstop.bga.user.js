@@ -22,6 +22,7 @@ const CANT_STOP_MAX_CHIPS_COUNT = 3;
 const DICE_SELECT_ID_PREFIX = "dice_select_";
 const PROBABILITY_PANEL_ID_PREFIX = "dice_probability_";
 const PROBABILITY_PANEL_CLASS = "dice_probability_cell";
+const BGA_TOKEN_NAME_PATTERN = /^token_(?<playerId>\d+)_(?<number>\d+)$/;
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -184,9 +185,25 @@ var cantStopBgaUserscriptData = {
         return columns;
     },
 
+    parseColumns: function () {
+        const columns = {};
+        const savedTokensElements = this.dojo.query('#game_board>.token:not(.color_000000):not(.unmoving)');
+        savedTokensElements.forEach((tokenElement) => {
+            const column = parseInt(this.dojo.getAttr(tokenElement, 'data-column'));
+            const height = parseInt(this.dojo.getAttr(tokenElement, 'data-height'));
+            const id = this.dojo.getAttr(tokenElement, 'id');
+            const playerId = parseInt(BGA_TOKEN_NAME_PATTERN.exec(id).groups['playerId']);
+            if (columns[column] == null) {
+                columns[column] = {};
+            }
+            columns[column][playerId] = height;
+        })
+        return columns;
+    },
+
     getClosedColumns: function () {
         const closedColumns = {};
-        const columns = this.getColumns();
+        const columns = this.parseColumns();
         objectKeys(columns).map(s => parseInt(s)).forEach(c => {
             if (objectValues(columns[c]).map(s => parseInt(s)).some(v => v === 0)) {
                 closedColumns[c] = columns[c];
