@@ -239,9 +239,12 @@ var cantStopBgaUserscriptData = {
     getOpenDesiredOutcomesCountFromArray(args) {
         const closedColumnNumbers = objectKeys(this.getClosedColumns()).map(s => parseInt(s));
         return this.possibleOutcomesValues
-            .filter(
-                sums => args.some(a => sums.includes(a))
-                    || args.length < CANT_STOP_MAX_CHIPS_COUNT && !sums.every(s => closedColumnNumbers.includes(s))
+            .filter(sums =>
+                    !sums.every(s => closedColumnNumbers.includes(s))
+                    && (
+                        args.some(a => sums.includes(a))
+                        || args.length < CANT_STOP_MAX_CHIPS_COUNT
+                    )
             ).length;
     },
 
