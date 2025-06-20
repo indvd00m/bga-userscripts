@@ -118,10 +118,12 @@ var cantStopBgaUserscriptData = {
                 const pProbability = this.getCommonDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
                 const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
                 const spExpectation = spProbability === 1 ? Infinity : 1 / (1 - spProbability);
+                const spNMax = spProbability === 1 ? Infinity : Math.floor(Math.log(0.5)/Math.log(spProbability));
                 movesProbabilities[index1][index2] = {
                     progressProbability: pProbability,
                     saveProgressProbability: spProbability,
                     saveProgressExpectation: spExpectation,
+                    saveProgressNMax50PercentSuccess: spNMax,
                     both: possibleMove.both,
                     move: move1,
                 };
@@ -141,10 +143,12 @@ var cantStopBgaUserscriptData = {
                 const pProbability = this.getCommonDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
                 const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
                 const spExpectation = spProbability === 1 ? Infinity : 1 / (1 - spProbability);
+                const spNMax = spProbability === 1 ? Infinity : Math.floor(Math.log(0.5)/Math.log(spProbability));
                 movesProbabilities[index1][index2] = {
                     progressProbability: pProbability,
                     saveProgressProbability: spProbability,
                     saveProgressExpectation: spExpectation,
+                    saveProgressNMax50PercentSuccess: spNMax,
                     both: possibleMove.both,
                     move: move2,
                 };
@@ -283,8 +287,9 @@ var cantStopBgaUserscriptData = {
         const formattedProgressProbability = this.formatDecimal(moveProbability.progressProbability * 100, 2);
         const formattedSaveProgressProbability = this.formatDecimal(moveProbability.saveProgressProbability * 100, 2);
         const formattedSaveProgressExpectation = this.formatDecimal(moveProbability.saveProgressExpectation, 2);
+        const formattedSaveProgressNMax50PercentSuccess = this.formatDecimal(moveProbability.saveProgressNMax50PercentSuccess, 0);
         const saveProgressProbabilityElement =
-            `<div style='${maxVisibleSaveProgressProbability ? `font-weight: bolder; color: ${moveProbability.saveProgressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(A)=${formattedSaveProgressProbability}% E[X]=${formattedSaveProgressExpectation}</div>`;
+            `<div style='${maxVisibleSaveProgressProbability ? `font-weight: bolder; color: ${moveProbability.saveProgressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(A)=${formattedSaveProgressProbability}% E[X]=${formattedSaveProgressExpectation} n_max=${formattedSaveProgressNMax50PercentSuccess}</div>`;
         const progressProbabilityElement = `<div style='${maxVisibleProgressProbability ? 'font-weight: bolder;' +
             ` color: ${moveProbability.progressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(⧡)=${formattedProgressProbability}%</div>`;
         const probabilityElement = `<div style='font-size: 70%; font-family: monospace;'>${visible ? `${saveProgressProbabilityElement} ${progressProbabilityElement}` : ''}</div>`;
