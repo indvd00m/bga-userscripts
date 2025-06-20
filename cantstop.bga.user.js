@@ -107,7 +107,7 @@ var cantStopBgaUserscriptData = {
             {
                 const index2 = 0;
                 let columns = [];
-                objectKeys(unsavedColumns).forEach((c) => columns.push(parseInt(c)));
+                objectKeys(unsavedColumns).map(s => parseInt(s)).forEach((c) => columns.push(c));
                 if (possibleMove.both) {
                     columns.push(sum1);
                     columns.push(sum2);
@@ -118,7 +118,7 @@ var cantStopBgaUserscriptData = {
                 const pProbability = this.getCommonDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
                 const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
                 const spExpectation = spProbability === 1 ? Infinity : 1 / (1 - spProbability);
-                const spNMax = spProbability === 1 ? Infinity : Math.floor(Math.log(0.5)/Math.log(spProbability));
+                const spNMax = spProbability === 1 ? Infinity : Math.floor(Math.log(0.5) / Math.log(spProbability));
                 movesProbabilities[index1][index2] = {
                     progressProbability: pProbability,
                     saveProgressProbability: spProbability,
@@ -132,7 +132,7 @@ var cantStopBgaUserscriptData = {
             {
                 const index2 = 1;
                 let columns = [];
-                objectKeys(unsavedColumns).forEach((c) => columns.push(parseInt(c)));
+                objectKeys(unsavedColumns).map(s => parseInt(s)).forEach((c) => columns.push(c));
                 if (possibleMove.both) {
                     columns.push(sum1);
                     columns.push(sum2);
@@ -143,7 +143,7 @@ var cantStopBgaUserscriptData = {
                 const pProbability = this.getCommonDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
                 const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
                 const spExpectation = spProbability === 1 ? Infinity : 1 / (1 - spProbability);
-                const spNMax = spProbability === 1 ? Infinity : Math.floor(Math.log(0.5)/Math.log(spProbability));
+                const spNMax = spProbability === 1 ? Infinity : Math.floor(Math.log(0.5) / Math.log(spProbability));
                 movesProbabilities[index1][index2] = {
                     progressProbability: pProbability,
                     saveProgressProbability: spProbability,
@@ -175,9 +175,9 @@ var cantStopBgaUserscriptData = {
 
     getColumns: function () {
         const columns = {};
-        objectKeys(this.game.columns).forEach(c => {
+        objectKeys(this.game.columns).map(s => parseInt(s)).forEach(c => {
             columns[c] = {};
-            objectKeys(this.game.columns[c]).forEach(p => {
+            objectKeys(this.game.columns[c]).map(s => parseInt(s)).forEach(p => {
                 columns[c][p] = parseInt(this.game.columns[c][p]);
             })
         });
@@ -187,8 +187,8 @@ var cantStopBgaUserscriptData = {
     getClosedColumns: function () {
         const closedColumns = {};
         const columns = this.getColumns();
-        objectKeys(columns).forEach(c => {
-            if (objectValues(columns[c]).some(v => v === 0)) {
+        objectKeys(columns).map(s => parseInt(s)).forEach(c => {
+            if (objectValues(columns[c]).map(s => parseInt(s)).some(v => v === 0)) {
                 closedColumns[c] = columns[c];
             }
         });
@@ -237,7 +237,7 @@ var cantStopBgaUserscriptData = {
     },
 
     getOpenDesiredOutcomesCountFromArray(args) {
-        const closedColumnNumbers = objectKeys(this.getClosedColumns());
+        const closedColumnNumbers = objectKeys(this.getClosedColumns()).map(s => parseInt(s));
         return this.possibleOutcomesValues
             .filter(
                 sums => args.some(a => sums.includes(a))
