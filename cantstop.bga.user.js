@@ -159,6 +159,7 @@ var cantStopBgaUserscriptData = {
         const prevSPProbability = progressState.saveProgressProbability;
         this.recalculateProgressState(progressState, playerId);
         if (prevSPProbability !== progressState.saveProgressProbability) {
+            console.log('reset rolling dice count');
             progressState.rollingDiceCount = 0;
         }
         this.saveProgressState(progressState);
@@ -167,9 +168,11 @@ var cantStopBgaUserscriptData = {
     updateProgressStateRollingDiceCount: function (playerId) {
         console.log("updateProgressStateRollingDiceCount");
         const progressState = this.readProgressState();
+        const playerChanged = playerId !== progressState.playerId;
         this.recalculateProgressState(progressState, playerId);
-        if (progressState.saveProgressProbability < 1) {
+        if (!playerChanged && progressState.saveProgressProbability < 1) {
             progressState.rollingDiceCount++;
+            console.log('increment rolling dice count to ' + progressState.rollingDiceCount);
         }
         this.saveProgressState(progressState);
     },
@@ -509,13 +512,13 @@ var cantStopBgaUserscriptData = {
             `               <div class="grad" style="left: 0%; background-color: darkgray;">` +
             `                    <span style="position: absolute; top: 50%; left: 5px; transform: translate(0%, -50%); color: white; font-size: 75%;">${rdCount}</span>` +
             `               </div>` +
-            `               <div class="grad" style="left: ${nextRDCountPercentage}%;"></div>` +
             `               <div class="grad" style="left: ${nMaxPercentage}%; background-color: blue;">` +
             `                    <span style="position: absolute; top: 50%; left: 2px; transform: translate(0%, -50%); color: blue; font-size: 75%;">${formattedNMax}</span>` +
             `               </div>` +
             `               <div class="grad" style="left: ${expectationPercentage}%; background-color: red;">` +
             `                    <span style="position: absolute; top: 50%; left: 2px; transform: translate(0%, -50%); color: red; font-size: 75%;">${formattedExpectation}</span>` +
             `               </div>` +
+            `               <div class="grad" style="left: ${nextRDCountPercentage}%;"></div>` +
             `           </div>` +
             `       </di>` +
             `   </div>` +
