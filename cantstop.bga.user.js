@@ -156,7 +156,11 @@ var cantStopBgaUserscriptData = {
     updateProgressStateProbability: function (playerId) {
         console.log("updateProgressStateProbability");
         const progressState = this.readProgressState();
+        const prevSPProbability = progressState.saveProgressProbability;
         this.recalculateProgressState(progressState, playerId);
+        if (prevSPProbability !== progressState.saveProgressProbability) {
+            progressState.rollingDiceCount = 0;
+        }
         this.saveProgressState(progressState);
     },
 
@@ -433,7 +437,7 @@ var cantStopBgaUserscriptData = {
         const formattedExpectation = this.formatDecimal(spExpectation, 0);
         const formattedSaveProgressProbability = this.formatDecimal(progressState.saveProgressProbability * 100, 2);
         const nMaxPercentage = 50;
-        const expectationPercentage = nMax === 0 ? 0 : (nMax === Infinity ? 100 : (100 * spExpectation / (nMax * 2)));
+        const expectationPercentage = nMax === 0 ? 100 : (nMax === Infinity ? 100 : (100 * spExpectation / (nMax * 2)));
         let rdCountPercentage = 0;
         let nextRDCountPercentage = 0;
         if (spExpectation === 0) {
@@ -500,7 +504,10 @@ var cantStopBgaUserscriptData = {
             `           </div>` +
             `           <div class="progressbar_bar" style="margin-left: 100px;">` +
             `               <div class="progressbar_content" style="width: ${rdCountPercentage}%; background-color: ${color};">` +
-            `                    <span class="progressbar_valuename">${progressState.rollingDiceCount}</span>` +
+            `                    <span class="progressbar_valuename"></span>` +
+            `               </div>` +
+            `               <div class="grad" style="left: 0%; background-color: darkgray;">` +
+            `                    <span style="position: absolute; top: 50%; left: 5px; transform: translate(0%, -50%); color: white; font-size: 75%;">${rdCount}</span>` +
             `               </div>` +
             `               <div class="grad" style="left: ${nextRDCountPercentage}%;"></div>` +
             `               <div class="grad" style="left: ${nMaxPercentage}%; background-color: blue;">` +
