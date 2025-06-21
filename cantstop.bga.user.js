@@ -23,6 +23,14 @@ const DICE_SELECT_ID_PREFIX = "dice_select_";
 const PROBABILITY_PANEL_ID_PREFIX = "dice_probability_";
 const PROBABILITY_PANEL_CLASS = "dice_probability_cell";
 const BGA_TOKEN_NAME_PATTERN = /^token_(?<playerId>\d+)_(?<number>\d+)$/;
+const DEFAULT_PROGRESS_STATE = {
+    playerId: -1,
+    saveProgressProbability: 0,
+    saveProgressExpectation: 0,
+    saveProgressNMax50PercentSuccess: 0,
+    rollingDiceCount: 0
+};
+const PROGRESS_STATE_KEY = "cantStopUserscriptProgressState";
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -74,6 +82,8 @@ var cantStopBgaUserscriptData = {
 
         // Connect event handlers to follow game progress
         this.dojo.subscribe("rollDice", this, "onEventRollDice");
+        this.dojo.subscribe("removeProgress", this, "onEventRemoveProgress");
+        this.dojo.subscribe("moveToken", this, "onEventMoveToken");
         // Possble events: gameStateChange tableDecision rollDice saveProgress moveToken removeProgress
 
 
@@ -86,9 +96,88 @@ var cantStopBgaUserscriptData = {
         return this;
     },
 
+    onEventRemoveProgress: function (e) {
+        console.log("onEventRemoveProgress");
+        console.log(JSON.stringify(e));
+        this.resetProgressState();
+    },
+
+    onEventMoveToken: function (e) {
+        console.log("onEventMoveToken");
+        console.log(JSON.stringify(e));
+        const playerId = parseInt(e.args.player_id);
+        this.updateProgressStateProbability(playerId);
+    },
+
     onEventRollDice: function (e) {
         console.log("onEventRollDice");
+        console.log(JSON.stringify(e));
         this.processPossibleMoves(e.args, this.getUnsavedColumns());
+        let playerId = parseInt(e.args.player_id);
+        this.updateProgressStateRollingDiceCount(playerId);
+    },
+
+    saveProgressState: function (state) {
+        console.log("saveProgressState");
+        localStorage.setItem(this.PROGRESS_STATE_KEY, JSON.stringify(state));
+    },
+
+    readProgressState: function () {
+        console.log("readProgressState");
+        const sState = localStorage.getItem(this.PROGRESS_STATE_KEY);
+        if (sState == null) {
+            return DEFAULT_PROGRESS_STATE;
+        }
+        const state = JSON.parse(sState);
+
+        // Infinity not exists in JSON
+        if (state.saveProgressExpectation == null) {
+            state.saveProgressExpectation = Infinity;
+        }
+        if (state.saveProgressNMax50PercentSuccess == null) {
+            state.saveProgressNMax50PercentSuccess = Infinity;
+        }
+
+        return state;
+    },
+
+    resetProgressState: function () {
+        console.log("resetProgressState");
+        localStorage.setItem(this.PROGRESS_STATE_KEY, JSON.stringify(DEFAULT_PROGRESS_STATE));
+    },
+
+    updateProgressStateProbability: function (playerId) {
+        console.log("updateProgressStateProbability");
+        const progressState = this.readProgressState();
+        this.recalculateProgressState(progressState, playerId);
+        this.saveProgressState(progressState);
+    },
+
+    updateProgressStateRollingDiceCount: function (playerId) {
+        console.log("updateProgressStateRollingDiceCount");
+        const progressState = this.readProgressState();
+        this.recalculateProgressState(progressState, playerId);
+        if (progressState.saveProgressProbability < 1) {
+            progressState.rollingDiceCount++;
+        }
+        this.saveProgressState(progressState);
+    },
+
+    recalculateProgressState: function (progressState, playerId) {
+        console.log("recalculateProgressState");
+        const unsavedColumns = this.getUnsavedColumns();
+        const columns = objectKeys(unsavedColumns).map(s => parseInt(s));
+        const possibleOutcomeValuesCount = this.possibleOutcomesValues.length;
+        const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
+        const spExpectation = this.calculateExpectation(spProbability);
+        const spNMax = this.calculateNMax(spProbability);
+        if (progressState.playerId !== playerId) {
+            progressState.playerId = playerId;
+        }
+        progressState.saveProgressProbability = spProbability;
+        progressState.saveProgressExpectation = spExpectation;
+        progressState.saveProgressNMax50PercentSuccess = spNMax;
+        return progressState;
     },
 
     processPossibleMoves: function (args, unsavedColumns) {
@@ -120,8 +209,8 @@ var cantStopBgaUserscriptData = {
                 columns = columns.filter(onlyUnique);
                 const pProbability = this.getCommonDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
                 const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
-                const spExpectation = spProbability === 1 ? Infinity : 1 / (1 - spProbability);
-                const spNMax = spProbability === 1 ? Infinity : Math.floor(Math.log(0.5) / Math.log(spProbability));
+                const spExpectation = this.calculateExpectation(spProbability);
+                const spNMax = this.calculateNMax(spProbability);
                 movesProbabilities[index1][index2] = {
                     progressProbability: pProbability,
                     saveProgressProbability: spProbability,
@@ -145,8 +234,8 @@ var cantStopBgaUserscriptData = {
                 columns = columns.filter(onlyUnique);
                 const pProbability = this.getCommonDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
                 const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
-                const spExpectation = spProbability === 1 ? Infinity : 1 / (1 - spProbability);
-                const spNMax = spProbability === 1 ? Infinity : Math.floor(Math.log(0.5) / Math.log(spProbability));
+                const spExpectation = this.calculateExpectation(spProbability);
+                const spNMax = this.calculateNMax(spProbability);
                 movesProbabilities[index1][index2] = {
                     progressProbability: pProbability,
                     saveProgressProbability: spProbability,
@@ -159,6 +248,14 @@ var cantStopBgaUserscriptData = {
             }
         }
         this.renderMovesProbabilities(movesProbabilities);
+    },
+
+    calculateNMax: function (saveProgressProbability) {
+        return saveProgressProbability === 1 ? Infinity : Math.floor(Math.log(0.5) / Math.log(saveProgressProbability));
+    },
+
+    calculateExpectation: function (saveProgressProbability) {
+        return saveProgressProbability === 1 ? Infinity : 1 / (1 - saveProgressProbability);
     },
 
     getUnsavedColumns: function () {
