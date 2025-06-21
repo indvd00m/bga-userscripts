@@ -79,7 +79,9 @@ var cantStopBgaUserscriptData = {
 
         this.renderContainers();
 
-        this.processPossibleMoves(this.game.gamestate.args, this.getUnsavedColumns());
+        if (this.game.gamestate.args) {
+            this.processPossibleMoves(this.game.gamestate.args, this.getUnsavedColumns());
+        }
 
         return this;
     },
