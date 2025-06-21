@@ -429,6 +429,8 @@ var cantStopBgaUserscriptData = {
         const rdCount = progressState.rollingDiceCount;
 
         const stateJsonElement = `<span style="font-size: 60%; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(progressState, null, 4)}</span>`;
+        const formattedNMax = this.formatDecimal(nMax, 0);
+        const formattedExpectation = this.formatDecimal(spExpectation, 0);
         const formattedSaveProgressProbability = this.formatDecimal(progressState.saveProgressProbability * 100, 2);
         const nMaxPercentage = 50;
         const expectationPercentage = nMax === 0 ? 0 : (nMax === Infinity ? 100 : (100 * spExpectation / (nMax * 2)));
@@ -501,8 +503,12 @@ var cantStopBgaUserscriptData = {
             `                    <span class="progressbar_valuename">${progressState.rollingDiceCount}</span>` +
             `               </div>` +
             `               <div class="grad" style="left: ${nextRDCountPercentage}%;"></div>` +
-            `               <div class="grad" style="left: ${nMaxPercentage}%; background-color: blue;"></div>` +
-            `               <div class="grad" style="left: ${expectationPercentage}%; background-color: red;"></div>` +
+            `               <div class="grad" style="left: ${nMaxPercentage}%; background-color: blue;">` +
+            `                    <span style="position: absolute; top: 50%; left: 2px; transform: translate(0%, -50%); color: blue; font-size: 75%;">${formattedNMax}</span>` +
+            `               </div>` +
+            `               <div class="grad" style="left: ${expectationPercentage}%; background-color: red;">` +
+            `                    <span style="position: absolute; top: 50%; left: 2px; transform: translate(0%, -50%); color: red; font-size: 75%;">${formattedExpectation}</span>` +
+            `               </div>` +
             `           </div>` +
             `       </di>` +
             `   </div>` +
