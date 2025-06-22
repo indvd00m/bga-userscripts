@@ -551,8 +551,8 @@ var cantStopBgaUserscriptData = {
             `   </div>` +
             `</div>`;
         const stateJsonElement = `<span style="font-size: 60%; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(progressState, null, 4)}</span>`;
-        const stateElement = `${stateJsonElement}${stateProgressBarElement}`;
-        // const stateElement = `${stateProgressBarElement}`;
+        // const stateElement = `${stateJsonElement}${stateProgressBarElement}`;
+        const stateElement = `${stateProgressBarElement}`;
         this.dojo.place(stateElement, PROGRESS_STATE_PANEL_ID, 'only');
     },
 
