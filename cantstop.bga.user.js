@@ -126,12 +126,12 @@ var cantStopBgaUserscriptData = {
 
     saveProgressState: function (state) {
         console.log("saveProgressState");
-        localStorage.setItem(this.PROGRESS_STATE_KEY, JSON.stringify(state));
+        sessionStorage.setItem(this.PROGRESS_STATE_KEY, JSON.stringify(state));
     },
 
     readProgressState: function () {
         console.log("readProgressState");
-        const sState = localStorage.getItem(this.PROGRESS_STATE_KEY);
+        const sState = sessionStorage.getItem(this.PROGRESS_STATE_KEY);
         if (sState == null) {
             return DEFAULT_PROGRESS_STATE;
         }
@@ -150,7 +150,7 @@ var cantStopBgaUserscriptData = {
 
     resetProgressState: function () {
         console.log("resetProgressState");
-        localStorage.setItem(this.PROGRESS_STATE_KEY, JSON.stringify(DEFAULT_PROGRESS_STATE));
+        sessionStorage.setItem(this.PROGRESS_STATE_KEY, JSON.stringify(DEFAULT_PROGRESS_STATE));
     },
 
     updateProgressStateProbability: function (playerId) {
