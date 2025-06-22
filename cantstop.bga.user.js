@@ -452,7 +452,7 @@ var cantStopBgaUserscriptData = {
             rdCountPercentage = 0;
             nextRDCountPercentage = 0;
         } else if (scaleMaxValue === Infinity) {
-            nMaxPercentage = 100 * nMax / scaleMaxValue;
+            nMaxPercentage = 50;
             expectationPercentage = 100;
             nonlinearRDCountPercentage = 0;
             rdCountPercentage = 0;
