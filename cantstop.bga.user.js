@@ -434,7 +434,7 @@ var cantStopBgaUserscriptData = {
         const nMax = progressState.saveProgressNMax50PercentSuccess;
         const spExpectation = progressState.saveProgressExpectation;
         const rdCount = progressState.rollingDiceCount;
-        const minDangerZoneFactor = 0.9;
+        const minDangerZoneFactor = 0.95;
         let scaleMaxValue = nMax * 2;
         if (spExpectation > 0 && spExpectation / minDangerZoneFactor > scaleMaxValue) {
             scaleMaxValue = Math.ceil(spExpectation / minDangerZoneFactor);
