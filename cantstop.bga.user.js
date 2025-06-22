@@ -479,45 +479,59 @@ var cantStopBgaUserscriptData = {
             nextRDCountPercentage = 0;
         }
         let color = 'green';
+        let icon = 'bgasmiley';
         switch (true) {
             case (rdCountPercentage >= expectationPercentage):
                 color = '#330000';
+                icon = 'bgasmiley_unsmile';
                 break;
             case (nonlinearRDCountPercentage <= 10):
                 color = '#33FF99';
+                icon = 'bgasmiley_sunglass';
                 break;
             case (nonlinearRDCountPercentage <= 20):
                 color = '#00FF99';
+                icon = 'bgasmiley_bigsmile';
                 break;
             case (nonlinearRDCountPercentage <= 30):
                 color = '#33CC66';
+                icon = 'bgasmiley_bigsmile';
                 break;
             case (nonlinearRDCountPercentage <= 40):
                 color = '#00CC66';
+                icon = 'bgasmiley_smile';
                 break;
             case (nonlinearRDCountPercentage <= 50):
                 color = '#009933';
+                icon = 'bgasmiley_smile';
                 break;
             case (nonlinearRDCountPercentage <= 55):
                 color = '#FFCC00';
+                icon = 'bgasmiley_surprised';
                 break;
             case (nonlinearRDCountPercentage <= 60):
                 color = '#FF9933';
+                icon = 'bgasmiley_surprised';
                 break;
             case (nonlinearRDCountPercentage <= 65):
                 color = '#CC3333';
+                icon = 'bgasmiley_bad';
                 break;
             case (nonlinearRDCountPercentage <= 70):
                 color = '#993333';
+                icon = 'bgasmiley_shocked';
                 break;
             case (nonlinearRDCountPercentage <= 80):
                 color = '#990033';
+                icon = 'bgasmiley_shocked';
                 break;
             case (nonlinearRDCountPercentage <= 90):
                 color = '#330000';
+                icon = 'bgasmiley_unsmile';
                 break;
             default:
                 color = '#330000';
+                icon = 'bgasmiley_unsmile';
         }
 
         const formattedNMax = this.formatDecimal(nMax, 0);
@@ -529,7 +543,7 @@ var cantStopBgaUserscriptData = {
             `   <div class="progressbar_inner">` +
             `       <div class="progressbar" style="background-color: darkgray;">` +
             `           <div class="progressbar_label" style="background-color: #0099FF; width: 100px;">` +
-            `               <span class="symbol icon20 icon20_rankw" style="position: relative;top:2px;"></span>` +
+            `               <span class="symbol icon20 ${icon}" style="position: relative;top:2px;"></span>` +
             `               <span style="position: relative;top:-2px;">${formattedSaveProgressProbability}%</span>` +
             `           </div>` +
             `           <div class="progressbar_bar" style="margin-left: 100px;">` +
