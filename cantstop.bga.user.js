@@ -3,7 +3,7 @@
 // @description Extended statistics for Can't Stop game at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 1.3.0
+// @version 1.4.0
 // @match https://boardgamearena.com/*/cantstop*
 // @match https://*.boardgamearena.com/*/cantstop*
 // @grant none
@@ -25,6 +25,7 @@ const GAME_BOARD_WRAP_ID = "game_board_wrap";
 const PROBABILITY_PANEL_ID_PREFIX = "dice_probability_";
 const PROBABILITY_PANEL_CLASS = "dice_probability_cell";
 const BGA_TOKEN_NAME_PATTERN = /^token_(?<playerId>\d+)_(?<number>\d+)$/;
+const BGA_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
 const DEFAULT_PROGRESS_STATE = {
     playerId: -1,
     saveProgressProbability: 0,
@@ -32,7 +33,7 @@ const DEFAULT_PROGRESS_STATE = {
     saveProgressNMax50PercentSuccess: 0,
     rollingDiceCount: 0
 };
-const PROGRESS_STATE_KEY = "cantStopUserscriptProgressState";
+const PROGRESS_STATE_KEY_PREFIX = "cantStopUserscriptProgressState-";
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -61,6 +62,7 @@ var cantStopBgaUserscriptData = {
     playersStats: {},
     playersServerStats: {},
     possibleOutcomesValues: null,
+    bgaTableId: 0,
 
     init: function () {
         // Check if the site was loaded correctly
@@ -71,6 +73,7 @@ var cantStopBgaUserscriptData = {
         }
 
         // init state
+        this.bgaTableId = BGA_URL_TABLE_ID_PATTERN.exec(window.location.search).groups['tableId'];
         this.dojo = window.parent.dojo;
         this.game = window.parent.gameui.gamedatas;
         const myPlayerId = objectKeys(this.game.players)
@@ -126,12 +129,12 @@ var cantStopBgaUserscriptData = {
 
     saveProgressState: function (state) {
         console.log("saveProgressState");
-        sessionStorage.setItem(this.PROGRESS_STATE_KEY, JSON.stringify(state));
+        sessionStorage.setItem(PROGRESS_STATE_KEY_PREFIX + this.bgaTableId, JSON.stringify(state));
     },
 
     readProgressState: function () {
         console.log("readProgressState");
-        const sState = sessionStorage.getItem(this.PROGRESS_STATE_KEY);
+        const sState = sessionStorage.getItem(PROGRESS_STATE_KEY_PREFIX + this.bgaTableId);
         if (sState == null) {
             return DEFAULT_PROGRESS_STATE;
         }
@@ -150,7 +153,7 @@ var cantStopBgaUserscriptData = {
 
     resetProgressState: function () {
         console.log("resetProgressState");
-        sessionStorage.setItem(this.PROGRESS_STATE_KEY, JSON.stringify(DEFAULT_PROGRESS_STATE));
+        sessionStorage.setItem(PROGRESS_STATE_KEY_PREFIX + this.bgaTableId, JSON.stringify(DEFAULT_PROGRESS_STATE));
     },
 
     updateProgressStateProbability: function (playerId) {
