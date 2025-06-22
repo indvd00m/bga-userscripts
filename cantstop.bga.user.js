@@ -3,7 +3,7 @@
 // @description Extended statistics for Can't Stop game at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 1.2.0
+// @version 1.3.0
 // @match https://boardgamearena.com/*/cantstop*
 // @match https://*.boardgamearena.com/*/cantstop*
 // @grant none
@@ -126,12 +126,12 @@ var cantStopBgaUserscriptData = {
 
     saveProgressState: function (state) {
         console.log("saveProgressState");
-        localStorage.setItem(this.PROGRESS_STATE_KEY, JSON.stringify(state));
+        sessionStorage.setItem(this.PROGRESS_STATE_KEY, JSON.stringify(state));
     },
 
     readProgressState: function () {
         console.log("readProgressState");
-        const sState = localStorage.getItem(this.PROGRESS_STATE_KEY);
+        const sState = sessionStorage.getItem(this.PROGRESS_STATE_KEY);
         if (sState == null) {
             return DEFAULT_PROGRESS_STATE;
         }
@@ -150,7 +150,7 @@ var cantStopBgaUserscriptData = {
 
     resetProgressState: function () {
         console.log("resetProgressState");
-        localStorage.setItem(this.PROGRESS_STATE_KEY, JSON.stringify(DEFAULT_PROGRESS_STATE));
+        sessionStorage.setItem(this.PROGRESS_STATE_KEY, JSON.stringify(DEFAULT_PROGRESS_STATE));
     },
 
     updateProgressStateProbability: function (playerId) {
@@ -434,75 +434,116 @@ var cantStopBgaUserscriptData = {
         const nMax = progressState.saveProgressNMax50PercentSuccess;
         const spExpectation = progressState.saveProgressExpectation;
         const rdCount = progressState.rollingDiceCount;
+        const minDangerZoneFactor = 0.95;
+        let scaleMaxValue = nMax * 2;
+        if (spExpectation > 0 && spExpectation / minDangerZoneFactor > scaleMaxValue) {
+            scaleMaxValue = Math.ceil(spExpectation / minDangerZoneFactor);
+        }
 
-        const stateJsonElement = `<span style="font-size: 60%; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(progressState, null, 4)}</span>`;
-        const formattedNMax = this.formatDecimal(nMax, 0);
-        const formattedExpectation = this.formatDecimal(spExpectation, 0);
-        const formattedSaveProgressProbability = this.formatDecimal(progressState.saveProgressProbability * 100, 2);
-        const nMaxPercentage = 50;
-        const expectationPercentage = nMax === 0 ? 100 : (nMax === Infinity ? 100 : (100 * spExpectation / (nMax * 2)));
+        let nMaxPercentage;
+        let expectationPercentage;
+        let nonlinearRDCountPercentage = 0;
         let rdCountPercentage = 0;
         let nextRDCountPercentage = 0;
-        if (spExpectation === 0) {
+        if (scaleMaxValue === 0) {
+            nMaxPercentage = 50;
+            expectationPercentage = 100;
+            nonlinearRDCountPercentage = 0;
             rdCountPercentage = 0;
             nextRDCountPercentage = 0;
-        } else if (rdCount < spExpectation) {
-            rdCountPercentage = nMax === 0 ? 100 : (nMax === Infinity ? 0 : (100 * rdCount / (nMax * 2)));
-            nextRDCountPercentage = nMax === 0 ? 100 : (nMax === Infinity ? 0 : (100 * (rdCount + 1) / (nMax * 2)));
+        } else if (scaleMaxValue === Infinity) {
+            nMaxPercentage = 50;
+            expectationPercentage = 100;
+            nonlinearRDCountPercentage = 0;
+            rdCountPercentage = 0;
+            nextRDCountPercentage = 0;
+        } else if (scaleMaxValue > 0) {
+            nMaxPercentage = 100 * nMax / scaleMaxValue;
+            expectationPercentage = 100 * spExpectation / scaleMaxValue;
+            if (rdCount < spExpectation) {
+                nonlinearRDCountPercentage = 100 * rdCount / (nMax * 2);
+                rdCountPercentage = 100 * rdCount / scaleMaxValue;
+                nextRDCountPercentage = 100 * (rdCount + 1) / scaleMaxValue;
+            } else {
+                const k = 0.2;
+                const rdCountDangerValue = spExpectation + (scaleMaxValue - spExpectation) * (1 - 2.71828 ** (-k * (rdCount - spExpectation)));
+                const nextRDCountDangerValue = spExpectation + (scaleMaxValue - spExpectation) * (1 - 2.71828 ** (-k * (rdCount + 1 - spExpectation)));
+                nonlinearRDCountPercentage = 100 * rdCountDangerValue / scaleMaxValue;
+                rdCountPercentage = 100 * rdCountDangerValue / scaleMaxValue;
+                nextRDCountPercentage = 100 * (nextRDCountDangerValue) / scaleMaxValue;
+            }
         } else {
-            const k = 0.2;
-            const rdCountDangerValue = spExpectation + (nMax * 2 - spExpectation) * (1 - 2.71828 ** (-k * (rdCount - spExpectation)));
-            const nextRDCountDangerValue = spExpectation + (nMax * 2 - spExpectation) * (1 - 2.71828 ** (-k * (rdCount + 1 - spExpectation)));
-            rdCountPercentage = nMax === 0 ? 100 : (nMax === Infinity ? 0 : (100 * rdCountDangerValue / (nMax * 2)));
-            nextRDCountPercentage = nMax === 0 ? 100 : (nMax === Infinity ? 0 : (100 * (nextRDCountDangerValue) / (nMax * 2)));
+            nMaxPercentage = 50;
+            expectationPercentage = 100;
+            rdCountPercentage = 0;
+            nextRDCountPercentage = 0;
         }
         let color = 'green';
+        let icon = 'bgasmiley';
         switch (true) {
             case (rdCountPercentage >= expectationPercentage):
                 color = '#330000';
+                icon = 'bgasmiley_unsmile';
                 break;
-            case (rdCountPercentage <= 10):
+            case (nonlinearRDCountPercentage <= 10):
                 color = '#33FF99';
+                icon = 'bgasmiley_sunglass';
                 break;
-            case (rdCountPercentage <= 20):
+            case (nonlinearRDCountPercentage <= 20):
                 color = '#00FF99';
+                icon = 'bgasmiley_bigsmile';
                 break;
-            case (rdCountPercentage <= 30):
+            case (nonlinearRDCountPercentage <= 30):
                 color = '#33CC66';
+                icon = 'bgasmiley_bigsmile';
                 break;
-            case (rdCountPercentage <= 40):
+            case (nonlinearRDCountPercentage <= 40):
                 color = '#00CC66';
+                icon = 'bgasmiley_smile';
                 break;
-            case (rdCountPercentage <= 50):
+            case (nonlinearRDCountPercentage <= 50):
                 color = '#009933';
+                icon = 'bgasmiley_smile';
                 break;
-            case (rdCountPercentage <= 55):
+            case (nonlinearRDCountPercentage <= 55):
                 color = '#FFCC00';
+                icon = 'bgasmiley_surprised';
                 break;
-            case (rdCountPercentage <= 60):
+            case (nonlinearRDCountPercentage <= 60):
                 color = '#FF9933';
+                icon = 'bgasmiley_surprised';
                 break;
-            case (rdCountPercentage <= 65):
+            case (nonlinearRDCountPercentage <= 65):
                 color = '#CC3333';
+                icon = 'bgasmiley_bad';
                 break;
-            case (rdCountPercentage <= 70):
+            case (nonlinearRDCountPercentage <= 70):
                 color = '#993333';
+                icon = 'bgasmiley_shocked';
                 break;
-            case (rdCountPercentage <= 80):
+            case (nonlinearRDCountPercentage <= 80):
                 color = '#990033';
+                icon = 'bgasmiley_shocked';
                 break;
-            case (rdCountPercentage <= 90):
+            case (nonlinearRDCountPercentage <= 90):
                 color = '#330000';
+                icon = 'bgasmiley_unsmile';
                 break;
             default:
-                color = 'green';
+                color = '#330000';
+                icon = 'bgasmiley_unsmile';
         }
+
+        const formattedNMax = this.formatDecimal(nMax, 0);
+        const formattedExpectation = this.formatDecimal(spExpectation, 0);
+        const formattedSaveProgressProbability = this.formatDecimal(progressState.saveProgressProbability * 100, 2);
+
         const stateProgressBarElement =
             `<div class="progressbar_with_info">` +
             `   <div class="progressbar_inner">` +
             `       <div class="progressbar" style="background-color: darkgray;">` +
             `           <div class="progressbar_label" style="background-color: #0099FF; width: 100px;">` +
-            `               <span class="symbol icon20 icon20_rankw" style="position: relative;top:2px;"></span>` +
+            `               <span class="symbol icon20 ${icon}" style="position: relative;top:2px;"></span>` +
             `               <span style="position: relative;top:-2px;">${formattedSaveProgressProbability}%</span>` +
             `           </div>` +
             `           <div class="progressbar_bar" style="margin-left: 100px;">` +
@@ -523,6 +564,7 @@ var cantStopBgaUserscriptData = {
             `       </di>` +
             `   </div>` +
             `</div>`;
+        const stateJsonElement = `<span style="font-size: 60%; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(progressState, null, 4)}</span>`;
         // const stateElement = `${stateJsonElement}${stateProgressBarElement}`;
         const stateElement = `${stateProgressBarElement}`;
         this.dojo.place(stateElement, PROGRESS_STATE_PANEL_ID, 'only');
