@@ -97,6 +97,7 @@ var cantStopBgaUserscriptData = {
         if (this.game.gamestate.args) {
             this.processPossibleMoves(this.game.gamestate.args, this.getUnsavedColumns());
         }
+        this.recalculateAndSaveProgressState();
 
         this.renderProgressState();
 
@@ -177,6 +178,14 @@ var cantStopBgaUserscriptData = {
             progressState.rollingDiceCount++;
             console.log('increment rolling dice count to ' + progressState.rollingDiceCount);
         }
+        this.saveProgressState(progressState);
+    },
+
+    recalculateAndSaveProgressState: function () {
+        console.log("recalculateAndSaveProgressState");
+        const activePlayerId = parseInt(this.game.gamestate.active_player);
+        const progressState = this.readProgressState();
+        this.recalculateProgressState(progressState, activePlayerId);
         this.saveProgressState(progressState);
     },
 
