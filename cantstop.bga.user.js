@@ -21,6 +21,7 @@ const USERSCRIPT_LOAD_TIMEOUT_MS = 5000;
 const CANT_STOP_MAX_CHIPS_COUNT = 3;
 const DICE_SELECT_ID_PREFIX = "dice_select_";
 const PROGRESS_STATE_PANEL_ID = "progress_state";
+const PROGRESS_STATE_NEW_PANEL_ID = "progress_state_new";
 const GAME_BOARD_WRAP_ID = "game_board_wrap";
 const PROBABILITY_PANEL_ID_PREFIX = "dice_probability_";
 const PROBABILITY_PANEL_CLASS = "dice_probability_cell";
@@ -31,7 +32,8 @@ const DEFAULT_PROGRESS_STATE = {
     saveProgressProbability: 0,
     saveProgressExpectation: 0,
     saveProgressNMax50PercentSuccess: 0,
-    rollingDiceCount: 0
+    rollingDiceCount: 0,
+    lastRollDiceMatchesCount: 0,
 };
 const PROGRESS_STATE_KEY_PREFIX = "cantStopUserscriptProgressState-";
 
@@ -63,6 +65,7 @@ var cantStopBgaUserscriptData = {
     playersServerStats: {},
     possibleOutcomesValues: null,
     bgaTableId: 0,
+    rollDiceLog: [],
 
     init: function () {
         // Check if the site was loaded correctly
@@ -84,6 +87,7 @@ var cantStopBgaUserscriptData = {
         }
 
         this.possibleOutcomesValues = this.calcPossibleOutcomesValues();
+        this.parseHistoryRollDices();
 
         // Connect event handlers to follow game progress
         this.dojo.subscribe("rollDice", this, "onEventRollDice");
@@ -100,6 +104,7 @@ var cantStopBgaUserscriptData = {
         this.recalculateAndSaveProgressState();
 
         this.renderProgressState();
+        this.renderProgressStateNew();
 
         return this;
     },
@@ -109,6 +114,7 @@ var cantStopBgaUserscriptData = {
         console.log(JSON.stringify(e));
         this.resetProgressState();
         this.renderProgressState();
+        this.renderProgressStateNew();
     },
 
     onEventMoveToken: function (e) {
@@ -117,15 +123,18 @@ var cantStopBgaUserscriptData = {
         const playerId = parseInt(e.args.player_id);
         this.updateProgressStateProbability(playerId);
         this.renderProgressState();
+        this.renderProgressStateNew();
     },
 
     onEventRollDice: function (e) {
         console.log("onEventRollDice");
         console.log(JSON.stringify(e));
+        this.addRollDiceEventToLog(e);
         this.processPossibleMoves(e.args, this.getUnsavedColumns());
         let playerId = parseInt(e.args.player_id);
         this.updateProgressStateRollingDiceCount(playerId);
         this.renderProgressState();
+        this.renderProgressStateNew();
     },
 
     saveProgressState: function (state) {
@@ -197,12 +206,14 @@ var cantStopBgaUserscriptData = {
         const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
         const spExpectation = this.calculateExpectation(spProbability);
         const spNMax = this.calculateNMax(spProbability);
+        const lastMatchesCount = this.getLastRollDiceLogMatchedCountFromArray(columns);
         if (progressState.playerId !== playerId) {
             progressState.playerId = playerId;
         }
         progressState.saveProgressProbability = spProbability;
         progressState.saveProgressExpectation = spExpectation;
         progressState.saveProgressNMax50PercentSuccess = spNMax;
+        progressState.lastRollDiceMatchesCount = lastMatchesCount;
         return progressState;
     },
 
@@ -244,6 +255,7 @@ var cantStopBgaUserscriptData = {
                     saveProgressNMax50PercentSuccess: spNMax,
                     both: possibleMove.both,
                     move: move1,
+                    lastMatchesCount: this.getLastRollDiceLogMatchedCountFromArray(columns),
                 };
                 console.log(`${index1},${index2} with dice ${JSON.stringify(dice1)} and sum ${sum1} has probability ${pProbability}`);
             }
@@ -269,6 +281,7 @@ var cantStopBgaUserscriptData = {
                     saveProgressNMax50PercentSuccess: spNMax,
                     both: possibleMove.both,
                     move: move2,
+                    lastMatchesCount: this.getLastRollDiceLogMatchedCountFromArray(columns),
                 };
                 console.log(`${index1},${index2} with dice ${JSON.stringify(dice2)} and sum ${sum2} has probability ${pProbability}`);
             }
@@ -341,6 +354,16 @@ var cantStopBgaUserscriptData = {
         return moveProbability.move && (!moveProbability.both || index2 === 0);
     },
 
+    getSums(dice1, dice2, dice3, dice4) {
+        const sum1 = dice1 + dice2;
+        const sum2 = dice1 + dice3;
+        const sum3 = dice1 + dice4;
+        const sum4 = dice2 + dice3;
+        const sum5 = dice2 + dice4;
+        const sum6 = dice3 + dice4;
+        return [sum1, sum2, sum3, sum4, sum5, sum6].sort((a, b) => a - b).filter(onlyUnique);
+    },
+
     calcPossibleOutcomesValues() {
         const start = Date.now();
         const values = [];
@@ -348,13 +371,7 @@ var cantStopBgaUserscriptData = {
             for (let diceGreen = 1; diceGreen <= 6; diceGreen++) {
                 for (let diceBlue = 1; diceBlue <= 6; diceBlue++) {
                     for (let diceYellow = 1; diceYellow <= 6; diceYellow++) {
-                        const sum1 = diceRed + diceGreen;
-                        const sum2 = diceRed + diceBlue;
-                        const sum3 = diceRed + diceYellow;
-                        const sum4 = diceGreen + diceBlue;
-                        const sum5 = diceGreen + diceYellow;
-                        const sum6 = diceBlue + diceYellow;
-                        const sums = [sum1, sum2, sum3, sum4, sum5, sum6].sort((a, b) => a - b).filter(onlyUnique);
+                        const sums = this.getSums(diceRed, diceGreen, diceBlue, diceYellow);
                         values.push(sums);
                     }
                 }
@@ -369,13 +386,13 @@ var cantStopBgaUserscriptData = {
         return this.getCommonDesiredOutcomesCountFromArray(args);
     },
 
+    getCommonDesiredOutcomesCountFromArray(args) {
+        return this.possibleOutcomesValues.filter(sums => args.some(a => sums.includes(a))).length;
+    },
+
     getOpenDesiredOutcomesCount() {
         const args = [].slice.call(arguments);
         return this.getOpenDesiredOutcomesCountFromArray(args);
-    },
-
-    getCommonDesiredOutcomesCountFromArray(args) {
-        return this.possibleOutcomesValues.filter(sums => args.some(a => sums.includes(a))).length;
     },
 
     getOpenDesiredOutcomesCountFromArray(args) {
@@ -388,6 +405,57 @@ var cantStopBgaUserscriptData = {
                         || args.length < CANT_STOP_MAX_CHIPS_COUNT
                     )
             ).length;
+    },
+
+    getLastRollDiceLogMatchedCount() {
+        const args = [].slice.call(arguments);
+        return this.getLastRollDiceLogMatchedCountFromArray(args);
+    },
+
+    getLastRollDiceLogMatchedCountFromArray(args) {
+        let matches = 0;
+        const log = this.rollDiceLog;
+        for (let i = log.length - 1; i > 0; i--) {
+            const action = log[i];
+            const dice = action.dice;
+            const sums = this.getSums(dice[0], dice[1], dice[2], dice[3]);
+            if (args.some(a => sums.includes(a))) {
+                matches++;
+            } else {
+                break;
+            }
+        }
+        return matches;
+    },
+
+    getHistory() {
+        return window.parent.gameui.notifqueue.logs_to_load.filter(e => e.data && e.data.length).flatMap(e => e.data).filter(a => a.args);
+    },
+
+    filterHistory(originalType) {
+        return this.getHistory().filter(a => a.args.originalType === originalType);
+    },
+
+    parseHistoryRollDices() {
+        this.filterHistory('rollDice').forEach(e => {
+            this.addRollDiceHistoryElementToLog(e);
+        });
+    },
+
+    addRollDiceEventToLog(e) {
+        this.rollDiceLog.push({
+            uid: e.uid,
+            playerId: parseInt(e.args.player_id),
+            dice: e.args.dice,
+        });
+    },
+
+    addRollDiceHistoryElementToLog(e) {
+        this.rollDiceLog.push({
+            uid: e.uid,
+            playerId: parseInt(e.args.player_id),
+            dice: e.args.dice,
+        });
     },
 
     renderMovesProbabilities: function (movesProbabilities) {
@@ -433,8 +501,9 @@ var cantStopBgaUserscriptData = {
         const formattedSaveProgressProbability = this.formatDecimal(moveProbability.saveProgressProbability * 100, 2);
         const formattedSaveProgressExpectation = this.formatDecimal(moveProbability.saveProgressExpectation, 2);
         const formattedSaveProgressNMax50PercentSuccess = this.formatDecimal(moveProbability.saveProgressNMax50PercentSuccess, 0);
+        const lastMatchesCount = moveProbability.lastMatchesCount;
         const saveProgressProbabilityElement =
-            `<div style='${maxVisibleSaveProgressProbability ? `font-weight: bolder; color: ${moveProbability.saveProgressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(A)=${formattedSaveProgressProbability}% E[X]=${formattedSaveProgressExpectation} n_max=${formattedSaveProgressNMax50PercentSuccess}</div>`;
+            `<div style='${maxVisibleSaveProgressProbability ? `font-weight: bolder; color: ${moveProbability.saveProgressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(A)=${formattedSaveProgressProbability}% E[X]=${formattedSaveProgressExpectation} n_max=${formattedSaveProgressNMax50PercentSuccess} n=${lastMatchesCount}</div>`;
         const progressProbabilityElement = `<div style='${maxVisibleProgressProbability ? 'font-weight: bolder;' +
             ` color: ${moveProbability.progressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(⧡)=${formattedProgressProbability}%</div>`;
         const probabilityElement = `<div style='font-size: 60%; font-family: monospace;'>${visible ? `${saveProgressProbabilityElement} ${progressProbabilityElement}` : ''}</div>`;
@@ -577,9 +646,152 @@ var cantStopBgaUserscriptData = {
             `   </div>` +
             `</div>`;
         const stateJsonElement = `<span style="font-size: 60%; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(progressState, null, 4)}</span>`;
+        const stateElement = `${stateJsonElement}${stateProgressBarElement}`;
+        // const stateElement = `${stateProgressBarElement}`;
+        this.dojo.place(stateElement, PROGRESS_STATE_PANEL_ID, 'only');
+    },
+
+    renderProgressStateNew: function () {
+        const progressState = this.readProgressState();
+        const nMax = progressState.saveProgressNMax50PercentSuccess;
+        const spExpectation = progressState.saveProgressExpectation;
+        const rdCount = progressState.rollingDiceCount;
+        const rdmCount = progressState.lastRollDiceMatchesCount;
+        const rdIncrement = rdmCount > rdCount ? rdmCount - rdCount : 0;
+        const minDangerZoneFactor = 0.95;
+        let scaleMaxValue = nMax * 2;
+        if (spExpectation > 0 && spExpectation / minDangerZoneFactor > scaleMaxValue) {
+            scaleMaxValue = Math.ceil(spExpectation / minDangerZoneFactor);
+        }
+
+        let nMaxPercentage;
+        let expectationPercentage;
+        let nonlinearRDCountPercentage = 0;
+        let rdCountPercentage = 0;
+        let nextRDCountPercentage = 0;
+        if (scaleMaxValue === 0) {
+            nMaxPercentage = 50;
+            expectationPercentage = 100;
+            nonlinearRDCountPercentage = 0;
+            rdCountPercentage = 0;
+            nextRDCountPercentage = 0;
+        } else if (scaleMaxValue === Infinity) {
+            nMaxPercentage = 50;
+            expectationPercentage = 100;
+            nonlinearRDCountPercentage = 0;
+            rdCountPercentage = 0;
+            nextRDCountPercentage = 0;
+        } else if (scaleMaxValue > 0) {
+            nMaxPercentage = 100 * nMax / scaleMaxValue;
+            expectationPercentage = 100 * spExpectation / scaleMaxValue;
+            if (rdmCount < spExpectation) {
+                nonlinearRDCountPercentage = 100 * rdmCount / (nMax * 2);
+                rdCountPercentage = 100 * rdmCount / scaleMaxValue;
+                nextRDCountPercentage = 100 * (rdmCount + 1) / scaleMaxValue;
+            } else {
+                const k = 0.2;
+                const rdCountDangerValue = spExpectation + (scaleMaxValue - spExpectation) * (1 - 2.71828 ** (-k * (rdmCount - spExpectation)));
+                const nextRDCountDangerValue = spExpectation + (scaleMaxValue - spExpectation) * (1 - 2.71828 ** (-k * (rdmCount + 1 - spExpectation)));
+                nonlinearRDCountPercentage = 100 * rdCountDangerValue / scaleMaxValue;
+                rdCountPercentage = 100 * rdCountDangerValue / scaleMaxValue;
+                nextRDCountPercentage = 100 * (nextRDCountDangerValue) / scaleMaxValue;
+            }
+        } else {
+            nMaxPercentage = 50;
+            expectationPercentage = 100;
+            rdCountPercentage = 0;
+            nextRDCountPercentage = 0;
+        }
+        let color = 'green';
+        let icon = 'bgasmiley';
+        switch (true) {
+            case (rdCountPercentage >= expectationPercentage):
+                color = '#330000';
+                icon = 'bgasmiley_unsmile';
+                break;
+            case (nonlinearRDCountPercentage <= 10):
+                color = '#33FF99';
+                icon = 'bgasmiley_sunglass';
+                break;
+            case (nonlinearRDCountPercentage <= 20):
+                color = '#00FF99';
+                icon = 'bgasmiley_bigsmile';
+                break;
+            case (nonlinearRDCountPercentage <= 30):
+                color = '#33CC66';
+                icon = 'bgasmiley_bigsmile';
+                break;
+            case (nonlinearRDCountPercentage <= 40):
+                color = '#00CC66';
+                icon = 'bgasmiley_smile';
+                break;
+            case (nonlinearRDCountPercentage <= 50):
+                color = '#009933';
+                icon = 'bgasmiley_smile';
+                break;
+            case (nonlinearRDCountPercentage <= 55):
+                color = '#FFCC00';
+                icon = 'bgasmiley_surprised';
+                break;
+            case (nonlinearRDCountPercentage <= 60):
+                color = '#FF9933';
+                icon = 'bgasmiley_surprised';
+                break;
+            case (nonlinearRDCountPercentage <= 65):
+                color = '#CC3333';
+                icon = 'bgasmiley_bad';
+                break;
+            case (nonlinearRDCountPercentage <= 70):
+                color = '#993333';
+                icon = 'bgasmiley_shocked';
+                break;
+            case (nonlinearRDCountPercentage <= 80):
+                color = '#990033';
+                icon = 'bgasmiley_shocked';
+                break;
+            case (nonlinearRDCountPercentage <= 90):
+                color = '#330000';
+                icon = 'bgasmiley_unsmile';
+                break;
+            default:
+                color = '#330000';
+                icon = 'bgasmiley_unsmile';
+        }
+
+        const formattedNMax = this.formatDecimal(nMax, 0);
+        const formattedExpectation = this.formatDecimal(spExpectation, 0);
+        const formattedSaveProgressProbability = this.formatDecimal(progressState.saveProgressProbability * 100, 2);
+
+        const stateProgressBarElement =
+            `<div class="progressbar_with_info">` +
+            `   <div class="progressbar_inner">` +
+            `       <div class="progressbar" style="background-color: darkgray;">` +
+            `           <div class="progressbar_label" style="background-color: #0099FF; width: 100px;">` +
+            `               <span class="symbol icon20 ${icon}" style="position: relative;top:2px;"></span>` +
+            `               <span style="position: relative;top:-2px;">${formattedSaveProgressProbability}%</span>` +
+            `           </div>` +
+            `           <div class="progressbar_bar" style="margin-left: 100px;">` +
+            `               <div class="progressbar_content" style="width: ${rdCountPercentage}%; background-color: ${color};">` +
+            `                    <span class="progressbar_valuename"></span>` +
+            `               </div>` +
+            `               <div class="grad" style="left: 0%; background-color: darkgray;">` +
+            `                    <span style="position: absolute; top: 50%; left: 5px; transform: translate(0%, -50%); color: white; font-size: 75%; white-space: nowrap;">${rdCount} +${rdIncrement} [${rdmCount}]</span>` +
+            `               </div>` +
+            `               <div class="grad" style="left: ${nMaxPercentage}%; background-color: blue;">` +
+            `                    <span style="position: absolute; top: 50%; left: 2px; transform: translate(0%, -50%); color: blue; font-size: 75%; white-space: nowrap;">${formattedNMax}</span>` +
+            `               </div>` +
+            `               <div class="grad" style="left: ${expectationPercentage}%; background-color: red;">` +
+            `                    <span style="position: absolute; top: 50%; left: 2px; transform: translate(0%, -50%); color: red; font-size: 75%; white-space: nowrap;">${formattedExpectation}</span>` +
+            `               </div>` +
+            `               <div class="grad" style="left: ${nextRDCountPercentage}%;"></div>` +
+            `           </div>` +
+            `       </di>` +
+            `   </div>` +
+            `</div>`;
+        const stateJsonElement = `<span style="font-size: 60%; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(progressState, null, 4)}</span>`;
         // const stateElement = `${stateJsonElement}${stateProgressBarElement}`;
         const stateElement = `${stateProgressBarElement}`;
-        this.dojo.place(stateElement, PROGRESS_STATE_PANEL_ID, 'only');
+        this.dojo.place(stateElement, PROGRESS_STATE_NEW_PANEL_ID, 'only');
     },
 
     renderContainers: function () {
@@ -589,6 +801,8 @@ var cantStopBgaUserscriptData = {
             const probabilityElement = `<div id="${probabilityElementId}" class="${PROBABILITY_PANEL_CLASS}"></div>`;
             this.dojo.place(probabilityElement, buttonSelectElement, 'after');
         });
+        const progressStateNewElement = `<div id="${PROGRESS_STATE_NEW_PANEL_ID}" style="width: 100%;"></div>`;
+        this.dojo.place(progressStateNewElement, GAME_BOARD_WRAP_ID, 'first');
         const progressStateElement = `<div id="${PROGRESS_STATE_PANEL_ID}" style="width: 100%;"></div>`;
         this.dojo.place(progressStateElement, GAME_BOARD_WRAP_ID, 'first');
     },
