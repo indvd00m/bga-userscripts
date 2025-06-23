@@ -703,7 +703,7 @@ var cantStopBgaUserscriptData = {
             `    </tr>` +
             `    </tbody>` +
             `    <tr>` +
-            `        <th>Diff</th>`;
+            `        <th>Diff /${this.rollDiceLog.length}</th>`;
         for (let i = 1; i < lineProbabilitiesDiffArr.length; i++) {
             const diff = lineProbabilitiesDiffArr[i];
             linesTableElement +=
