@@ -691,9 +691,11 @@ var cantStopBgaUserscriptData = {
             `    <tbody>` +
             `    <tr id="line_stats_header">` +
             `        <th>Line</th>`;
+        const maxDiff = Math.max.apply(null, lineProbabilitiesDiffArr.map(p => Math.abs(p)));
+        console.log(`maxDiff=${maxDiff}`);
         for (let i = 1; i < lineProbabilitiesDiffArr.length; i++) {
             const diff = lineProbabilitiesDiffArr[i];
-            const diffColor = this.percentageDiffColor(diff);
+            const diffColor = this.percentageDiffColor(diff, maxDiff);
             linesTableElement +=
                 `    <th style="background-color: ${diffColor}; color: white;">${i + 1}</th>`;
         }
@@ -884,47 +886,47 @@ var cantStopBgaUserscriptData = {
         }
     },
 
-    percentageDiffColor: function (diff) {
+    percentageDiffColor: function (diff, maxDiff) {
         switch (true) {
-            case (diff < -0.10):
+            case (diff < -1 * maxDiff):
                 return '#CC0033';
-            case (diff < -0.09):
+            case (diff < -0.9 * maxDiff):
                 return '#CC0033';
-            case (diff < -0.08):
+            case (diff < -0.8 * maxDiff):
                 return '#CC0033';
-            case (diff < -0.07):
+            case (diff < -0.7 * maxDiff):
                 return '#CC0033';
-            case (diff < -0.06):
+            case (diff < -0.6 * maxDiff):
                 return '#CC0033';
-            case (diff < -0.05):
+            case (diff < -0.5 * maxDiff):
                 return '#FF0033';
-            case (diff < -0.04):
+            case (diff < -0.4 * maxDiff):
                 return '#FF3333';
-            case (diff < -0.03):
+            case (diff < -0.3 * maxDiff):
                 return '#FF6666';
-            case (diff < -0.02):
+            case (diff < -0.2 * maxDiff):
                 return '#FF9999';
-            case (diff < -0.01):
+            case (diff < -0.1 * maxDiff):
                 return '#FFCCCC';
             case (diff < 0.00):
                 return '#99FF99';
-            case (diff < 0.01):
+            case (diff < 0.1 * maxDiff):
                 return '#66FF66';
-            case (diff < 0.02):
+            case (diff < 0.2 * maxDiff):
                 return '#33FF66';
-            case (diff < 0.03):
+            case (diff < 0.3 * maxDiff):
                 return '#00FF66';
-            case (diff < 0.04):
+            case (diff < 0.4 * maxDiff):
                 return '#339933';
-            case (diff < 0.05):
+            case (diff < 0.5 * maxDiff):
                 return '#006600';
-            case (diff < 0.06):
+            case (diff < 0.6 * maxDiff):
                 return '#006600';
-            case (diff < 0.07):
+            case (diff < 0.7 * maxDiff):
                 return '#006600';
-            case (diff < 0.08):
+            case (diff < 0.8 * maxDiff):
                 return '#006600';
-            case (diff < 0.09):
+            case (diff < 0.9 * maxDiff):
                 return '#006600';
             default:
                 return '#006600';
