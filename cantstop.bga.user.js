@@ -22,6 +22,7 @@ const CANT_STOP_MAX_CHIPS_COUNT = 3;
 const DICE_SELECT_ID_PREFIX = "dice_select_";
 const PROGRESS_STATE_PANEL_ID = "progress_state";
 const PROGRESS_STATE_NEW_PANEL_ID = "progress_state_new";
+const LINE_PROBABILITIES_PANEL_ID = "line_probabilities";
 const GAME_BOARD_WRAP_ID = "game_board_wrap";
 const PROBABILITY_PANEL_ID_PREFIX = "dice_probability_";
 const PROBABILITY_PANEL_CLASS = "dice_probability_cell";
@@ -64,6 +65,8 @@ var cantStopBgaUserscriptData = {
     playersStats: {},
     playersServerStats: {},
     possibleOutcomesValues: null,
+    lineProbabilities: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    currentLineCounts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     bgaTableId: 0,
     rollDiceLog: [],
 
@@ -86,7 +89,9 @@ var cantStopBgaUserscriptData = {
             this.myPlayerId = parseInt(myPlayerId);
         }
 
-        this.possibleOutcomesValues = this.calcPossibleOutcomesValues();
+        const stats = this.calcStats();
+        this.possibleOutcomesValues = stats.possibleOutcomesValues;
+        this.lineProbabilities = stats.lineProbabilities;
         this.parseHistoryRollDices();
 
         // Connect event handlers to follow game progress
@@ -105,6 +110,7 @@ var cantStopBgaUserscriptData = {
 
         this.renderProgressState();
         this.renderProgressStateNew();
+        this.renderLineProbabilities();
 
         return this;
     },
@@ -135,6 +141,7 @@ var cantStopBgaUserscriptData = {
         this.updateProgressStateRollingDiceCount(playerId);
         this.renderProgressState();
         this.renderProgressStateNew();
+        this.renderLineProbabilities();
     },
 
     saveProgressState: function (state) {
@@ -364,21 +371,28 @@ var cantStopBgaUserscriptData = {
         return [sum1, sum2, sum3, sum4, sum5, sum6].sort((a, b) => a - b).filter(onlyUnique);
     },
 
-    calcPossibleOutcomesValues() {
+    calcStats() {
         const start = Date.now();
         const values = [];
+        const lineCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         for (let diceRed = 1; diceRed <= 6; diceRed++) {
             for (let diceGreen = 1; diceGreen <= 6; diceGreen++) {
                 for (let diceBlue = 1; diceBlue <= 6; diceBlue++) {
                     for (let diceYellow = 1; diceYellow <= 6; diceYellow++) {
                         const sums = this.getSums(diceRed, diceGreen, diceBlue, diceYellow);
                         values.push(sums);
+                        sums.forEach(sum => lineCounts[sum - 1]++);
                     }
                 }
             }
         }
+        const lineProbabilities = lineCounts.map(count => count / values.length)
+        const stats = {
+            possibleOutcomesValues: values,
+            lineProbabilities: lineProbabilities,
+        }
         console.log(`calc time=${Date.now() - start}ms`);
-        return values;
+        return stats;
     },
 
     getCommonDesiredOutcomesCount() {
@@ -443,19 +457,25 @@ var cantStopBgaUserscriptData = {
     },
 
     addRollDiceEventToLog(e) {
+        const dice = e.args.dice;
         this.rollDiceLog.push({
             uid: e.uid,
             playerId: parseInt(e.args.player_id),
-            dice: e.args.dice,
+            dice: dice,
         });
+        const sums = this.getSums(dice[0], dice[1], dice[2], dice[3]);
+        sums.forEach(sum => this.currentLineCounts[sum - 1]++);
     },
 
     addRollDiceHistoryElementToLog(e) {
+        const dice = e.args.dice;
         this.rollDiceLog.push({
             uid: e.uid,
             playerId: parseInt(e.args.player_id),
-            dice: e.args.dice,
+            dice: dice,
         });
+        const sums = this.getSums(dice[0], dice[1], dice[2], dice[3]);
+        sums.forEach(sum => this.currentLineCounts[sum - 1]++);
     },
 
     renderMovesProbabilities: function (movesProbabilities) {
@@ -651,6 +671,52 @@ var cantStopBgaUserscriptData = {
         this.dojo.place(stateElement, PROGRESS_STATE_PANEL_ID, 'only');
     },
 
+    renderLineProbabilities: function () {
+        const lineProbabilitiesDiffObj = {};
+        const lineProbabilitiesDiffArr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        const lineProbabilitiesValues = {};
+        for (let i = 1; i < this.lineProbabilities.length; i++) {
+            const expectedProbability = this.lineProbabilities[i];
+            const realProbability = this.currentLineCounts[i] / this.rollDiceLog.length;
+            lineProbabilitiesValues[i + 1] = {
+                e: this.formatDecimal(expectedProbability, 2),
+                x: this.formatDecimal(realProbability, 2),
+            }
+            lineProbabilitiesDiffObj[i + 1] = this.formatDecimal(expectedProbability - realProbability, 2);
+            lineProbabilitiesDiffArr[i] = expectedProbability - realProbability;
+        }
+
+        let linesTableElement =
+            `<table class="statstable" id="line_stats_table" style="font-size: 80%; table-layout: fixed;">` +
+            `    <tbody>` +
+            `    <tr id="line_stats_header">` +
+            `        <th>Line</th>`;
+        for (let i = 1; i < lineProbabilitiesDiffArr.length; i++) {
+            const diff = lineProbabilitiesDiffArr[i];
+            const diffColor = this.percentageDiffColor(diff);
+            linesTableElement +=
+                `    <th style="background-color: ${diffColor}; color: white;">${i + 1}</th>`;
+        }
+        linesTableElement +=
+            `    </tr>` +
+            `    </tbody>` +
+            `    <tr>` +
+            `        <th>Diff</th>`;
+        for (let i = 1; i < lineProbabilitiesDiffArr.length; i++) {
+            const diff = lineProbabilitiesDiffArr[i];
+            linesTableElement +=
+                `    <td>${this.formatDecimal(diff * 100, 2)}%</td>`;
+        }
+        linesTableElement +=
+            `    </tr>` +
+            `</table>`;
+        const valuesJsonElement = `<span style="font-size: 60%; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(lineProbabilitiesValues, null, 4)}</span>`;
+        const diffJsonElement = `<span style="font-size: 60%; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(lineProbabilitiesDiffObj, null, 4)}</span>`;
+        // const lineProbabilitiesElement = `${diffJsonElement}${linesTableElement}`;
+        const lineProbabilitiesElement = `${linesTableElement}`;
+        this.dojo.place(lineProbabilitiesElement, LINE_PROBABILITIES_PANEL_ID, 'only');
+    },
+
     renderProgressStateNew: function () {
         const progressState = this.readProgressState();
         const nMax = progressState.saveProgressNMax50PercentSuccess;
@@ -801,6 +867,8 @@ var cantStopBgaUserscriptData = {
             const probabilityElement = `<div id="${probabilityElementId}" class="${PROBABILITY_PANEL_CLASS}"></div>`;
             this.dojo.place(probabilityElement, buttonSelectElement, 'after');
         });
+        const lineProbabilitiesElement = `<div id="${LINE_PROBABILITIES_PANEL_ID}" style="width: 100%;"></div>`;
+        this.dojo.place(lineProbabilitiesElement, GAME_BOARD_WRAP_ID, 'first');
         const progressStateNewElement = `<div id="${PROGRESS_STATE_NEW_PANEL_ID}" style="width: 100%;"></div>`;
         this.dojo.place(progressStateNewElement, GAME_BOARD_WRAP_ID, 'first');
         const progressStateElement = `<div id="${PROGRESS_STATE_PANEL_ID}" style="width: 100%;"></div>`;
@@ -813,6 +881,53 @@ var cantStopBgaUserscriptData = {
         } else {
             const multiplier = Math.pow(10, precision);
             return Math.round((value + Number.EPSILON) * multiplier) / multiplier;
+        }
+    },
+
+    percentageDiffColor: function (diff) {
+        switch (true) {
+            case (diff < -0.10):
+                return '#CC0033';
+            case (diff < -0.09):
+                return '#CC0033';
+            case (diff < -0.08):
+                return '#CC0033';
+            case (diff < -0.07):
+                return '#CC0033';
+            case (diff < -0.06):
+                return '#CC0033';
+            case (diff < -0.05):
+                return '#FF0033';
+            case (diff < -0.04):
+                return '#FF3333';
+            case (diff < -0.03):
+                return '#FF6666';
+            case (diff < -0.02):
+                return '#FF9999';
+            case (diff < -0.01):
+                return '#FFCCCC';
+            case (diff < 0.00):
+                return '#99FF99';
+            case (diff < 0.01):
+                return '#66FF66';
+            case (diff < 0.02):
+                return '#33FF66';
+            case (diff < 0.03):
+                return '#00FF66';
+            case (diff < 0.04):
+                return '#339933';
+            case (diff < 0.05):
+                return '#006600';
+            case (diff < 0.06):
+                return '#006600';
+            case (diff < 0.07):
+                return '#006600';
+            case (diff < 0.08):
+                return '#006600';
+            case (diff < 0.09):
+                return '#006600';
+            default:
+                return '#006600';
         }
     },
 
