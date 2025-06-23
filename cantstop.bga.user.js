@@ -646,8 +646,8 @@ var cantStopBgaUserscriptData = {
             `   </div>` +
             `</div>`;
         const stateJsonElement = `<span style="font-size: 60%; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(progressState, null, 4)}</span>`;
-        const stateElement = `${stateJsonElement}${stateProgressBarElement}`;
-        // const stateElement = `${stateProgressBarElement}`;
+        // const stateElement = `${stateJsonElement}${stateProgressBarElement}`;
+        const stateElement = `${stateProgressBarElement}`;
         this.dojo.place(stateElement, PROGRESS_STATE_PANEL_ID, 'only');
     },
 
@@ -766,7 +766,7 @@ var cantStopBgaUserscriptData = {
             `<div class="progressbar_with_info">` +
             `   <div class="progressbar_inner">` +
             `       <div class="progressbar" style="background-color: darkgray;">` +
-            `           <div class="progressbar_label" style="background-color: #0099FF; width: 100px;">` +
+            `           <div class="progressbar_label" style="background-color: #339966; width: 100px;">` +
             `               <span class="symbol icon20 ${icon}" style="position: relative;top:2px;"></span>` +
             `               <span style="position: relative;top:-2px;">${formattedSaveProgressProbability}%</span>` +
             `           </div>` +
@@ -775,7 +775,7 @@ var cantStopBgaUserscriptData = {
             `                    <span class="progressbar_valuename"></span>` +
             `               </div>` +
             `               <div class="grad" style="left: 0%; background-color: darkgray;">` +
-            `                    <span style="position: absolute; top: 50%; left: 5px; transform: translate(0%, -50%); color: white; font-size: 75%; white-space: nowrap;">${rdCount} +${rdIncrement} [${rdmCount}]</span>` +
+            `                    <span style="position: absolute; top: 50%; left: 5px; transform: translate(0%, -50%); color: white; font-size: 75%; white-space: nowrap;">${rdmCount} [+${rdIncrement}]</span>` +
             `               </div>` +
             `               <div class="grad" style="left: ${nMaxPercentage}%; background-color: blue;">` +
             `                    <span style="position: absolute; top: 50%; left: 2px; transform: translate(0%, -50%); color: blue; font-size: 75%; white-space: nowrap;">${formattedNMax}</span>` +
