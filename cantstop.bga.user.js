@@ -33,7 +33,6 @@ const DEFAULT_PROGRESS_STATE = {
     saveProgressExpectation: 0,
     saveProgressNMax50PercentSuccess: 0,
     rollingDiceCount: 0,
-    lastRollDiceMatchesCount: 0,
 };
 const PROGRESS_STATE_KEY_PREFIX = "cantStopUserscriptProgressState-";
 
@@ -208,14 +207,12 @@ var cantStopBgaUserscriptData = {
         const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
         const spExpectation = this.calculateExpectation(spProbability);
         const spNMax = this.calculateNMax(spProbability);
-        const lastMatchesCount = this.getLastRollDiceLogMatchedCountFromArray(columns);
         if (progressState.playerId !== playerId) {
             progressState.playerId = playerId;
         }
         progressState.saveProgressProbability = spProbability;
         progressState.saveProgressExpectation = spExpectation;
         progressState.saveProgressNMax50PercentSuccess = spNMax;
-        progressState.lastRollDiceMatchesCount = lastMatchesCount;
         return progressState;
     },
 
@@ -257,7 +254,6 @@ var cantStopBgaUserscriptData = {
                     saveProgressNMax50PercentSuccess: spNMax,
                     both: possibleMove.both,
                     move: move1,
-                    lastMatchesCount: this.getLastRollDiceLogMatchedCountFromArray(columns),
                 };
                 console.log(`${index1},${index2} with dice ${JSON.stringify(dice1)} and sum ${sum1} has probability ${pProbability}`);
             }
@@ -283,7 +279,6 @@ var cantStopBgaUserscriptData = {
                     saveProgressNMax50PercentSuccess: spNMax,
                     both: possibleMove.both,
                     move: move2,
-                    lastMatchesCount: this.getLastRollDiceLogMatchedCountFromArray(columns),
                 };
                 console.log(`${index1},${index2} with dice ${JSON.stringify(dice2)} and sum ${sum2} has probability ${pProbability}`);
             }
@@ -516,9 +511,8 @@ var cantStopBgaUserscriptData = {
         const formattedSaveProgressProbability = this.formatDecimal(moveProbability.saveProgressProbability * 100, 2);
         const formattedSaveProgressExpectation = this.formatDecimal(moveProbability.saveProgressExpectation, 2);
         const formattedSaveProgressNMax50PercentSuccess = this.formatDecimal(moveProbability.saveProgressNMax50PercentSuccess, 0);
-        const lastMatchesCount = moveProbability.lastMatchesCount;
         const saveProgressProbabilityElement =
-            `<div style='${maxVisibleSaveProgressProbability ? `font-weight: bolder; color: ${moveProbability.saveProgressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(A)=${formattedSaveProgressProbability}% E[X]=${formattedSaveProgressExpectation} n_max=${formattedSaveProgressNMax50PercentSuccess} n=${lastMatchesCount}</div>`;
+            `<div style='${maxVisibleSaveProgressProbability ? `font-weight: bolder; color: ${moveProbability.saveProgressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(A)=${formattedSaveProgressProbability}% E[X]=${formattedSaveProgressExpectation} n_max=${formattedSaveProgressNMax50PercentSuccess}</div>`;
         const progressProbabilityElement = `<div style='${maxVisibleProgressProbability ? 'font-weight: bolder;' +
             ` color: ${moveProbability.progressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(⧡)=${formattedProgressProbability}%</div>`;
         const probabilityElement = `<div style='font-size: 60%; font-family: monospace;'>${visible ? `${saveProgressProbabilityElement} ${progressProbabilityElement}` : ''}</div>`;
