@@ -662,7 +662,7 @@ var cantStopBgaUserscriptData = {
 
     renderLineProbabilities: function () {
         let linesTableElement =
-            `<table class="statstable" id="line_stats_table" style="font-size: 60%; table-layout: fixed;">` +
+            `<table class="statstable" id="line_stats_table" style="font-size: 60%; table-layout: fixed; max-width: 500px; margin: 0 auto;">` +
             `    <tbody>` +
             `    <tr id="line_stats_header">` +
             `        <th>Line</th>`;
@@ -694,7 +694,7 @@ var cantStopBgaUserscriptData = {
             const probabilityElement = `<div id="${probabilityElementId}" class="${PROBABILITY_PANEL_CLASS}"></div>`;
             this.dojo.place(probabilityElement, buttonSelectElement, 'after');
         });
-        const lineProbabilitiesElement = `<div id="${LINE_PROBABILITIES_PANEL_ID}" style="width: 100%; max-width: 500px;"></div>`;
+        const lineProbabilitiesElement = `<div id="${LINE_PROBABILITIES_PANEL_ID}" style="width: 100%;"></div>`;
         this.dojo.place(lineProbabilitiesElement, GAME_BOARD_WRAP_ID, 'first');
         const progressStateElement = `<div id="${PROGRESS_STATE_PANEL_ID}" style="width: 100%;"></div>`;
         this.dojo.place(progressStateElement, GAME_BOARD_WRAP_ID, 'first');
