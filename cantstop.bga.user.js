@@ -668,7 +668,7 @@ var cantStopBgaUserscriptData = {
 
     renderLineProbabilities: function () {
         let linesTableElement =
-            `<table class="statstable" id="line_stats_table" style="font-size: 80%; table-layout: fixed;">` +
+            `<table class="statstable" id="line_stats_table" style="font-size: 60%; table-layout: fixed;">` +
             `    <tbody>` +
             `    <tr id="line_stats_header">` +
             `        <th>Line</th>`;
@@ -680,7 +680,7 @@ var cantStopBgaUserscriptData = {
             `    </tr>` +
             `    </tbody>` +
             `    <tr>` +
-            `        <th>Probability</th>`;
+            `        <th>Prob.</th>`;
         for (let i = 1; i < this.lineProbabilities.length; i++) {
             const probability = this.lineProbabilities[i];
             linesTableElement +=
@@ -700,7 +700,7 @@ var cantStopBgaUserscriptData = {
             const probabilityElement = `<div id="${probabilityElementId}" class="${PROBABILITY_PANEL_CLASS}"></div>`;
             this.dojo.place(probabilityElement, buttonSelectElement, 'after');
         });
-        const lineProbabilitiesElement = `<div id="${LINE_PROBABILITIES_PANEL_ID}" style="width: 100%;"></div>`;
+        const lineProbabilitiesElement = `<div id="${LINE_PROBABILITIES_PANEL_ID}" style="width: 100%; max-width: 500px;"></div>`;
         this.dojo.place(lineProbabilitiesElement, GAME_BOARD_WRAP_ID, 'first');
         const progressStateElement = `<div id="${PROGRESS_STATE_PANEL_ID}" style="width: 100%;"></div>`;
         this.dojo.place(progressStateElement, GAME_BOARD_WRAP_ID, 'first');
