@@ -67,6 +67,7 @@ var cantStopBgaUserscriptData = {
     currentLineCounts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     bgaTableId: 0,
     rollDiceLog: [],
+    parseLog: false,
 
     init: function () {
         // Check if the site was loaded correctly
@@ -90,7 +91,10 @@ var cantStopBgaUserscriptData = {
         const stats = this.calcStats();
         this.possibleOutcomesValues = stats.possibleOutcomesValues;
         this.lineProbabilities = stats.lineProbabilities;
-        this.parseHistoryRollDices();
+
+        if (this.parseLog) {
+            this.parseHistoryRollDices();
+        }
 
         // Connect event handlers to follow game progress
         this.dojo.subscribe("rollDice", this, "onEventRollDice");
