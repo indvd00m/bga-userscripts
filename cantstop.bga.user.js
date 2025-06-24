@@ -21,7 +21,6 @@ const USERSCRIPT_LOAD_TIMEOUT_MS = 5000;
 const CANT_STOP_MAX_CHIPS_COUNT = 3;
 const DICE_SELECT_ID_PREFIX = "dice_select_";
 const PROGRESS_STATE_PANEL_ID = "progress_state";
-const PROGRESS_STATE_NEW_PANEL_ID = "progress_state_new";
 const LINE_PROBABILITIES_PANEL_ID = "line_probabilities";
 const GAME_BOARD_WRAP_ID = "game_board_wrap";
 const PROBABILITY_PANEL_ID_PREFIX = "dice_probability_";
@@ -109,7 +108,6 @@ var cantStopBgaUserscriptData = {
         this.recalculateAndSaveProgressState();
 
         this.renderProgressState();
-        this.renderProgressStateNew();
         this.renderLineProbabilities();
 
         return this;
@@ -120,7 +118,6 @@ var cantStopBgaUserscriptData = {
         console.log(JSON.stringify(e));
         this.resetProgressState();
         this.renderProgressState();
-        this.renderProgressStateNew();
     },
 
     onEventMoveToken: function (e) {
@@ -129,7 +126,6 @@ var cantStopBgaUserscriptData = {
         const playerId = parseInt(e.args.player_id);
         this.updateProgressStateProbability(playerId);
         this.renderProgressState();
-        this.renderProgressStateNew();
     },
 
     onEventRollDice: function (e) {
@@ -140,7 +136,6 @@ var cantStopBgaUserscriptData = {
         let playerId = parseInt(e.args.player_id);
         this.updateProgressStateRollingDiceCount(playerId);
         this.renderProgressState();
-        this.renderProgressStateNew();
         this.renderLineProbabilities();
     },
 
@@ -672,194 +667,30 @@ var cantStopBgaUserscriptData = {
     },
 
     renderLineProbabilities: function () {
-        const lineProbabilitiesDiffObj = {};
-        const lineProbabilitiesDiffArr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        const lineProbabilitiesValues = {};
-        for (let i = 1; i < this.lineProbabilities.length; i++) {
-            const expectedProbability = this.lineProbabilities[i];
-            const realProbability = this.currentLineCounts[i] / this.rollDiceLog.length;
-            lineProbabilitiesValues[i + 1] = {
-                e: this.formatDecimal(expectedProbability, 2),
-                x: this.formatDecimal(realProbability, 2),
-            }
-            lineProbabilitiesDiffObj[i + 1] = this.formatDecimal(expectedProbability - realProbability, 2);
-            lineProbabilitiesDiffArr[i] = expectedProbability - realProbability;
-        }
-
         let linesTableElement =
             `<table class="statstable" id="line_stats_table" style="font-size: 80%; table-layout: fixed;">` +
             `    <tbody>` +
             `    <tr id="line_stats_header">` +
             `        <th>Line</th>`;
-        const maxDiff = Math.max.apply(null, lineProbabilitiesDiffArr.map(p => Math.abs(p)));
-        console.log(`maxDiff=${maxDiff}`);
-        for (let i = 1; i < lineProbabilitiesDiffArr.length; i++) {
-            const diff = lineProbabilitiesDiffArr[i];
-            const diffColor = this.percentageDiffColor(diff, maxDiff);
+        for (let i = 1; i < this.lineProbabilities.length; i++) {
             linesTableElement +=
-                `    <th style="background-color: ${diffColor}; color: white;">${i + 1}</th>`;
+                `    <th>${i + 1}</th>`;
         }
         linesTableElement +=
             `    </tr>` +
             `    </tbody>` +
             `    <tr>` +
-            `        <th>Diff /${this.rollDiceLog.length}</th>`;
-        for (let i = 1; i < lineProbabilitiesDiffArr.length; i++) {
-            const diff = lineProbabilitiesDiffArr[i];
+            `        <th>Probability</th>`;
+        for (let i = 1; i < this.lineProbabilities.length; i++) {
+            const probability = this.lineProbabilities[i];
             linesTableElement +=
-                `    <td>${this.formatDecimal(diff * 100, 2)}%</td>`;
+                `    <td>${this.formatDecimal(probability * 100, 2)}%</td>`;
         }
         linesTableElement +=
             `    </tr>` +
             `</table>`;
-        const valuesJsonElement = `<span style="font-size: 60%; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(lineProbabilitiesValues, null, 4)}</span>`;
-        const diffJsonElement = `<span style="font-size: 60%; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(lineProbabilitiesDiffObj, null, 4)}</span>`;
-        // const lineProbabilitiesElement = `${diffJsonElement}${linesTableElement}`;
         const lineProbabilitiesElement = `${linesTableElement}`;
         this.dojo.place(lineProbabilitiesElement, LINE_PROBABILITIES_PANEL_ID, 'only');
-    },
-
-    renderProgressStateNew: function () {
-        const progressState = this.readProgressState();
-        const nMax = progressState.saveProgressNMax50PercentSuccess;
-        const spExpectation = progressState.saveProgressExpectation;
-        const rdCount = progressState.rollingDiceCount;
-        const rdmCount = progressState.lastRollDiceMatchesCount;
-        const rdIncrement = rdmCount > rdCount ? rdmCount - rdCount : 0;
-        const minDangerZoneFactor = 0.95;
-        let scaleMaxValue = nMax * 2;
-        if (spExpectation > 0 && spExpectation / minDangerZoneFactor > scaleMaxValue) {
-            scaleMaxValue = Math.ceil(spExpectation / minDangerZoneFactor);
-        }
-
-        let nMaxPercentage;
-        let expectationPercentage;
-        let nonlinearRDCountPercentage = 0;
-        let rdCountPercentage = 0;
-        let nextRDCountPercentage = 0;
-        if (scaleMaxValue === 0) {
-            nMaxPercentage = 50;
-            expectationPercentage = 100;
-            nonlinearRDCountPercentage = 0;
-            rdCountPercentage = 0;
-            nextRDCountPercentage = 0;
-        } else if (scaleMaxValue === Infinity) {
-            nMaxPercentage = 50;
-            expectationPercentage = 100;
-            nonlinearRDCountPercentage = 0;
-            rdCountPercentage = 0;
-            nextRDCountPercentage = 0;
-        } else if (scaleMaxValue > 0) {
-            nMaxPercentage = 100 * nMax / scaleMaxValue;
-            expectationPercentage = 100 * spExpectation / scaleMaxValue;
-            if (rdmCount < spExpectation) {
-                nonlinearRDCountPercentage = 100 * rdmCount / (nMax * 2);
-                rdCountPercentage = 100 * rdmCount / scaleMaxValue;
-                nextRDCountPercentage = 100 * (rdmCount + 1) / scaleMaxValue;
-            } else {
-                const k = 0.2;
-                const rdCountDangerValue = spExpectation + (scaleMaxValue - spExpectation) * (1 - 2.71828 ** (-k * (rdmCount - spExpectation)));
-                const nextRDCountDangerValue = spExpectation + (scaleMaxValue - spExpectation) * (1 - 2.71828 ** (-k * (rdmCount + 1 - spExpectation)));
-                nonlinearRDCountPercentage = 100 * rdCountDangerValue / scaleMaxValue;
-                rdCountPercentage = 100 * rdCountDangerValue / scaleMaxValue;
-                nextRDCountPercentage = 100 * (nextRDCountDangerValue) / scaleMaxValue;
-            }
-        } else {
-            nMaxPercentage = 50;
-            expectationPercentage = 100;
-            rdCountPercentage = 0;
-            nextRDCountPercentage = 0;
-        }
-        let color = 'green';
-        let icon = 'bgasmiley';
-        switch (true) {
-            case (rdCountPercentage >= expectationPercentage):
-                color = '#330000';
-                icon = 'bgasmiley_unsmile';
-                break;
-            case (nonlinearRDCountPercentage <= 10):
-                color = '#33FF99';
-                icon = 'bgasmiley_sunglass';
-                break;
-            case (nonlinearRDCountPercentage <= 20):
-                color = '#00FF99';
-                icon = 'bgasmiley_bigsmile';
-                break;
-            case (nonlinearRDCountPercentage <= 30):
-                color = '#33CC66';
-                icon = 'bgasmiley_bigsmile';
-                break;
-            case (nonlinearRDCountPercentage <= 40):
-                color = '#00CC66';
-                icon = 'bgasmiley_smile';
-                break;
-            case (nonlinearRDCountPercentage <= 50):
-                color = '#009933';
-                icon = 'bgasmiley_smile';
-                break;
-            case (nonlinearRDCountPercentage <= 55):
-                color = '#FFCC00';
-                icon = 'bgasmiley_surprised';
-                break;
-            case (nonlinearRDCountPercentage <= 60):
-                color = '#FF9933';
-                icon = 'bgasmiley_surprised';
-                break;
-            case (nonlinearRDCountPercentage <= 65):
-                color = '#CC3333';
-                icon = 'bgasmiley_bad';
-                break;
-            case (nonlinearRDCountPercentage <= 70):
-                color = '#993333';
-                icon = 'bgasmiley_shocked';
-                break;
-            case (nonlinearRDCountPercentage <= 80):
-                color = '#990033';
-                icon = 'bgasmiley_shocked';
-                break;
-            case (nonlinearRDCountPercentage <= 90):
-                color = '#330000';
-                icon = 'bgasmiley_unsmile';
-                break;
-            default:
-                color = '#330000';
-                icon = 'bgasmiley_unsmile';
-        }
-
-        const formattedNMax = this.formatDecimal(nMax, 0);
-        const formattedExpectation = this.formatDecimal(spExpectation, 0);
-        const formattedSaveProgressProbability = this.formatDecimal(progressState.saveProgressProbability * 100, 2);
-
-        const stateProgressBarElement =
-            `<div class="progressbar_with_info">` +
-            `   <div class="progressbar_inner">` +
-            `       <div class="progressbar" style="background-color: darkgray;">` +
-            `           <div class="progressbar_label" style="background-color: #339966; width: 100px;">` +
-            `               <span class="symbol icon20 ${icon}" style="position: relative;top:2px;"></span>` +
-            `               <span style="position: relative;top:-2px;">${formattedSaveProgressProbability}%</span>` +
-            `           </div>` +
-            `           <div class="progressbar_bar" style="margin-left: 100px;">` +
-            `               <div class="progressbar_content" style="width: ${rdCountPercentage}%; background-color: ${color};">` +
-            `                    <span class="progressbar_valuename"></span>` +
-            `               </div>` +
-            `               <div class="grad" style="left: 0%; background-color: darkgray;">` +
-            `                    <span style="position: absolute; top: 50%; left: 5px; transform: translate(0%, -50%); color: white; font-size: 75%; white-space: nowrap;">${rdmCount} [+${rdIncrement}]</span>` +
-            `               </div>` +
-            `               <div class="grad" style="left: ${nMaxPercentage}%; background-color: blue;">` +
-            `                    <span style="position: absolute; top: 50%; left: 2px; transform: translate(0%, -50%); color: blue; font-size: 75%; white-space: nowrap;">${formattedNMax}</span>` +
-            `               </div>` +
-            `               <div class="grad" style="left: ${expectationPercentage}%; background-color: red;">` +
-            `                    <span style="position: absolute; top: 50%; left: 2px; transform: translate(0%, -50%); color: red; font-size: 75%; white-space: nowrap;">${formattedExpectation}</span>` +
-            `               </div>` +
-            `               <div class="grad" style="left: ${nextRDCountPercentage}%;"></div>` +
-            `           </div>` +
-            `       </di>` +
-            `   </div>` +
-            `</div>`;
-        const stateJsonElement = `<span style="font-size: 60%; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(progressState, null, 4)}</span>`;
-        // const stateElement = `${stateJsonElement}${stateProgressBarElement}`;
-        const stateElement = `${stateProgressBarElement}`;
-        this.dojo.place(stateElement, PROGRESS_STATE_NEW_PANEL_ID, 'only');
     },
 
     renderContainers: function () {
@@ -871,8 +702,6 @@ var cantStopBgaUserscriptData = {
         });
         const lineProbabilitiesElement = `<div id="${LINE_PROBABILITIES_PANEL_ID}" style="width: 100%;"></div>`;
         this.dojo.place(lineProbabilitiesElement, GAME_BOARD_WRAP_ID, 'first');
-        const progressStateNewElement = `<div id="${PROGRESS_STATE_NEW_PANEL_ID}" style="width: 100%;"></div>`;
-        this.dojo.place(progressStateNewElement, GAME_BOARD_WRAP_ID, 'first');
         const progressStateElement = `<div id="${PROGRESS_STATE_PANEL_ID}" style="width: 100%;"></div>`;
         this.dojo.place(progressStateElement, GAME_BOARD_WRAP_ID, 'first');
     },
@@ -883,53 +712,6 @@ var cantStopBgaUserscriptData = {
         } else {
             const multiplier = Math.pow(10, precision);
             return Math.round((value + Number.EPSILON) * multiplier) / multiplier;
-        }
-    },
-
-    percentageDiffColor: function (diff, maxDiff) {
-        switch (true) {
-            case (diff < -1 * maxDiff):
-                return '#CC0033';
-            case (diff < -0.9 * maxDiff):
-                return '#CC0033';
-            case (diff < -0.8 * maxDiff):
-                return '#CC0033';
-            case (diff < -0.7 * maxDiff):
-                return '#CC0033';
-            case (diff < -0.6 * maxDiff):
-                return '#CC0033';
-            case (diff < -0.5 * maxDiff):
-                return '#FF0033';
-            case (diff < -0.4 * maxDiff):
-                return '#FF3333';
-            case (diff < -0.3 * maxDiff):
-                return '#FF6666';
-            case (diff < -0.2 * maxDiff):
-                return '#FF9999';
-            case (diff < -0.1 * maxDiff):
-                return '#FFCCCC';
-            case (diff < 0.00):
-                return '#99FF99';
-            case (diff < 0.1 * maxDiff):
-                return '#66FF66';
-            case (diff < 0.2 * maxDiff):
-                return '#33FF66';
-            case (diff < 0.3 * maxDiff):
-                return '#00FF66';
-            case (diff < 0.4 * maxDiff):
-                return '#339933';
-            case (diff < 0.5 * maxDiff):
-                return '#006600';
-            case (diff < 0.6 * maxDiff):
-                return '#006600';
-            case (diff < 0.7 * maxDiff):
-                return '#006600';
-            case (diff < 0.8 * maxDiff):
-                return '#006600';
-            case (diff < 0.9 * maxDiff):
-                return '#006600';
-            default:
-                return '#006600';
         }
     },
 
