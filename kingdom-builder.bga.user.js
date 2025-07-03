@@ -18,6 +18,7 @@
 
 log('userscript');
 
+const LOGS_ELEMENT_ID = "logs";
 const INIT_MESSAGE_LOG_ID = "log_kingdom_builder_init";
 const BGA_PLAYER_BOARDS_ID = "player_boards";
 const BGA_PLAYER_BOARD_CLASS = "player-board";
