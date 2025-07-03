@@ -3,7 +3,7 @@
 // @description Hide non-participating friends' activity in the game log
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 0.1.0-dev
+// @version 0.9.0
 // @match https://boardgamearena.com/*/*?*table=*
 // @match https://*.boardgamearena.com/*/*?*table=*
 // @grant none
