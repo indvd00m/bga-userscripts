@@ -426,9 +426,9 @@ var cantStopBgaUserscriptData = {
 
     getLastRollDiceLogMatchedCountFromArray(args) {
         let matches = 0;
-        const log = this.rollDiceLog;
-        for (let i = log.length - 1; i > 0; i--) {
-            const action = log[i];
+        const rdLog = this.rollDiceLog;
+        for (let i = rdLog.length - 1; i > 0; i--) {
+            const action = rdLog[i];
             const dice = action.dice;
             const sums = this.getSums(dice[0], dice[1], dice[2], dice[3]);
             if (args.some(a => sums.includes(a))) {
