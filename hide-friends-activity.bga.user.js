@@ -49,9 +49,9 @@ var bgaUserscriptHideFriendsActivityData = {
 
     getGamePlayers: function () {
         return []
-            .concat(window.parent.gameui.gameNeutralPlayers)
-            .concat(window.parent.gameui.gameMasculinePlayers)
-            .concat(window.parent.gameui.gameFemininePlayers);
+            .concat(this.gameui.gameNeutralPlayers)
+            .concat(this.gameui.gameMasculinePlayers)
+            .concat(this.gameui.gameFemininePlayers);
     },
 
     registerObserver: function () {
