@@ -20,6 +20,7 @@ console.log('BGA userscript: hide-friends-activity');
 const USERSCRIPT_LOAD_TIMEOUT_MS = 3000;
 const LOGS_ELEMENT_ID = "logs";
 const PLAYER_NAME_ELEMENT_CLASS = "playername";
+const INIT_MESSAGE_LOG_ID = "log_hide_friends_activity_init";
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -43,6 +44,7 @@ var bgaUserscriptHideFriendsActivityData = {
         this.players = this.getGamePlayers();
 
         this.registerObserver();
+        this.renderInitMessage();
 
         return this;
     },
@@ -85,6 +87,14 @@ var bgaUserscriptHideFriendsActivityData = {
             console.log(`Hide activity of ${nonParticipatingPlayerNames}: ${logElement.innerText}`);
             this.dojo.destroy(logElement);
         }
+    },
+
+    renderInitMessage: function () {
+        const logElement =
+            `<div id="${INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `    <div class="roundedbox" style="background-color: lightgray;">HFA userscript: activated</div>` +
+            `</div>`;
+        this.dojo.place(logElement, LOGS_ELEMENT_ID, 'first');
     },
 
 };
