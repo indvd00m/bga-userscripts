@@ -18,8 +18,8 @@
 
 log('userscript');
 
-const LOGS_ELEMENT_ID = "logs";
-const INIT_MESSAGE_LOG_ID = "log_kingdom_builder_init";
+const KB_LOGS_ELEMENT_ID = "logs";
+const KB_INIT_MESSAGE_LOG_ID = "log_kingdom_builder_init";
 const BGA_PLAYER_BOARDS_ID = "player_boards";
 const BGA_PLAYER_BOARD_CLASS = "player-board";
 const BGA_PLAYER_BOARD_ID_PREFIX = "overall_player_board_";
@@ -1544,10 +1544,10 @@ var kingdomBuilderBgaUserscriptData = {
 
     renderInitMessage: function () {
         const logElement =
-            `<div id="${INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `<div id="${KB_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
             `    <div class="roundedbox" style="background-color: lightgray;">KB userscript: activated</div>` +
             `</div>`;
-        this.dojo.place(logElement, LOGS_ELEMENT_ID, 'first');
+        this.dojo.place(logElement, KB_LOGS_ELEMENT_ID, 'first');
     },
 
 };
