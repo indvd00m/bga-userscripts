@@ -5,7 +5,6 @@
 // @license Creative Commons Attribution 3.0 Unported
 // @version 0.1.0-dev
 // @match https://boardgamearena.com/*/cantstop*
-// @match https://*.boardgamearena.com/*/cantstop*
 // @require file:///Users/indvd00m/dev/bga-userscripts/cantstop.bga.user.js
 // ==/UserScript==
 

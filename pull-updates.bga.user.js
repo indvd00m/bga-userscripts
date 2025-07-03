@@ -5,7 +5,6 @@
 // @license Creative Commons Attribution 3.0 Unported
 // @version 0.9.0
 // @match https://boardgamearena.com/*/*?*table=*
-// @match https://*.boardgamearena.com/*/*?*table=*
 // @grant none
 // @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/pull-updates.bga.user.js
 // @downloadURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/pull-updates.bga.user.js
