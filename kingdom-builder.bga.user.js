@@ -37,6 +37,18 @@ const BGA_QUADRANT_CLASS_NAME_PATTERN = /^quadrant-(?<index>\d+)$/;
 const BGA_QUADRANT_FLIPPED_CLASS_NAME = 'flipped';
 const BGA_CELL_CONTAINER_ID_PREFIX = 'cell-container';
 
+const BGA_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
+const DEFAULT_TERRAINS_STATE = {
+    terrainsPlayed: {},
+    terrainsProbability: {},
+    terrainsPlayedCount: 0,
+    turnsCount: 0,
+    logIsFull: false,
+    lastShowTerrainPlayerId: 0,
+    lastProcessedEventUid: null,
+};
+const TERRAINS_STATE_KEY_PREFIX = "kingdomBuilderUserscriptTerrainsState-";
+
 const QUADRANT_WIDTH = 10;
 const QUADRANT_HEIGHT = 10;
 
@@ -353,17 +365,20 @@ function add(accumulator, a) {
 var kingdomBuilderBgaUserscriptData = {
     dojo: null,
     game: null,
+    bgaTableId: 0,
     settlements: {},
     terrains: ['Grass', 'Canyon', 'Desert', 'Flower', 'Forest'],
     // unfortunetally we do not have language independent terrain name in actions history
     terrainsRu: ['Трава', 'Каньон', 'Пустыня', 'Цвет', 'Лес'],
+
     terrainsPlayed: {},
     terrainsProbability: {},
     terrainsPlayedCount: 0,
     turnsCount: 0,
     logIsFull: false,
-    terrainsStackSize: 25,
     lastShowTerrainPlayerId: 0,
+
+    terrainsStackSize: 25,
     myPlayerId: -1,
     map: new Canvas(1, 1, ' '),
     isRenderAsciiMap: false,
@@ -424,12 +439,13 @@ var kingdomBuilderBgaUserscriptData = {
                 x: x,
                 y: y
             };
-        })
+        });
+        this.bgaTableId = BGA_URL_TABLE_ID_PATTERN.exec(window.location.search).groups['tableId'];
         const myPlayer = this.game.fplayers.find(p => p.name === window.parent.gameui.current_player_name);
         if (myPlayer) {
             this.myPlayerId = parseInt(myPlayer.id);
         }
-        this.resetTerrainsStatistics();
+        this.resetTerrainsStatistics(this);
 
         // images
         this.detectImagesPaths();
@@ -449,21 +465,42 @@ var kingdomBuilderBgaUserscriptData = {
         const activePlayerId = parseInt(this.game.gamestate.active_player);
         this.lastShowTerrainPlayerId = activePlayerId;
 
+        const terrainsState = this.readTerrainsState();
+        this.terrainsPlayed = terrainsState.terrainsPlayed;
+        this.terrainsProbability = terrainsState.terrainsProbability;
+        this.terrainsPlayedCount = terrainsState.terrainsPlayedCount;
+        this.turnsCount = terrainsState.turnsCount;
+        this.logIsFull = terrainsState.logIsFull;
+        this.lastShowTerrainPlayerId = terrainsState.lastShowTerrainPlayerId;
+
+        let lastProcessedEventUid = terrainsState.lastProcessedEventUid;
+
         const log = window.parent.gameui.notifqueue.logs_to_load;
-        this.logIsFull = this.isFullLog(log);
+        const processedTerrainsState = this.findShownTerrains(log, lastProcessedEventUid);
+        lastProcessedEventUid = processedTerrainsState.lastProcessedEventUid;
+
+        // log is full
+        if (this.terrainsPlayedCount === 0) {
+            this.logIsFull = this.isFullLog(log);
+        } else {
+            this.logIsFull = this.logIsFull && processedTerrainsState.logIsFull;
+        }
         if (this.logIsFull) {
             console.log(`Found full log with ${log.length} actions`);
         } else {
             console.log(`Found incomplete log with ${log.length} actions`);
         }
-        const openedTerrains = this.findShownTerrains(log);
+
+        // terrains
+        const openedTerrains = processedTerrainsState.openedTerrains;
         if (openedTerrains.length) {
             openedTerrains.forEach(t => {
-                this.processTerrain(t);
+                this.processTerrain(t, lastProcessedEventUid);
             });
-            this.processAnotherCurrentPlayerTerrain(log);
-        } else {
-            this.processFirstTerrains();
+            this.processAnotherCurrentPlayerTerrain(log, lastProcessedEventUid);
+        }
+        if (this.terrainsPlayedCount === 0) {
+            this.processFirstTerrains(lastProcessedEventUid);
         }
 
         // map
@@ -959,29 +996,29 @@ var kingdomBuilderBgaUserscriptData = {
         }
     },
 
-    resetTerrainsStatistics: function () {
-        this.terrainsPlayedCount = 0;
+    resetTerrainsStatistics: function (obj) {
+        obj.terrainsPlayedCount = 0;
         this.terrains.forEach(terrain => {
-            this.terrainsPlayed[terrain] = 0;
-            this.terrainsProbability[terrain] = 0;
+            obj.terrainsPlayed[terrain] = 0;
+            obj.terrainsProbability[terrain] = 0;
         });
     },
 
-    processFirstTerrains: function () {
+    processFirstTerrains: function (lastProcessedEventUid) {
         this.game.fplayers.map(p => p.terrain).filter(t => t !== BGA_TERRAIN_BACK).forEach(terrainIndex => {
             const terrainName = this.terrains[parseInt(terrainIndex)];
-            this.processTerrain(terrainName);
+            this.processTerrain(terrainName, lastProcessedEventUid);
         })
     },
 
-    processMyCurrentTerrain: function () {
+    processMyCurrentTerrain: function (lastProcessedEventUid) {
         this.game.fplayers.filter(p => parseInt(p.id) === this.myPlayerId).map(p => p.terrain).filter(t => t !== BGA_TERRAIN_BACK).forEach(terrainIndex => {
             const terrainName = this.terrains[parseInt(terrainIndex)];
-            this.processTerrain(terrainName);
+            this.processTerrain(terrainName, lastProcessedEventUid);
         })
     },
 
-    processAnotherCurrentPlayerTerrain: function (log) {
+    processAnotherCurrentPlayerTerrain: function (log, lastProcessedEventUid) {
         const activePlayerId = parseInt(this.game.gamestate.active_player);
         const playersWithoutActions = this.game.fplayers
             .filter(p => parseInt(p.id) !== this.myPlayerId)
@@ -992,7 +1029,7 @@ var kingdomBuilderBgaUserscriptData = {
             .map(p => p.terrain)
             .forEach(terrainIndex => {
                 const terrainName = this.terrains[parseInt(terrainIndex)];
-                this.processTerrain(terrainName);
+                this.processTerrain(terrainName, lastProcessedEventUid);
             });
     },
 
@@ -1033,7 +1070,7 @@ var kingdomBuilderBgaUserscriptData = {
 
         this.lastShowTerrainPlayerId = pId;
         const terrainName = this.terrains[parseInt(data.args.terrain)];
-        this.processTerrain(terrainName);
+        this.processTerrain(terrainName, data.uid);
     },
 
     processUpdateScores: function (data) {
@@ -1160,9 +1197,9 @@ var kingdomBuilderBgaUserscriptData = {
         this.renderPlayerUserscriptPanels();
     },
 
-    processTerrain: function (terrainName) {
+    processTerrain: function (terrainName, lastProcessedEventUid) {
         if (this.terrainsPlayedCount === this.terrainsStackSize) {
-            this.resetTerrainsStatistics();
+            this.resetTerrainsStatistics(this);
         }
         this.terrainsPlayed[terrainName]++;
         this.terrainsPlayedCount++;
@@ -1179,6 +1216,17 @@ var kingdomBuilderBgaUserscriptData = {
             this.terrainsProbability[terrain] = probability;
         });
         console.log('terrainsProbability: ' + JSON.stringify(this.terrainsProbability));
+
+        // save state
+        this.saveTerrainsState({
+            terrainsPlayed: this.terrainsPlayed,
+            terrainsProbability: this.terrainsProbability,
+            terrainsPlayedCount: this.terrainsPlayedCount,
+            turnsCount: this.turnsCount,
+            logIsFull: this.logIsFull,
+            lastShowTerrainPlayerId: this.lastShowTerrainPlayerId,
+            lastProcessedEventUid: lastProcessedEventUid,
+        });
 
         this.renderStatisticsPanel();
     },
@@ -1204,17 +1252,23 @@ var kingdomBuilderBgaUserscriptData = {
         return false;
     },
 
-    findShownTerrains: function (log) {
+    findShownTerrains: function (log, prevLastProcessedEventUid) {
         const openedTerrains = [];
+        let lastProcessedEventUid = null;
         if (log == null) {
             return openedTerrains;
         }
-        const actions = log.filter(e => e.data && e.data.length).flatMap(e => e.data).filter(a => a.args);
+        let actions = log.filter(e => e.data && e.data.length).flatMap(e => e.data).filter(a => a.args);
         console.log(`History (${actions.length}):`)
         let terrainDetected = false;
         let terrainsCount = 0;
         let prevAction = null;
         let lastPlayerId = null;
+        const foundPrevLastProcessedEventIndex = prevLastProcessedEventUid == null ? -1 : actions.findIndex(a => a.uid === prevLastProcessedEventUid);
+        if (foundPrevLastProcessedEventIndex != -1) {
+            actions = actions.slice(foundPrevLastProcessedEventIndex + 1, actions.length);
+            console.log(`Unprocessed history (${actions.length}):`)
+        }
         actions.forEach(action => {
             if (this.isUserChanged(action, lastPlayerId) && !this.isMyAction(action)) {
                 console.log('user changed');
@@ -1251,9 +1305,14 @@ var kingdomBuilderBgaUserscriptData = {
             if (args.player_id) {
                 lastPlayerId = args.player_id;
             }
+            lastProcessedEventUid = action.uid;
             prevAction = action;
         });
-        return openedTerrains;
+        return {
+            openedTerrains: openedTerrains,
+            lastProcessedEventUid: lastProcessedEventUid != null ? lastProcessedEventUid : prevLastProcessedEventUid,
+            logIsFull: prevLastProcessedEventUid == null || foundPrevLastProcessedEventIndex !== -1,
+        };
     },
 
     isUserChanged: function (action, lastPlayerId) {
@@ -1534,7 +1593,38 @@ var kingdomBuilderBgaUserscriptData = {
             // fix bug with disappeared player settlements counter on ios
             this.dojo.replaceClass(`${BGA_PLAYER_SETTLEMENTS_ID_PREFIX}${id}`, 'player-settlements', 'hex-grid-content');
         });
-    }
+    },
+
+    saveTerrainsState: function (state) {
+        console.log(`saveTerrainsState ${JSON.stringify(state)}`);
+        sessionStorage.setItem(TERRAINS_STATE_KEY_PREFIX + this.bgaTableId, JSON.stringify(state));
+    },
+
+    readTerrainsState: function () {
+        console.log("readTerrainsState");
+        const sState = sessionStorage.getItem(TERRAINS_STATE_KEY_PREFIX + this.bgaTableId);
+        if (sState == null) {
+            const state = DEFAULT_TERRAINS_STATE;
+            this.resetTerrainsStatistics(state);
+            return state;
+        }
+        const state = JSON.parse(sState);
+
+        return state;
+    },
+
+    resetTerrainsState: function () {
+        console.log("resetTerrainsState");
+        sessionStorage.setItem(TERRAINS_STATE_KEY_PREFIX + this.bgaTableId, JSON.stringify(DEFAULT_TERRAINS_STATE));
+    },
+
+    getHistory() {
+        return window.parent.gameui.notifqueue.logs_to_load.filter(e => e.data && e.data.length).flatMap(e => e.data).filter(a => a.args);
+    },
+
+    filterHistory(originalType) {
+        return this.getHistory().filter(a => a.args.originalType === originalType);
+    },
 
 };
 
