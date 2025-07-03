@@ -21,6 +21,8 @@ const USERSCRIPT_LOAD_TIMEOUT_MS = 3000;
 const UPPER_RIGHT_MENU_ID = "upperrightmenu";
 const PULL_UPDATES_PANEL_ID = "pull_updates_panel";
 const PULL_UPDATES_BUTTON_ID = "pull_updates_button";
+const LOGS_ELEMENT_ID = "logs";
+const INIT_MESSAGE_LOG_ID = "log_pull_updates_init";
 const BGA_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
 
 function sleep(ms) {
@@ -66,6 +68,8 @@ var pullUpdatesBgaUserscriptData = {
 
         this.registerSocketListeners();
 
+        this.renderInitMessage();
+
         return this;
     },
 
@@ -97,6 +101,14 @@ var pullUpdatesBgaUserscriptData = {
     renderContainers: function () {
         const pullUpdatesElement = `<div id="${PULL_UPDATES_PANEL_ID}" class="upperrightmenu_item flex justify-center self-center"></div>`;
         this.dojo.place(pullUpdatesElement, UPPER_RIGHT_MENU_ID, 'first');
+    },
+
+    renderInitMessage: function () {
+        const logElement =
+            `<div id="${INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `    <div class="roundedbox" style="background-color: lightgray;">Pull Updates userscript: activated</div>` +
+            `</div>`;
+        this.dojo.place(logElement, LOGS_ELEMENT_ID, 'first');
     },
 
 };
