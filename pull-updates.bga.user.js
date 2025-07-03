@@ -61,16 +61,33 @@ var pullUpdatesBgaUserscriptData = {
         this.gameui = window.parent.gameui;
         this.bgaTableId = BGA_URL_TABLE_ID_PATTERN.exec(window.location.search).groups['tableId'];
 
+
         this.renderContainers();
 
         this.renderPullUpdatesButton();
 
+        this.registerSocketListeners();
+
         return this;
     },
 
-    onClickButton: function (e) {
-        console.log(`try to pull events`);
+    registerSocketListeners: function () {
+        console.log(`Registering socket listeners...`);
+        window.parent.gameui.socket.on('connected', function (ctx) {
+            console.log(`socket connected`);
+            this.pullUpdates();
+        }).on('disconnected', function (ctx) {
+            console.log(`socket disconnected`);
+        });
+    },
+
+    pullUpdates: function () {
+        console.log(`Trying to pull updates`);
         window.parent.gameui.reconnectAllSubscriptions();
+    },
+
+    onClickButton: function (e) {
+        this.pullUpdates();
     },
 
     renderPullUpdatesButton: function () {
