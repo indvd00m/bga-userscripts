@@ -82,7 +82,7 @@ var bgaUserscriptHideFriendsActivityData = {
             .map(e => e.innerText)
             .filter(name => !this.players.includes(name));
         if (nonParticipatingPlayerNames.length) {
-            console.log(`Hide activity of: ${nonParticipatingPlayerNames}`);
+            console.log(`Hide activity of ${nonParticipatingPlayerNames}: ${logElement.innerText}`);
             this.dojo.destroy(logElement);
         }
     },
