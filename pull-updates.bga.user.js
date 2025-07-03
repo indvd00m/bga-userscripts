@@ -3,7 +3,7 @@
 // @description Possibility to force pull of updates at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 0.2.0
+// @version 0.3.0-dev
 // @match https://boardgamearena.com/*/*?*table=*
 // @match https://*.boardgamearena.com/*/*?*table=*
 // @grant none
