@@ -494,6 +494,7 @@ var kingdomBuilderBgaUserscriptData = {
         this.renderPlayerUserscriptPanels();
         this.recalculateTurnsToGameEnd();
         this.renderStatisticsPanel();
+        this.renderInitMessage();
 
         return this;
     },
@@ -1537,7 +1538,15 @@ var kingdomBuilderBgaUserscriptData = {
             // fix bug with disappeared player settlements counter on ios
             this.dojo.replaceClass(`${BGA_PLAYER_SETTLEMENTS_ID_PREFIX}${id}`, 'player-settlements', 'hex-grid-content');
         });
-    }
+    },
+
+    renderInitMessage: function () {
+        const logElement =
+            `<div id="${INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `    <div class="roundedbox" style="background-color: lightgray;">KB userscript: activated</div>` +
+            `</div>`;
+        this.dojo.place(logElement, LOGS_ELEMENT_ID, 'first');
+    },
 
 };
 

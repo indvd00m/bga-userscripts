@@ -115,6 +115,7 @@ var cantStopBgaUserscriptData = {
 
         this.renderProgressState();
         this.renderLineProbabilities();
+        this.renderInitMessage();
 
         return this;
     },
@@ -705,6 +706,14 @@ var cantStopBgaUserscriptData = {
         this.dojo.place(lineProbabilitiesElement, GAME_BOARD_WRAP_ID, 'first');
         const progressStateElement = `<div id="${PROGRESS_STATE_PANEL_ID}" style="width: 100%;"></div>`;
         this.dojo.place(progressStateElement, GAME_BOARD_WRAP_ID, 'first');
+    },
+
+    renderInitMessage: function () {
+        const logElement =
+            `<div id="${INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `    <div class="roundedbox" style="background-color: lightgray;">CS userscript: activated</div>` +
+            `</div>`;
+        this.dojo.place(logElement, LOGS_ELEMENT_ID, 'first');
     },
 
     formatDecimal: function (value, precision) {
