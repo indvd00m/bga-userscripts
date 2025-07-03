@@ -69,17 +69,7 @@ var pullUpdatesBgaUserscriptData = {
     },
 
     onClickButton: function (e) {
-        alert('try to pull events');
-        // not working
-        // window.parent.gameui.sendWakeUpSignal();
-
-        // kingdom-builder
-        // window.parent.gameui.takeAction('undoAction');
-        // window.parent.gameui.clearPossible();
-
-        // not working
-        // window.parent.gameui.loadPreviousMessage('table', this.bgaTableId);
-
+        console.log(`try to pull events`);
         window.parent.gameui.reconnectAllSubscriptions();
     },
 
