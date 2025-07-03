@@ -59,7 +59,7 @@ var bgaUserscriptHideFriendsActivityData = {
         const config = {
             attributes: false,
             childList: true,
-            subtree: true,
+            subtree: false,
         };
         const logsElement = Array.from(this.dojo.query(`#${LOGS_ELEMENT_ID}`))[0];
         this.observer = new MutationObserver(this.logsElementObserverCallback.bind(this));
