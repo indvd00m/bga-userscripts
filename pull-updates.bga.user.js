@@ -15,8 +15,6 @@
 // TODO: @grant
 // TODO: @exclude-match
 
-// INFO: undo action: window.parent.gameui.ajaxcall(`https://boardgamearena.com/14/kingdombuilder/kingdombuilder/undoAction.html?lock=2d4e4b5f-604a-40bc-8bce-a84d18a6a426&table=692670204&noerrortracking=true&dojo.preventCache=${Date.now()}`, {lock: !0})
-
 console.log('BGA userscript for force pull updates');
 
 const USERSCRIPT_LOAD_TIMEOUT_MS = 3000;
