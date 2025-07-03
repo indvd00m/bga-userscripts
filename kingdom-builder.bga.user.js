@@ -16,7 +16,7 @@
 
 // TODO: Rounds played
 
-console.log('BGA userscript for Kingdom Builder');
+log('userscript');
 
 const BGA_PLAYER_BOARDS_ID = "player_boards";
 const BGA_PLAYER_BOARD_CLASS = "player-board";
@@ -38,6 +38,10 @@ const BGA_CELL_CONTAINER_ID_PREFIX = 'cell-container';
 
 const QUADRANT_WIDTH = 10;
 const QUADRANT_HEIGHT = 10;
+
+function log(msg) {
+    console.log(`KB: ${msg}`);
+}
 
 class Coord {
     x = 0;
@@ -451,9 +455,9 @@ var kingdomBuilderBgaUserscriptData = {
         const log = window.parent.gameui.notifqueue.logs_to_load;
         this.logIsFull = this.isFullLog(log);
         if (this.logIsFull) {
-            console.log(`Found full log with ${log.length} actions`);
+            log(`Found full log with ${log.length} actions`);
         } else {
-            console.log(`Found incomplete log with ${log.length} actions`);
+            log(`Found incomplete log with ${log.length} actions`);
         }
         const openedTerrains = this.findShownTerrains(log);
         if (openedTerrains.length) {
@@ -467,8 +471,8 @@ var kingdomBuilderBgaUserscriptData = {
 
         // map
         this.map = this.parseMap();
-        console.log('Map in ASCII format:');
-        console.log(this.map.text);
+        log('Map in ASCII format:');
+        log(this.map.text);
         if (this.isRenderAsciiMap) {
             this.renderAsciiMap();
         }
@@ -522,7 +526,7 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     recalculateTurnsToGameEnd: function () {
-        console.log(`playersTiles: ${JSON.stringify(this.playersTiles)}`);
+        log(`playersTiles: ${JSON.stringify(this.playersTiles)}`);
 
         const allPlayerTurnsToGameEnd = this.game.fplayers.map(p => {
             const playerId = parseInt(p.id);
@@ -950,7 +954,7 @@ var kingdomBuilderBgaUserscriptData = {
         const quadrantName = `BASE_QUADRANT_${postfix}`;
         const quadrantCanvas = Maps[quadrantName];
         let rotated = quadrantElement.classList.contains(BGA_QUADRANT_FLIPPED_CLASS_NAME);
-        console.log(`Found quadrant ${quadrantName}${rotated ? ' (rotated)' : ''}`);
+        log(`Found quadrant ${quadrantName}${rotated ? ' (rotated)' : ''}`);
         if (rotated) {
             return quadrantCanvas.rotate180();
         } else {
@@ -986,7 +990,7 @@ var kingdomBuilderBgaUserscriptData = {
             .filter(p => parseInt(p.id) !== this.myPlayerId)
             .filter(p => parseInt(p.id) === activePlayerId)
             .filter(p => !this.isPlayerLastAction(log, parseInt(p.id)))
-        console.log(`Found another active players without actions: ${playersWithoutActions.map(p => p.name).join(',')}`);
+        log(`Found another active players without actions: ${playersWithoutActions.map(p => p.name).join(',')}`);
         playersWithoutActions
             .map(p => p.terrain)
             .forEach(terrainIndex => {
@@ -1004,29 +1008,29 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     processShowTerrain: function (data) {
-        console.log("showTerrain", JSON.stringify(data));
+        log("showTerrain", JSON.stringify(data));
 
         // Input check
         if (!data || !data.args || !data.args.pId || !data.args.terrain) {
             return;
         }
 
-        console.log(JSON.stringify(data.args));
+        log(JSON.stringify(data.args));
 
         const pId = parseInt(data.args.pId);
         const prevLastShowTerrainPlayerId = this.lastShowTerrainPlayerId;
         this.lastShowTerrainPlayerId = pId;
 
         if (BGA_TERRAIN_BACK === data.args.terrain) {
-            console.log('Skip back terrain processing');
+            log('Skip back terrain processing');
             return;
         }
         if (this.myPlayerId === pId && data.args.i18n == null) {
-            console.log('Skip my turn second processing');
+            log('Skip my turn second processing');
             return;
         }
         if (this.myPlayerId !== pId && prevLastShowTerrainPlayerId === pId) {
-            console.log(`Skip undoing of player ${pId}`);
+            log(`Skip undoing of player ${pId}`);
             return;
         }
 
@@ -1036,7 +1040,7 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     processUpdateScores: function (data) {
-        console.log("updateScores", JSON.stringify(data));
+        log("updateScores", JSON.stringify(data));
 
         // Input check
         if (!data || !data.args || !data.args.scores) {
@@ -1055,7 +1059,7 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     processObtainTile: function (data) {
-        console.log("obtainTile", JSON.stringify(data));
+        log("obtainTile", JSON.stringify(data));
 
         // Input check
         if (!data || !data.args || !data.args.location_name || !data.args.location
@@ -1077,7 +1081,7 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     processLoseTile: function (data) {
-        console.log("loseTile", JSON.stringify(data));
+        log("loseTile", JSON.stringify(data));
 
         // Input check
         if (!data || !data.args || !data.args) {
@@ -1095,7 +1099,7 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     processBuild: function (data) {
-        console.log("build", JSON.stringify(data));
+        log("build", JSON.stringify(data));
 
         // Input check
         if (!data || !data.args || !data.args.player_id || data.args.x == null || data.args.y == null) {
@@ -1115,7 +1119,7 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     processMove: function (data) {
-        console.log("move", JSON.stringify(data));
+        log("move", JSON.stringify(data));
         // Input check
         if (!data || !data.args || !data.args.player_id || !data.args.from || data.args.x == null || data.args.y == null) {
             return;
@@ -1135,7 +1139,7 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     processCancel: function (data) {
-        console.log("cancel", JSON.stringify(data));
+        log("cancel", JSON.stringify(data));
         // Input check
         if (!data || !data.args || !data.args.board || !data.args.fplayers) {
             return;
@@ -1166,8 +1170,8 @@ var kingdomBuilderBgaUserscriptData = {
         this.terrainsPlayed[terrainName]++;
         this.terrainsPlayedCount++;
         this.turnsCount++;
-        console.log('terrainsPlayed: ' + JSON.stringify(this.terrainsPlayed));
-        console.log(`terrainsPlayedCount: ${this.terrainsPlayedCount}`);
+        log('terrainsPlayed: ' + JSON.stringify(this.terrainsPlayed));
+        log(`terrainsPlayedCount: ${this.terrainsPlayedCount}`);
 
         this.terrains.forEach(terrain => {
             const playedCount = this.terrainsPlayed[terrain];
@@ -1177,7 +1181,7 @@ var kingdomBuilderBgaUserscriptData = {
             }
             this.terrainsProbability[terrain] = probability;
         });
-        console.log('terrainsProbability: ' + JSON.stringify(this.terrainsProbability));
+        log('terrainsProbability: ' + JSON.stringify(this.terrainsProbability));
 
         this.renderStatisticsPanel();
     },
@@ -1209,14 +1213,14 @@ var kingdomBuilderBgaUserscriptData = {
             return openedTerrains;
         }
         const actions = log.filter(e => e.data && e.data.length).flatMap(e => e.data).filter(a => a.args);
-        console.log(`History (${actions.length}):`)
+        log(`History (${actions.length}):`)
         let terrainDetected = false;
         let terrainsCount = 0;
         let prevAction = null;
         let lastPlayerId = null;
         actions.forEach(action => {
             if (this.isUserChanged(action, lastPlayerId) && !this.isMyAction(action)) {
-                console.log('user changed');
+                log('user changed');
                 terrainDetected = false;
             }
             const args = action.args;
@@ -1226,7 +1230,7 @@ var kingdomBuilderBgaUserscriptData = {
                 terrainsCount++;
                 const terrainIndex = parseInt(args.terrain);
                 const terrainName = this.terrains[terrainIndex];
-                console.log(`detected ${terrainsCount} terrain: ${terrainName}`);
+                log(`detected ${terrainsCount} terrain: ${terrainName}`);
                 openedTerrains.push(terrainName);
             } else if (mandatoryAction && !terrainDetected) {
                 let terrainName = this.terrains.find(t => args.terrainName.toLowerCase().includes(t.toLowerCase()));
@@ -1240,13 +1244,13 @@ var kingdomBuilderBgaUserscriptData = {
                 if (terrainName != null) {
                     terrainDetected = true;
                     terrainsCount++;
-                    console.log(`detected ${terrainsCount} terrain: ${terrainName}`);
+                    log(`detected ${terrainsCount} terrain: ${terrainName}`);
                     openedTerrains.push(terrainName);
                 } else {
-                    console.log(`can not detect terrain: ${args.terrainName}`);
+                    log(`can not detect terrain: ${args.terrainName}`);
                 }
             }
-            console.log(`${mandatoryAction ? '!' : ' '}${action.move_id} player ${args.player_id} ${args.originalType} ${args.terrainName} ${args.location_name}`);
+            log(`${mandatoryAction ? '!' : ' '}${action.move_id} player ${args.player_id} ${args.originalType} ${args.terrainName} ${args.location_name}`);
             if (args.player_id) {
                 lastPlayerId = args.player_id;
             }
@@ -1538,12 +1542,12 @@ var kingdomBuilderBgaUserscriptData = {
 };
 
 var onload = async function () {
-    console.log('onload');
+    log('Loaded');
     await sleep(10000);
-    console.log('waited');
+    log('Waited');
     if (!window.parent || !window.parent.gameui || !window.parent.gameui.game_name ||
         window.parent.gameui.game_name != 'kingdombuilder') {
-        console.log('Wrong state or game')
+        log('Wrong state or game')
         return;
     }
 
@@ -1551,7 +1555,7 @@ var onload = async function () {
     if (window.parent.isKingdomBuilderBgaUserscriptStarted) {
         return;
     } else {
-        console.log('Starting...');
+        log('Starting...');
         window.parent.isKingdomBuilderBgaUserscriptStarted = true;
         window.parent.kingdomBuilderBgaUserscriptData = kingdomBuilderBgaUserscriptData.init();
     }

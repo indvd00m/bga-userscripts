@@ -14,7 +14,7 @@
 // TODO: @grant
 // TODO: @exclude-match
 
-console.log('BGA userscript for Can\'t Stop');
+log('userscript');
 
 const USERSCRIPT_LOAD_TIMEOUT_MS = 5000;
 const CANT_STOP_MAX_CHIPS_COUNT = 3;
@@ -34,6 +34,10 @@ const DEFAULT_PROGRESS_STATE = {
     rollingDiceCount: 0,
 };
 const PROGRESS_STATE_KEY_PREFIX = "cantStopUserscriptProgressState-";
+
+function log(msg) {
+    console.log(`CS: ${msg}`);
+}
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -116,23 +120,23 @@ var cantStopBgaUserscriptData = {
     },
 
     onEventRemoveProgress: function (e) {
-        console.log("onEventRemoveProgress");
-        console.log(JSON.stringify(e));
+        log("onEventRemoveProgress");
+        log(JSON.stringify(e));
         this.resetProgressState();
         this.renderProgressState();
     },
 
     onEventMoveToken: function (e) {
-        console.log("onEventMoveToken");
-        console.log(JSON.stringify(e));
+        log("onEventMoveToken");
+        log(JSON.stringify(e));
         const playerId = parseInt(e.args.player_id);
         this.updateProgressStateProbability(playerId);
         this.renderProgressState();
     },
 
     onEventRollDice: function (e) {
-        console.log("onEventRollDice");
-        console.log(JSON.stringify(e));
+        log("onEventRollDice");
+        log(JSON.stringify(e));
         this.addRollDiceEventToLog(e);
         this.processPossibleMoves(e.args, this.getUnsavedColumns());
         let playerId = parseInt(e.args.player_id);
@@ -142,12 +146,12 @@ var cantStopBgaUserscriptData = {
     },
 
     saveProgressState: function (state) {
-        console.log("saveProgressState");
+        log("saveProgressState");
         sessionStorage.setItem(PROGRESS_STATE_KEY_PREFIX + this.bgaTableId, JSON.stringify(state));
     },
 
     readProgressState: function () {
-        console.log("readProgressState");
+        log("readProgressState");
         const sState = sessionStorage.getItem(PROGRESS_STATE_KEY_PREFIX + this.bgaTableId);
         if (sState == null) {
             return DEFAULT_PROGRESS_STATE;
@@ -166,36 +170,36 @@ var cantStopBgaUserscriptData = {
     },
 
     resetProgressState: function () {
-        console.log("resetProgressState");
+        log("resetProgressState");
         sessionStorage.setItem(PROGRESS_STATE_KEY_PREFIX + this.bgaTableId, JSON.stringify(DEFAULT_PROGRESS_STATE));
     },
 
     updateProgressStateProbability: function (playerId) {
-        console.log("updateProgressStateProbability");
+        log("updateProgressStateProbability");
         const progressState = this.readProgressState();
         const prevSPProbability = progressState.saveProgressProbability;
         this.recalculateProgressState(progressState, playerId);
         if (prevSPProbability !== progressState.saveProgressProbability) {
-            console.log('reset rolling dice count');
+            log('reset rolling dice count');
             progressState.rollingDiceCount = 0;
         }
         this.saveProgressState(progressState);
     },
 
     updateProgressStateRollingDiceCount: function (playerId) {
-        console.log("updateProgressStateRollingDiceCount");
+        log("updateProgressStateRollingDiceCount");
         const progressState = this.readProgressState();
         const playerChanged = playerId !== progressState.playerId;
         this.recalculateProgressState(progressState, playerId);
         if (!playerChanged && progressState.saveProgressProbability < 1) {
             progressState.rollingDiceCount++;
-            console.log('increment rolling dice count to ' + progressState.rollingDiceCount);
+            log('increment rolling dice count to ' + progressState.rollingDiceCount);
         }
         this.saveProgressState(progressState);
     },
 
     recalculateAndSaveProgressState: function () {
-        console.log("recalculateAndSaveProgressState");
+        log("recalculateAndSaveProgressState");
         const activePlayerId = parseInt(this.game.gamestate.active_player);
         const progressState = this.readProgressState();
         this.recalculateProgressState(progressState, activePlayerId);
@@ -203,7 +207,7 @@ var cantStopBgaUserscriptData = {
     },
 
     recalculateProgressState: function (progressState, playerId) {
-        console.log("recalculateProgressState");
+        log("recalculateProgressState");
         const unsavedColumns = this.getUnsavedColumns();
         const columns = objectKeys(unsavedColumns).map(s => parseInt(s));
         const possibleOutcomeValuesCount = this.possibleOutcomesValues.length;
@@ -220,7 +224,7 @@ var cantStopBgaUserscriptData = {
     },
 
     processPossibleMoves: function (args, unsavedColumns) {
-        console.log(`processPossibleMoves with unsavedColumns ${JSON.stringify(unsavedColumns)}`);
+        log(`processPossibleMoves with unsavedColumns ${JSON.stringify(unsavedColumns)}`);
         let diceArray = args.dice;
         let playerId = parseInt(args.player_id);
         let possibleMovesArray = args.possibleMoves;
@@ -258,7 +262,7 @@ var cantStopBgaUserscriptData = {
                     both: possibleMove.both,
                     move: move1,
                 };
-                console.log(`${index1},${index2} with dice ${JSON.stringify(dice1)} and sum ${sum1} has probability ${pProbability}`);
+                log(`${index1},${index2} with dice ${JSON.stringify(dice1)} and sum ${sum1} has probability ${pProbability}`);
             }
             {
                 const index2 = 1;
@@ -283,7 +287,7 @@ var cantStopBgaUserscriptData = {
                     both: possibleMove.both,
                     move: move2,
                 };
-                console.log(`${index1},${index2} with dice ${JSON.stringify(dice2)} and sum ${sum2} has probability ${pProbability}`);
+                log(`${index1},${index2} with dice ${JSON.stringify(dice2)} and sum ${sum2} has probability ${pProbability}`);
             }
         }
         this.renderMovesProbabilities(movesProbabilities);
@@ -384,7 +388,7 @@ var cantStopBgaUserscriptData = {
             possibleOutcomesValues: values,
             lineProbabilities: lineProbabilities,
         }
-        console.log(`calc time=${Date.now() - start}ms`);
+        log(`calc time=${Date.now() - start}ms`);
         return stats;
     },
 
@@ -472,7 +476,7 @@ var cantStopBgaUserscriptData = {
     },
 
     renderMovesProbabilities: function (movesProbabilities) {
-        console.log(`renderMovesProbabilities ${JSON.stringify(movesProbabilities)}`);
+        log(`renderMovesProbabilities ${JSON.stringify(movesProbabilities)}`);
         let maxVisibleSaveProgressProbability = 0;
         for (let index1 = 0; index1 < movesProbabilities.length; index1++) {
             for (let index2 = 0; index2 < movesProbabilities[index1].length; index2++) {
@@ -715,12 +719,12 @@ var cantStopBgaUserscriptData = {
 };
 
 var onload = async function () {
-    console.log('onload');
+    log('Loaded');
     await sleep(USERSCRIPT_LOAD_TIMEOUT_MS);
-    console.log('waited');
+    log('Waited');
     if (!window.parent || !window.parent.gameui || !window.parent.gameui.game_name ||
         window.parent.gameui.game_name != 'cantstop') {
-        console.log('Wrong state or game')
+        log('Wrong state or game')
         return;
     }
 
@@ -728,7 +732,7 @@ var onload = async function () {
     if (window.parent.isCantStopBgaUserscriptStarted) {
         return;
     } else {
-        console.log('Starting...');
+        log('Starting...');
         window.parent.isCantStopBgaUserscriptStarted = true;
         window.parent.cantStopBgaUserscriptData = cantStopBgaUserscriptData.init();
     }

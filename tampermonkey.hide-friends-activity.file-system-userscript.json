@@ -8,4 +8,4 @@
 // @require file:///Users/indvd00m/dev/bga-userscripts/hide-friends-activity.bga.user.js
 // ==/UserScript==
 
-console.log("BGA local userscript: hide-friends-activity");
+console.log("HFA: local userscript");
