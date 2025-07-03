@@ -17,6 +17,7 @@
 log('userscript');
 
 const USERSCRIPT_LOAD_TIMEOUT_MS = 5000;
+const INIT_MESSAGE_LOG_ID = "log_cantstop_init";
 const CANT_STOP_MAX_CHIPS_COUNT = 3;
 const DICE_SELECT_ID_PREFIX = "dice_select_";
 const PROGRESS_STATE_PANEL_ID = "progress_state";
