@@ -75,7 +75,7 @@ var pullUpdatesBgaUserscriptData = {
         console.log(`Registering socket listeners...`);
         window.parent.gameui.socket.on('connected', function (ctx) {
             console.log(`socket connected`);
-            this.pullUpdates();
+            window.parent.pullUpdatesBgaUserscriptData.pullUpdates();
         }).on('disconnected', function (ctx) {
             console.log(`socket disconnected`);
         });
