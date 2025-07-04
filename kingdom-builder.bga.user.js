@@ -3,7 +3,7 @@
 // @description Extended statistics for Kingdom Builder game at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 0.9.3
+// @version 0.9.4
 // @match https://boardgamearena.com/*/kingdombuilder*
 // @grant none
 // @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/kingdom-builder.bga.user.js
@@ -18,6 +18,7 @@
 
 log('userscript');
 
+const INIT_MESSAGE_LOG_ID = "log_kingdom_builder_init";
 const BGA_PLAYER_BOARDS_ID = "player_boards";
 const BGA_PLAYER_BOARD_CLASS = "player-board";
 const BGA_PLAYER_BOARD_ID_PREFIX = "overall_player_board_";
