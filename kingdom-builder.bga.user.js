@@ -3,7 +3,7 @@
 // @description Extended statistics for Kingdom Builder game at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 0.9.2
+// @version 0.9.3
 // @match https://boardgamearena.com/*/kingdombuilder*
 // @grant none
 // @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/kingdom-builder.bga.user.js
@@ -452,19 +452,19 @@ var kingdomBuilderBgaUserscriptData = {
         const activePlayerId = parseInt(this.game.gamestate.active_player);
         this.lastShowTerrainPlayerId = activePlayerId;
 
-        const log = window.parent.gameui.notifqueue.logs_to_load;
-        this.logIsFull = this.isFullLog(log);
+        const logs = window.parent.gameui.notifqueue.logs_to_load;
+        this.logIsFull = this.isFullLog(logs);
         if (this.logIsFull) {
-            log(`Found full log with ${log.length} actions`);
+            log(`Found full log with ${logs.length} actions`);
         } else {
-            log(`Found incomplete log with ${log.length} actions`);
+            log(`Found incomplete log with ${logs.length} actions`);
         }
-        const openedTerrains = this.findShownTerrains(log);
+        const openedTerrains = this.findShownTerrains(logs);
         if (openedTerrains.length) {
             openedTerrains.forEach(t => {
                 this.processTerrain(t);
             });
-            this.processAnotherCurrentPlayerTerrain(log);
+            this.processAnotherCurrentPlayerTerrain(logs);
         } else {
             this.processFirstTerrains();
         }
@@ -985,12 +985,12 @@ var kingdomBuilderBgaUserscriptData = {
         })
     },
 
-    processAnotherCurrentPlayerTerrain: function (log) {
+    processAnotherCurrentPlayerTerrain: function (logs) {
         const activePlayerId = parseInt(this.game.gamestate.active_player);
         const playersWithoutActions = this.game.fplayers
             .filter(p => parseInt(p.id) !== this.myPlayerId)
             .filter(p => parseInt(p.id) === activePlayerId)
-            .filter(p => !this.isPlayerLastAction(log, parseInt(p.id)))
+            .filter(p => !this.isPlayerLastAction(logs, parseInt(p.id)))
         log(`Found another active players without actions: ${playersWithoutActions.map(p => p.name).join(',')}`);
         playersWithoutActions
             .map(p => p.terrain)
@@ -1187,18 +1187,18 @@ var kingdomBuilderBgaUserscriptData = {
         this.renderStatisticsPanel();
     },
 
-    isFullLog: function (log) {
-        if (log == null || log.length === 0) {
+    isFullLog: function (logs) {
+        if (logs == null || logs.length === 0) {
             return false;
         }
-        return parseInt(log[0].move_id) === 1;
+        return parseInt(logs[0].move_id) === 1;
     },
 
-    isPlayerLastAction: function (log, playerId) {
-        if (log == null || log.length === 0) {
+    isPlayerLastAction: function (logs, playerId) {
+        if (logs == null || logs.length === 0) {
             return false;
         }
-        const actions = log.filter(e => e.data && e.data.length).flatMap(e => e.data).filter(a => a.args);
+        const actions = logs.filter(e => e.data && e.data.length).flatMap(e => e.data).filter(a => a.args);
         for (let i = actions.length - 1; i >= 0; i--) {
             const action = actions[i];
             if (action.args.player_id) {
@@ -1208,12 +1208,12 @@ var kingdomBuilderBgaUserscriptData = {
         return false;
     },
 
-    findShownTerrains: function (log) {
+    findShownTerrains: function (logs) {
         const openedTerrains = [];
-        if (log == null) {
+        if (logs == null) {
             return openedTerrains;
         }
-        const actions = log.filter(e => e.data && e.data.length).flatMap(e => e.data).filter(a => a.args);
+        const actions = logs.filter(e => e.data && e.data.length).flatMap(e => e.data).filter(a => a.args);
         log(`History (${actions.length}):`)
         let terrainDetected = false;
         let terrainsCount = 0;
