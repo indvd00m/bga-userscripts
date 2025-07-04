@@ -3,9 +3,8 @@
 // @description Hide non-participating friends' activity in the game log
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 0.9.0
+// @version 0.9.1
 // @match https://boardgamearena.com/*/*?*table=*
-// @match https://*.boardgamearena.com/*/*?*table=*
 // @grant none
 // @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/hide-friends-activity.bga.user.js
 // @downloadURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/hide-friends-activity.bga.user.js
@@ -15,12 +14,16 @@
 // TODO: @grant
 // TODO: @exclude-match
 
-console.log('BGA userscript: hide-friends-activity');
+log('userscript');
 
 const USERSCRIPT_LOAD_TIMEOUT_MS = 3000;
 const LOGS_ELEMENT_ID = "logs";
 const PLAYER_NAME_ELEMENT_CLASS = "playername";
 const INIT_MESSAGE_LOG_ID = "log_hide_friends_activity_init";
+
+function log(msg) {
+    console.log(`HFA: ${msg}`);
+}
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -57,7 +60,7 @@ var bgaUserscriptHideFriendsActivityData = {
     },
 
     registerObserver: function () {
-        console.log(`Registering observer...`);
+        log(`Registering observer...`);
         const config = {
             attributes: false,
             childList: true,
@@ -79,12 +82,12 @@ var bgaUserscriptHideFriendsActivityData = {
     },
 
     processLogElement: function (logElement) {
-        console.log(`Processing log element: ${logElement.outerHTML}`);
+        log(`Processing log element: ${logElement.outerHTML}`);
         const nonParticipatingPlayerNames = Array.from(this.dojo.query(`.${PLAYER_NAME_ELEMENT_CLASS}`, logElement))
             .map(e => e.innerText)
             .filter(name => !this.players.includes(name));
         if (nonParticipatingPlayerNames.length) {
-            console.log(`Hide activity of ${nonParticipatingPlayerNames}: ${logElement.innerText}`);
+            log(`Hide activity of ${nonParticipatingPlayerNames}: ${logElement.innerText}`);
             this.dojo.destroy(logElement);
         }
     },
@@ -100,11 +103,11 @@ var bgaUserscriptHideFriendsActivityData = {
 };
 
 var onload = async function () {
-    console.log('onload');
+    log('Loaded');
     await sleep(USERSCRIPT_LOAD_TIMEOUT_MS);
-    console.log('waited');
+    log('Waited');
     if (!window.parent || !window.parent.gameui || !window.parent.gameui.game_name) {
-        console.log('Wrong state or game')
+        log('Wrong state or game')
         return;
     }
 
@@ -112,7 +115,7 @@ var onload = async function () {
     if (window.parent.isBgaUserscriptHideFriendsActivityStarted) {
         return;
     } else {
-        console.log('Starting...');
+        log('Starting...');
         window.parent.isBgaUserscriptHideFriendsActivityStarted = true;
         window.parent.bgaUserscriptHideFriendsActivityData = bgaUserscriptHideFriendsActivityData.init();
     }

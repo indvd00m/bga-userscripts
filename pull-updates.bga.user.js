@@ -3,9 +3,8 @@
 // @description Possibility to force pull of updates at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 0.9.0
+// @version 0.9.1
 // @match https://boardgamearena.com/*/*?*table=*
-// @match https://*.boardgamearena.com/*/*?*table=*
 // @grant none
 // @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/pull-updates.bga.user.js
 // @downloadURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/pull-updates.bga.user.js
@@ -15,7 +14,7 @@
 // TODO: @grant
 // TODO: @exclude-match
 
-console.log('BGA userscript for force pull updates');
+log('userscript');
 
 const USERSCRIPT_LOAD_TIMEOUT_MS = 3000;
 const UPPER_RIGHT_MENU_ID = "upperrightmenu";
@@ -24,6 +23,10 @@ const PULL_UPDATES_BUTTON_ID = "pull_updates_button";
 const LOGS_ELEMENT_ID = "logs";
 const INIT_MESSAGE_LOG_ID = "log_pull_updates_init";
 const BGA_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
+
+function log(msg) {
+    console.log(`PU: ${msg}`);
+}
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -74,17 +77,17 @@ var pullUpdatesBgaUserscriptData = {
     },
 
     registerSocketListeners: function () {
-        console.log(`Registering socket listeners...`);
+        log(`Registering socket listeners...`);
         window.parent.gameui.socket.on('connected', function (ctx) {
-            console.log(`socket connected`);
+            log(`socket connected`);
             window.parent.pullUpdatesBgaUserscriptData.pullUpdates();
         }).on('disconnected', function (ctx) {
-            console.log(`socket disconnected`);
+            log(`socket disconnected`);
         });
     },
 
     pullUpdates: function () {
-        console.log(`Trying to pull updates`);
+        log(`Trying to pull updates`);
         window.parent.gameui.reconnectAllSubscriptions();
     },
 
@@ -114,11 +117,11 @@ var pullUpdatesBgaUserscriptData = {
 };
 
 var onload = async function () {
-    console.log('onload');
+    log('Loaded');
     await sleep(USERSCRIPT_LOAD_TIMEOUT_MS);
-    console.log('waited');
+    log('Waited');
     if (!window.parent || !window.parent.gameui || !window.parent.gameui.game_name) {
-        console.log('Wrong state or game')
+        log('Wrong state or game')
         return;
     }
 
@@ -126,7 +129,7 @@ var onload = async function () {
     if (window.parent.isPullUpdatesBgaUserscriptStarted) {
         return;
     } else {
-        console.log('Starting...');
+        log('Starting...');
         window.parent.isPullUpdatesBgaUserscriptStarted = true;
         window.parent.pullUpdatesBgaUserscriptData = pullUpdatesBgaUserscriptData.init();
     }
