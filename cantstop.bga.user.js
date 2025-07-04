@@ -3,7 +3,7 @@
 // @description Extended statistics for Can't Stop game at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 1.6.4
+// @version 1.6.5
 // @match https://boardgamearena.com/*/cantstop*
 // @grant none
 // @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/cantstop.bga.user.js
@@ -16,9 +16,9 @@
 
 log('userscript');
 
-const USERSCRIPT_LOAD_TIMEOUT_MS = 5000;
-const LOGS_ELEMENT_ID = "logs";
-const INIT_MESSAGE_LOG_ID = "log_cantstop_init";
+const CS_LOAD_TIMEOUT_MS = 5000;
+const CS_LOGS_ELEMENT_ID = "logs";
+const CS_INIT_MESSAGE_LOG_ID = "log_cantstop_init";
 const CANT_STOP_MAX_CHIPS_COUNT = 3;
 const DICE_SELECT_ID_PREFIX = "dice_select_";
 const PROGRESS_STATE_PANEL_ID = "progress_state";
@@ -27,7 +27,7 @@ const GAME_BOARD_WRAP_ID = "game_board_wrap";
 const PROBABILITY_PANEL_ID_PREFIX = "dice_probability_";
 const PROBABILITY_PANEL_CLASS = "dice_probability_cell";
 const BGA_TOKEN_NAME_PATTERN = /^token_(?<playerId>\d+)_(?<number>\d+)$/;
-const BGA_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
+const CS_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
 const DEFAULT_PROGRESS_STATE = {
     playerId: -1,
     saveProgressProbability: 0,
@@ -83,7 +83,7 @@ var cantStopBgaUserscriptData = {
         }
 
         // init state
-        this.bgaTableId = BGA_URL_TABLE_ID_PATTERN.exec(window.location.search).groups['tableId'];
+        this.bgaTableId = CS_URL_TABLE_ID_PATTERN.exec(window.location.search).groups['tableId'];
         this.dojo = window.parent.dojo;
         this.game = window.parent.gameui.gamedatas;
         const myPlayerId = objectKeys(this.game.players)
@@ -712,10 +712,10 @@ var cantStopBgaUserscriptData = {
 
     renderInitMessage: function () {
         const logElement =
-            `<div id="${INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `<div id="${CS_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
             `    <div class="roundedbox" style="background-color: lightgray;">CS userscript: activated</div>` +
             `</div>`;
-        this.dojo.place(logElement, LOGS_ELEMENT_ID, 'first');
+        this.dojo.place(logElement, CS_LOGS_ELEMENT_ID, 'first');
     },
 
     formatDecimal: function (value, precision) {
@@ -731,7 +731,7 @@ var cantStopBgaUserscriptData = {
 
 var onload = async function () {
     log('Loaded');
-    await sleep(USERSCRIPT_LOAD_TIMEOUT_MS);
+    await sleep(CS_LOAD_TIMEOUT_MS);
     log('Waited');
     if (!window.parent || !window.parent.gameui || !window.parent.gameui.game_name ||
         window.parent.gameui.game_name != 'cantstop') {

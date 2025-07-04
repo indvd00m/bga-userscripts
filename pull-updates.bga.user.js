@@ -3,7 +3,7 @@
 // @description Possibility to force pull of updates at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 0.9.1
+// @version 0.9.2
 // @match https://boardgamearena.com/*/*?*table=*
 // @grant none
 // @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/pull-updates.bga.user.js
@@ -16,13 +16,13 @@
 
 log('userscript');
 
-const USERSCRIPT_LOAD_TIMEOUT_MS = 3000;
+const PU_LOAD_TIMEOUT_MS = 3000;
 const UPPER_RIGHT_MENU_ID = "upperrightmenu";
 const PULL_UPDATES_PANEL_ID = "pull_updates_panel";
 const PULL_UPDATES_BUTTON_ID = "pull_updates_button";
-const LOGS_ELEMENT_ID = "logs";
-const INIT_MESSAGE_LOG_ID = "log_pull_updates_init";
-const BGA_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
+const PU_LOGS_ELEMENT_ID = "logs";
+const PU_INIT_MESSAGE_LOG_ID = "log_pull_updates_init";
+const PU_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
 
 function log(msg) {
     console.log(`PU: ${msg}`);
@@ -62,7 +62,7 @@ var pullUpdatesBgaUserscriptData = {
         // init state
         this.dojo = window.parent.dojo;
         this.gameui = window.parent.gameui;
-        this.bgaTableId = BGA_URL_TABLE_ID_PATTERN.exec(window.location.search).groups['tableId'];
+        this.bgaTableId = PU_URL_TABLE_ID_PATTERN.exec(window.location.search).groups['tableId'];
 
 
         this.renderContainers();
@@ -108,17 +108,17 @@ var pullUpdatesBgaUserscriptData = {
 
     renderInitMessage: function () {
         const logElement =
-            `<div id="${INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `<div id="${PU_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
             `    <div class="roundedbox" style="background-color: lightgray;">Pull Updates userscript: activated</div>` +
             `</div>`;
-        this.dojo.place(logElement, LOGS_ELEMENT_ID, 'first');
+        this.dojo.place(logElement, PU_LOGS_ELEMENT_ID, 'first');
     },
 
 };
 
 var onload = async function () {
     log('Loaded');
-    await sleep(USERSCRIPT_LOAD_TIMEOUT_MS);
+    await sleep(PU_LOAD_TIMEOUT_MS);
     log('Waited');
     if (!window.parent || !window.parent.gameui || !window.parent.gameui.game_name) {
         log('Wrong state or game')

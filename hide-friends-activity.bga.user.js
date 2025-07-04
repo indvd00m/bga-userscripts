@@ -3,7 +3,7 @@
 // @description Hide non-participating friends' activity in the game log
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 0.9.1
+// @version 0.9.2
 // @match https://boardgamearena.com/*/*?*table=*
 // @grant none
 // @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/hide-friends-activity.bga.user.js
@@ -16,10 +16,10 @@
 
 log('userscript');
 
-const USERSCRIPT_LOAD_TIMEOUT_MS = 3000;
-const LOGS_ELEMENT_ID = "logs";
+const HFA_LOAD_TIMEOUT_MS = 3000;
+const HFA_LOGS_ELEMENT_ID = "logs";
 const PLAYER_NAME_ELEMENT_CLASS = "playername";
-const INIT_MESSAGE_LOG_ID = "log_hide_friends_activity_init";
+const HFA_INIT_MESSAGE_LOG_ID = "log_hide_friends_activity_init";
 
 function log(msg) {
     console.log(`HFA: ${msg}`);
@@ -66,7 +66,7 @@ var bgaUserscriptHideFriendsActivityData = {
             childList: true,
             subtree: false,
         };
-        const logsElement = Array.from(this.dojo.query(`#${LOGS_ELEMENT_ID}`))[0];
+        const logsElement = Array.from(this.dojo.query(`#${HFA_LOGS_ELEMENT_ID}`))[0];
         this.observer = new MutationObserver(this.logsElementObserverCallback.bind(this));
         this.observer.observe(logsElement, config);
     },
@@ -94,17 +94,17 @@ var bgaUserscriptHideFriendsActivityData = {
 
     renderInitMessage: function () {
         const logElement =
-            `<div id="${INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `<div id="${HFA_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
             `    <div class="roundedbox" style="background-color: lightgray;">HFA userscript: activated</div>` +
             `</div>`;
-        this.dojo.place(logElement, LOGS_ELEMENT_ID, 'first');
+        this.dojo.place(logElement, HFA_LOGS_ELEMENT_ID, 'first');
     },
 
 };
 
 var onload = async function () {
     log('Loaded');
-    await sleep(USERSCRIPT_LOAD_TIMEOUT_MS);
+    await sleep(HFA_LOAD_TIMEOUT_MS);
     log('Waited');
     if (!window.parent || !window.parent.gameui || !window.parent.gameui.game_name) {
         log('Wrong state or game')
