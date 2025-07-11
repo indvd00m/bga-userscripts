@@ -2,7 +2,7 @@
 // @name bga-pull-updates
 // @description Possibility to force pull of updates at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
-// @license Creative Commons Attribution 3.0 Unported
+// @license Apache License 2.0
 // @version 1.2.0
 // @match https://boardgamearena.com/*/*?*table=*
 // @grant none

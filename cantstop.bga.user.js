@@ -2,7 +2,7 @@
 // @name bga-cantstop
 // @description Extended statistics for Can't Stop game at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
-// @license Creative Commons Attribution 3.0 Unported
+// @license Apache License 2.0
 // @version 1.7.0
 // @match https://boardgamearena.com/*/cantstop*
 // @grant none

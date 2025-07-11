@@ -2,7 +2,7 @@
 // @name bga-hide-friends-activity
 // @description Hide non-participating friends' activity in the game log
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
-// @license Creative Commons Attribution 3.0 Unported
+// @license Apache License 2.0
 // @version 1.0.0
 // @match https://boardgamearena.com/*/*?*table=*
 // @grant none
