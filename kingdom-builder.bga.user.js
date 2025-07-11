@@ -20,26 +20,26 @@ log('userscript');
 
 const KB_LOGS_ELEMENT_ID = "logs";
 const KB_INIT_MESSAGE_LOG_ID = "log_kingdom_builder_init";
-const BGA_PLAYER_BOARDS_ID = "player_boards";
-const BGA_PLAYER_BOARD_CLASS = "player-board";
-const BGA_PLAYER_BOARD_ID_PREFIX = "overall_player_board_";
-const BGA_PLAYER_SCORE_ID_PREFIX = "player_score_";
-const BGA_PLAYER_SETTLEMENTS_ID_PREFIX = "player-settlements-";
-const USERSCRIPT_PLAYER_BOARD_ID_PREFIX = "userscript_player_board_";
-const USERSCRIPT_PLAYER_SCORE_ID_PREFIX = "userscript_player_score_";
-const USERSCRIPT_PLAYER_SETTLEMENTS_ID_PREFIX = "userscript_player_settlements_";
-const BGA_TERRAIN_BACK = "back";
-const BGA_START_SETTLEMENTS_COUNT = 40;
-const BGA_MANDATORY_SETTLEMENTS_BUILD_COUNT = 3;
-const STATISTICS_PANEL_ID = "userscript_statistics_panel";
-const STATISTICS_PANEL_CLASS = "userscript_statistics_panel_class";
+const KB_BGA_PLAYER_BOARDS_ID = "player_boards";
+const KB_BGA_PLAYER_BOARD_CLASS = "player-board";
+const KB_BGA_PLAYER_BOARD_ID_PREFIX = "overall_player_board_";
+const KB_BGA_PLAYER_SCORE_ID_PREFIX = "player_score_";
+const KB_BGA_PLAYER_SETTLEMENTS_ID_PREFIX = "player-settlements-";
+const KB_PLAYER_BOARD_ID_PREFIX = "userscript_player_board_";
+const KB_PLAYER_SCORE_ID_PREFIX = "userscript_player_score_";
+const KB_PLAYER_SETTLEMENTS_ID_PREFIX = "userscript_player_settlements_";
+const KB_BGA_TERRAIN_BACK = "back";
+const KB_BGA_START_SETTLEMENTS_COUNT = 40;
+const KB_BGA_MANDATORY_SETTLEMENTS_BUILD_COUNT = 3;
+const KB_STATISTICS_PANEL_ID = "userscript_statistics_panel";
+const KB_STATISTICS_PANEL_CLASS = "userscript_statistics_panel_class";
 
-const BGA_QUADRANT_CLASS_NAME_PATTERN = /^quadrant-(?<index>\d+)$/;
-const BGA_QUADRANT_FLIPPED_CLASS_NAME = 'flipped';
-const BGA_CELL_CONTAINER_ID_PREFIX = 'cell-container';
+const KB_BGA_QUADRANT_CLASS_NAME_PATTERN = /^quadrant-(?<index>\d+)$/;
+const KB_BGA_QUADRANT_FLIPPED_CLASS_NAME = 'flipped';
+const KB_BGA_CELL_CONTAINER_ID_PREFIX = 'cell-container';
 
-const QUADRANT_WIDTH = 10;
-const QUADRANT_HEIGHT = 10;
+const KB_QUADRANT_WIDTH = 10;
+const KB_QUADRANT_HEIGHT = 10;
 
 function log(msg) {
     console.log(`KB: ${msg}`);
@@ -160,7 +160,7 @@ class Maps {
 
     static POSSIBLE_CHARS = 'GCDLRWM!0';
 
-    static BASE_QUADRANT_01 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
+    static BASE_QUADRANT_01 = new Canvas(KB_QUADRANT_WIDTH, KB_QUADRANT_HEIGHT,
         'CDDDDDDDDD\n' +
         'CCCDDDDDCD\n' +
         'MMMDMM0DDC\n' +
@@ -172,7 +172,7 @@ class Maps {
         'GGGRRWGGRR\n' +
         'GGGRWGGRRR');
 
-    static BASE_QUADRANT_02 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
+    static BASE_QUADRANT_02 = new Canvas(KB_QUADRANT_WIDTH, KB_QUADRANT_HEIGHT,
         'DDCWWRRRGG\n' +
         'D!CWRRR0GG\n' +
         'CCCLLLRCLL\n' +
@@ -184,7 +184,7 @@ class Maps {
         'GMRRWWWWWW\n' +
         'RRRWWWWWWW');
 
-    static BASE_QUADRANT_03 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
+    static BASE_QUADRANT_03 = new Canvas(KB_QUADRANT_WIDTH, KB_QUADRANT_HEIGHT,
         'GGGRRWGRRR\n' +
         'GGG!RWGRRR\n' +
         'GLLGRRWGGR\n' +
@@ -196,7 +196,7 @@ class Maps {
         'WWWDDDDMCC\n' +
         'WWWWDDDDDC');
 
-    static BASE_QUADRANT_04 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
+    static BASE_QUADRANT_04 = new Canvas(KB_QUADRANT_WIDTH, KB_QUADRANT_HEIGHT,
         'GGRRRWGRRL\n' +
         'GLRRWGRRLL\n' +
         'GLLRWGGLLL\n' +
@@ -208,7 +208,7 @@ class Maps {
         'WD!GWMWCCC\n' +
         'WDDWWWWCCC');
 
-    static BASE_QUADRANT_05 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
+    static BASE_QUADRANT_05 = new Canvas(KB_QUADRANT_WIDTH, KB_QUADRANT_HEIGHT,
         'RRRRMMGMCC\n' +
         'RMRRLGMMMC\n' +
         'LLRLLLGGWM\n' +
@@ -220,7 +220,7 @@ class Maps {
         'DCWWWRRLGG\n' +
         'DCCWRRRGGG');
 
-    static BASE_QUADRANT_06 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
+    static BASE_QUADRANT_06 = new Canvas(KB_QUADRANT_WIDTH, KB_QUADRANT_HEIGHT,
         'DDCWWRRGGG\n' +
         'DCWLLRRRGG\n' +
         'DDWLLRR0LG\n' +
@@ -232,7 +232,7 @@ class Maps {
         'WWCLWWWDDW\n' +
         'WWWWWWWWWW');
 
-    static BASE_QUADRANT_07 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
+    static BASE_QUADRANT_07 = new Canvas(KB_QUADRANT_WIDTH, KB_QUADRANT_HEIGHT,
         'CCCDDWDDDD\n' +
         'MMCDDWDDDD\n' +
         'MMCMMWDD0L\n' +
@@ -244,7 +244,7 @@ class Maps {
         'GGRRWGGGGR\n' +
         'GGRRWGGGRR');
 
-    static BASE_QUADRANT_08 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
+    static BASE_QUADRANT_08 = new Canvas(KB_QUADRANT_WIDTH, KB_QUADRANT_HEIGHT,
         'LDDMMDDCCC\n' +
         'LLDDDMMCCC\n' +
         'LLLLLLLMMM\n' +
@@ -256,7 +256,7 @@ class Maps {
         'DDDWRRRGGG\n' +
         'DDWWRRRGGG');
 
-    static BASE_QUADRANT_09 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
+    static BASE_QUADRANT_09 = new Canvas(KB_QUADRANT_WIDTH, KB_QUADRANT_HEIGHT,
         'WWGGWWWLLL\n' +
         'WGGRWWWLLL\n' +
         'WWWGRWWDDL\n' +
@@ -268,7 +268,7 @@ class Maps {
         'CMCCCLLLDD\n' +
         'CCCLLLLDDD');
 
-    static BASE_QUADRANT_10 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
+    static BASE_QUADRANT_10 = new Canvas(KB_QUADRANT_WIDTH, KB_QUADRANT_HEIGHT,
         'GGGWWWMCCC\n' +
         'GGWRDWWWCC\n' +
         'GMWR0DDDWM\n' +
@@ -280,7 +280,7 @@ class Maps {
         'DDWWGRRMRR\n' +
         'DDDWWRMRRR');
 
-    static BASE_QUADRANT_11 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
+    static BASE_QUADRANT_11 = new Canvas(KB_QUADRANT_WIDTH, KB_QUADRANT_HEIGHT,
         'CCCWWWWDDD\n' +
         'CCCW0LDDMD\n' +
         'CCCCCCLDMD\n' +
@@ -292,7 +292,7 @@ class Maps {
         'RMRRRRWWGG\n' +
         'RRRRWWWGGG');
 
-    static BASE_QUADRANT_12 = new Canvas(QUADRANT_WIDTH, QUADRANT_HEIGHT,
+    static BASE_QUADRANT_12 = new Canvas(KB_QUADRANT_WIDTH, KB_QUADRANT_HEIGHT,
         'DDDDDDDGGG\n' +
         'DDDMDLLLGG\n' +
         'DMDDDLWLGR\n' +
@@ -544,7 +544,7 @@ var kingdomBuilderBgaUserscriptData = {
 
     calculatePlayerTurnsToGameEnd: function (playerId) {
         const playerSettlements = objectValues(this.settlements).filter(s => s.player_id === playerId);
-        const remainsSettlementsCount = BGA_START_SETTLEMENTS_COUNT - playerSettlements.length;
+        const remainsSettlementsCount = KB_BGA_START_SETTLEMENTS_COUNT - playerSettlements.length;
         const production = this.playersStats[playerId].maxProduction;
         return Math.ceil(remainsSettlementsCount / production);
     },
@@ -571,7 +571,7 @@ var kingdomBuilderBgaUserscriptData = {
                     return false;
             }
         }).length;
-        return BGA_MANDATORY_SETTLEMENTS_BUILD_COUNT + productionTilesCount;
+        return KB_BGA_MANDATORY_SETTLEMENTS_BUILD_COUNT + productionTilesCount;
     },
 
     recalculateAllPlayerStats: function () {
@@ -658,13 +658,13 @@ var kingdomBuilderBgaUserscriptData = {
         const areaSettlements = [0, 0, 0, 0];
         const playerSettlements = objectValues(this.settlements).filter(s => s.player_id === id);
         playerSettlements.forEach(s => {
-            if (s.x < QUADRANT_WIDTH && s.y < QUADRANT_HEIGHT) {
+            if (s.x < KB_QUADRANT_WIDTH && s.y < KB_QUADRANT_HEIGHT) {
                 areaSettlements[0]++;
-            } else if (s.x >= QUADRANT_WIDTH && s.y < QUADRANT_HEIGHT) {
+            } else if (s.x >= KB_QUADRANT_WIDTH && s.y < KB_QUADRANT_HEIGHT) {
                 areaSettlements[1]++;
-            } else if (s.x < QUADRANT_WIDTH && s.y >= QUADRANT_HEIGHT) {
+            } else if (s.x < KB_QUADRANT_WIDTH && s.y >= KB_QUADRANT_HEIGHT) {
                 areaSettlements[2]++;
-            } else if (s.x >= QUADRANT_WIDTH && s.y >= QUADRANT_HEIGHT) {
+            } else if (s.x >= KB_QUADRANT_WIDTH && s.y >= KB_QUADRANT_HEIGHT) {
                 areaSettlements[3]++;
             }
         });
@@ -841,7 +841,7 @@ var kingdomBuilderBgaUserscriptData = {
             processedSettlements[key] = area;
             area.size++;
             const adjacentGexes = Maps.getAdjacentGexes(settlement.x, settlement.y)
-                .filter(g => g.x >= 0 && g.y >= 0 && g.x < QUADRANT_WIDTH * 2 && g.y < QUADRANT_HEIGHT * 2);
+                .filter(g => g.x >= 0 && g.y >= 0 && g.x < KB_QUADRANT_WIDTH * 2 && g.y < KB_QUADRANT_HEIGHT * 2);
             adjacentGexes.forEach(g => {
                 const char = this.map.getChar(g.x, g.y);
                 if (char === '!') {
@@ -929,7 +929,7 @@ var kingdomBuilderBgaUserscriptData = {
         for (let x = 0; x < this.map.width; x++) {
             for (let y = 0; y < this.map.height; y++) {
                 const char = this.map.getChar(x, y);
-                const cellId = `${BGA_CELL_CONTAINER_ID_PREFIX}-${y}-${x}`;
+                const cellId = `${KB_BGA_CELL_CONTAINER_ID_PREFIX}-${y}-${x}`;
                 this.dojo.place(`<span `
                     + `style="font-size: 70%; font-weight: bolder; position: absolute; left: 50%; top: 50%; `
                     + `transform: translate(-50%, -50%); z-index: 10; `
@@ -950,13 +950,13 @@ var kingdomBuilderBgaUserscriptData = {
 
     quadrantElementToCanvas: function (quadrantElement) {
         const classes = Array.from(quadrantElement.classList);
-        const className = classes.find(c => BGA_QUADRANT_CLASS_NAME_PATTERN.test(c));
-        const index = parseInt(BGA_QUADRANT_CLASS_NAME_PATTERN.exec(className).groups['index']);
+        const className = classes.find(c => KB_BGA_QUADRANT_CLASS_NAME_PATTERN.test(c));
+        const index = parseInt(KB_BGA_QUADRANT_CLASS_NAME_PATTERN.exec(className).groups['index']);
         const number = index + 1;
         const postfix = (number + '').padStart(2, '0');
         const quadrantName = `BASE_QUADRANT_${postfix}`;
         const quadrantCanvas = Maps[quadrantName];
-        let rotated = quadrantElement.classList.contains(BGA_QUADRANT_FLIPPED_CLASS_NAME);
+        let rotated = quadrantElement.classList.contains(KB_BGA_QUADRANT_FLIPPED_CLASS_NAME);
         log(`Found quadrant ${quadrantName}${rotated ? ' (rotated)' : ''}`);
         if (rotated) {
             return quadrantCanvas.rotate180();
@@ -974,14 +974,14 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     processFirstTerrains: function () {
-        this.game.fplayers.map(p => p.terrain).filter(t => t !== BGA_TERRAIN_BACK).forEach(terrainIndex => {
+        this.game.fplayers.map(p => p.terrain).filter(t => t !== KB_BGA_TERRAIN_BACK).forEach(terrainIndex => {
             const terrainName = this.terrains[parseInt(terrainIndex)];
             this.processTerrain(terrainName);
         })
     },
 
     processMyCurrentTerrain: function () {
-        this.game.fplayers.filter(p => parseInt(p.id) === this.myPlayerId).map(p => p.terrain).filter(t => t !== BGA_TERRAIN_BACK).forEach(terrainIndex => {
+        this.game.fplayers.filter(p => parseInt(p.id) === this.myPlayerId).map(p => p.terrain).filter(t => t !== KB_BGA_TERRAIN_BACK).forEach(terrainIndex => {
             const terrainName = this.terrains[parseInt(terrainIndex)];
             this.processTerrain(terrainName);
         })
@@ -1004,7 +1004,7 @@ var kingdomBuilderBgaUserscriptData = {
 
     isFirstTurn: function () {
         playersWithStartSettlementsCount = this.game.fplayers
-            .filter(p => p.settlements === BGA_START_SETTLEMENTS_COUNT)
+            .filter(p => p.settlements === KB_BGA_START_SETTLEMENTS_COUNT)
             .length;
         return playersWithStartSettlementsCount === this.game.fplayers.length
             || playersWithStartSettlementsCount === this.game.fplayers.length - 1;
@@ -1024,7 +1024,7 @@ var kingdomBuilderBgaUserscriptData = {
         const prevLastShowTerrainPlayerId = this.lastShowTerrainPlayerId;
         this.lastShowTerrainPlayerId = pId;
 
-        if (BGA_TERRAIN_BACK === data.args.terrain) {
+        if (KB_BGA_TERRAIN_BACK === data.args.terrain) {
             log('Skip back terrain processing');
             return;
         }
@@ -1312,31 +1312,31 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     renderContainers: function () {
-        this.dojo.place("<div id='" + STATISTICS_PANEL_ID + "'"
-            + " class='" + BGA_PLAYER_BOARD_CLASS + "'"
+        this.dojo.place("<div id='" + KB_STATISTICS_PANEL_ID + "'"
+            + " class='" + KB_BGA_PLAYER_BOARD_CLASS + "'"
             + "style='font-size: 70%;'"
             + "></div>",
-            BGA_PLAYER_BOARDS_ID,
+            KB_BGA_PLAYER_BOARDS_ID,
             "first");
 
         this.game.fplayers.forEach(p => {
             const id = parseInt(p.id);
-            this.dojo.place("<div id='" + (USERSCRIPT_PLAYER_BOARD_ID_PREFIX + id) + "'"
+            this.dojo.place("<div id='" + (KB_PLAYER_BOARD_ID_PREFIX + id) + "'"
                 + "style='font-size: 70%;'"
                 + "></div>",
-                BGA_PLAYER_BOARD_ID_PREFIX + id,
+                KB_BGA_PLAYER_BOARD_ID_PREFIX + id,
                 "last");
-            this.dojo.place("<span id='" + (USERSCRIPT_PLAYER_SCORE_ID_PREFIX + id) + "'>?</span>",
-                BGA_PLAYER_SCORE_ID_PREFIX + id,
+            this.dojo.place("<span id='" + (KB_PLAYER_SCORE_ID_PREFIX + id) + "'>?</span>",
+                KB_BGA_PLAYER_SCORE_ID_PREFIX + id,
                 "after");
-            this.dojo.place("<span id='" + (USERSCRIPT_PLAYER_SETTLEMENTS_ID_PREFIX + id) + "'> ?</span>",
-                `${BGA_PLAYER_SETTLEMENTS_ID_PREFIX}${id}`,
+            this.dojo.place("<span id='" + (KB_PLAYER_SETTLEMENTS_ID_PREFIX + id) + "'> ?</span>",
+                `${KB_BGA_PLAYER_SETTLEMENTS_ID_PREFIX}${id}`,
                 "last");
         })
     },
 
     renderStatisticsPanel: function () {
-        var html = "<div class='" + STATISTICS_PANEL_CLASS + "'>";
+        var html = "<div class='" + KB_STATISTICS_PANEL_CLASS + "'>";
         if (this.showTextStack) {
             html += `Found ${this.logIsFull ? 'full' : 'incomplete'} log with ${this.turnsCount} turns `;
             html += `and ${this.terrainsPlayedCount} played terrain cards.`;
@@ -1430,7 +1430,7 @@ var kingdomBuilderBgaUserscriptData = {
         html += `</div>`;
         html += `</div>`;
 
-        this.dojo.place(html, STATISTICS_PANEL_ID, "only");
+        this.dojo.place(html, KB_STATISTICS_PANEL_ID, "only");
     },
 
     renderPlayerUserscriptPanels: function () {
@@ -1519,7 +1519,7 @@ var kingdomBuilderBgaUserscriptData = {
             html += `</div>`;
 
             html += `</div>`;
-            this.dojo.place(html, USERSCRIPT_PLAYER_BOARD_ID_PREFIX + id, "only");
+            this.dojo.place(html, KB_PLAYER_BOARD_ID_PREFIX + id, "only");
 
             // score
             const serverScore = this.playersServerStats[id].score;
@@ -1527,18 +1527,18 @@ var kingdomBuilderBgaUserscriptData = {
             if (diff !== 0) {
                 this.dojo.place(
                     `<span style="color: ${diff > 0 ? 'green' : 'red'};"> ${diff > 0 ? '+' : '-'}${diff}</span>`
-                    , USERSCRIPT_PLAYER_SCORE_ID_PREFIX + id, "only");
+                    , KB_PLAYER_SCORE_ID_PREFIX + id, "only");
             } else {
-                this.dojo.place('<span></span>', USERSCRIPT_PLAYER_SCORE_ID_PREFIX + id, "only");
+                this.dojo.place('<span></span>', KB_PLAYER_SCORE_ID_PREFIX + id, "only");
             }
 
             // production
             this.dojo.place(
                 `<span style="color: red;">&nbsp;-${stats.maxProduction}</span>`
-                , USERSCRIPT_PLAYER_SETTLEMENTS_ID_PREFIX + id, "only");
+                , KB_PLAYER_SETTLEMENTS_ID_PREFIX + id, "only");
 
             // fix bug with disappeared player settlements counter on ios
-            this.dojo.replaceClass(`${BGA_PLAYER_SETTLEMENTS_ID_PREFIX}${id}`, 'player-settlements', 'hex-grid-content');
+            this.dojo.replaceClass(`${KB_BGA_PLAYER_SETTLEMENTS_ID_PREFIX}${id}`, 'player-settlements', 'hex-grid-content');
         });
     },
 

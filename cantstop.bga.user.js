@@ -19,23 +19,23 @@ log('userscript');
 const CS_LOAD_TIMEOUT_MS = 5000;
 const CS_LOGS_ELEMENT_ID = "logs";
 const CS_INIT_MESSAGE_LOG_ID = "log_cantstop_init";
-const CANT_STOP_MAX_CHIPS_COUNT = 3;
-const DICE_SELECT_ID_PREFIX = "dice_select_";
-const PROGRESS_STATE_PANEL_ID = "progress_state";
-const LINE_PROBABILITIES_PANEL_ID = "line_probabilities";
-const GAME_BOARD_WRAP_ID = "game_board_wrap";
-const PROBABILITY_PANEL_ID_PREFIX = "dice_probability_";
-const PROBABILITY_PANEL_CLASS = "dice_probability_cell";
-const BGA_TOKEN_NAME_PATTERN = /^token_(?<playerId>\d+)_(?<number>\d+)$/;
+const CS_MAX_CHIPS_COUNT = 3;
+const CS_DICE_SELECT_ID_PREFIX = "dice_select_";
+const CS_PROGRESS_STATE_PANEL_ID = "progress_state";
+const CS_LINE_PROBABILITIES_PANEL_ID = "line_probabilities";
+const CS_GAME_BOARD_WRAP_ID = "game_board_wrap";
+const CS_PROBABILITY_PANEL_ID_PREFIX = "dice_probability_";
+const CS_PROBABILITY_PANEL_CLASS = "dice_probability_cell";
+const CS_BGA_TOKEN_NAME_PATTERN = /^token_(?<playerId>\d+)_(?<number>\d+)$/;
 const CS_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
-const DEFAULT_PROGRESS_STATE = {
+const CS_DEFAULT_PROGRESS_STATE = {
     playerId: -1,
     saveProgressProbability: 0,
     saveProgressExpectation: 0,
     saveProgressNMax50PercentSuccess: 0,
     rollingDiceCount: 0,
 };
-const PROGRESS_STATE_KEY_PREFIX = "cantStopUserscriptProgressState-";
+const CS_PROGRESS_STATE_KEY_PREFIX = "cantStopUserscriptProgressState-";
 
 function log(msg) {
     console.log(`CS: ${msg}`);
@@ -150,14 +150,14 @@ var cantStopBgaUserscriptData = {
 
     saveProgressState: function (state) {
         log("saveProgressState");
-        sessionStorage.setItem(PROGRESS_STATE_KEY_PREFIX + this.bgaTableId, JSON.stringify(state));
+        sessionStorage.setItem(CS_PROGRESS_STATE_KEY_PREFIX + this.bgaTableId, JSON.stringify(state));
     },
 
     readProgressState: function () {
         log("readProgressState");
-        const sState = sessionStorage.getItem(PROGRESS_STATE_KEY_PREFIX + this.bgaTableId);
+        const sState = sessionStorage.getItem(CS_PROGRESS_STATE_KEY_PREFIX + this.bgaTableId);
         if (sState == null) {
-            return DEFAULT_PROGRESS_STATE;
+            return CS_DEFAULT_PROGRESS_STATE;
         }
         const state = JSON.parse(sState);
 
@@ -174,7 +174,7 @@ var cantStopBgaUserscriptData = {
 
     resetProgressState: function () {
         log("resetProgressState");
-        sessionStorage.setItem(PROGRESS_STATE_KEY_PREFIX + this.bgaTableId, JSON.stringify(DEFAULT_PROGRESS_STATE));
+        sessionStorage.setItem(CS_PROGRESS_STATE_KEY_PREFIX + this.bgaTableId, JSON.stringify(CS_DEFAULT_PROGRESS_STATE));
     },
 
     updateProgressStateProbability: function (playerId) {
@@ -337,7 +337,7 @@ var cantStopBgaUserscriptData = {
             const column = parseInt(this.dojo.getAttr(tokenElement, 'data-column'));
             const height = parseInt(this.dojo.getAttr(tokenElement, 'data-height'));
             const id = this.dojo.getAttr(tokenElement, 'id');
-            const playerId = parseInt(BGA_TOKEN_NAME_PATTERN.exec(id).groups['playerId']);
+            const playerId = parseInt(CS_BGA_TOKEN_NAME_PATTERN.exec(id).groups['playerId']);
             if (columns[column] == null) {
                 columns[column] = {};
             }
@@ -416,7 +416,7 @@ var cantStopBgaUserscriptData = {
                     !sums.every(s => closedColumnNumbers.includes(s))
                     && (
                         args.some(a => sums.includes(a))
-                        || args.length < CANT_STOP_MAX_CHIPS_COUNT
+                        || args.length < CS_MAX_CHIPS_COUNT
                     )
             ).length;
     },
@@ -526,7 +526,7 @@ var cantStopBgaUserscriptData = {
         const progressProbabilityElement = `<div style='${maxVisibleProgressProbability ? 'font-weight: bolder;' +
             ` color: ${moveProbability.progressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(⧡)=${formattedProgressProbability}%</div>`;
         const probabilityElement = `<div style='font-size: 60%; font-family: monospace;'>${visible ? `${saveProgressProbabilityElement} ${progressProbabilityElement}` : ''}</div>`;
-        this.dojo.place(probabilityElement, `${PROBABILITY_PANEL_ID_PREFIX}${index1}_${index2}`, 'only');
+        this.dojo.place(probabilityElement, `${CS_PROBABILITY_PANEL_ID_PREFIX}${index1}_${index2}`, 'only');
     },
 
     renderProgressState: function () {
@@ -667,7 +667,7 @@ var cantStopBgaUserscriptData = {
         const stateJsonElement = `<span style="font-size: 60%; font-family: monospace; white-space: pre-wrap;">${JSON.stringify(progressState, null, 4)}</span>`;
         // const stateElement = `${stateJsonElement}${stateProgressBarElement}`;
         const stateElement = `${stateProgressBarElement}`;
-        this.dojo.place(stateElement, PROGRESS_STATE_PANEL_ID, 'only');
+        this.dojo.place(stateElement, CS_PROGRESS_STATE_PANEL_ID, 'only');
     },
 
     renderLineProbabilities: function () {
@@ -694,20 +694,20 @@ var cantStopBgaUserscriptData = {
             `    </tr>` +
             `</table>`;
         const lineProbabilitiesElement = `${linesTableElement}`;
-        this.dojo.place(lineProbabilitiesElement, LINE_PROBABILITIES_PANEL_ID, 'only');
+        this.dojo.place(lineProbabilitiesElement, CS_LINE_PROBABILITIES_PANEL_ID, 'only');
     },
 
     renderContainers: function () {
         this.dojo.query('#dice_select_zone .dice_button_cell').forEach(buttonSelectElement => {
             const buttonSelectId = this.dojo.getAttr(buttonSelectElement, 'id');
-            const probabilityElementId = buttonSelectId.replace(DICE_SELECT_ID_PREFIX, PROBABILITY_PANEL_ID_PREFIX);
-            const probabilityElement = `<div id="${probabilityElementId}" class="${PROBABILITY_PANEL_CLASS}"></div>`;
+            const probabilityElementId = buttonSelectId.replace(CS_DICE_SELECT_ID_PREFIX, CS_PROBABILITY_PANEL_ID_PREFIX);
+            const probabilityElement = `<div id="${probabilityElementId}" class="${CS_PROBABILITY_PANEL_CLASS}"></div>`;
             this.dojo.place(probabilityElement, buttonSelectElement, 'after');
         });
-        const lineProbabilitiesElement = `<div id="${LINE_PROBABILITIES_PANEL_ID}" style="width: 100%;"></div>`;
-        this.dojo.place(lineProbabilitiesElement, GAME_BOARD_WRAP_ID, 'first');
-        const progressStateElement = `<div id="${PROGRESS_STATE_PANEL_ID}" style="width: 100%;"></div>`;
-        this.dojo.place(progressStateElement, GAME_BOARD_WRAP_ID, 'first');
+        const lineProbabilitiesElement = `<div id="${CS_LINE_PROBABILITIES_PANEL_ID}" style="width: 100%;"></div>`;
+        this.dojo.place(lineProbabilitiesElement, CS_GAME_BOARD_WRAP_ID, 'first');
+        const progressStateElement = `<div id="${CS_PROGRESS_STATE_PANEL_ID}" style="width: 100%;"></div>`;
+        this.dojo.place(progressStateElement, CS_GAME_BOARD_WRAP_ID, 'first');
     },
 
     renderInitMessage: function () {

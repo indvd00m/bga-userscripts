@@ -14,7 +14,6 @@
 // TODO: @grant
 // TODO: @exclude-match
 
-// TODO: unique name for constants per script
 // TODO: log into game log on button click
 // TODO: into game log show short script name
 // TODO: message about activating in mobile log
@@ -22,9 +21,9 @@
 log('userscript');
 
 const PU_LOAD_TIMEOUT_MS = 3000;
-const UPPER_RIGHT_MENU_ID = "upperrightmenu";
-const PULL_UPDATES_PANEL_ID = "pull_updates_panel";
-const PULL_UPDATES_BUTTON_ID = "pull_updates_button";
+const PU_UPPER_RIGHT_MENU_ID = "upperrightmenu";
+const PU_PANEL_ID = "pull_updates_panel";
+const PU_BUTTON_ID = "pull_updates_button";
 const PU_LOGS_ELEMENT_ID = "logs";
 const PU_INIT_MESSAGE_LOG_ID = "log_pull_updates_init";
 const PU_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
@@ -101,14 +100,14 @@ var pullUpdatesBgaUserscriptData = {
     },
 
     renderPullUpdatesButton: function () {
-        const buttonElement = `<a id="${PULL_UPDATES_BUTTON_ID}" class="globalaction icon20 icon20_warning self-center" href="#" style="top:0px"></a>`;
-        const placedNode = this.dojo.place(buttonElement, PULL_UPDATES_PANEL_ID, 'only');
+        const buttonElement = `<a id="${PU_BUTTON_ID}" class="globalaction icon20 icon20_warning self-center" href="#" style="top:0px"></a>`;
+        const placedNode = this.dojo.place(buttonElement, PU_PANEL_ID, 'only');
         this.dojo.connect(placedNode, "onclick", this.onClickButton.bind(this));
     },
 
     renderContainers: function () {
-        const pullUpdatesElement = `<div id="${PULL_UPDATES_PANEL_ID}" class="upperrightmenu_item flex justify-center self-center"></div>`;
-        this.dojo.place(pullUpdatesElement, UPPER_RIGHT_MENU_ID, 'first');
+        const pullUpdatesElement = `<div id="${PU_PANEL_ID}" class="upperrightmenu_item flex justify-center self-center"></div>`;
+        this.dojo.place(pullUpdatesElement, PU_UPPER_RIGHT_MENU_ID, 'first');
     },
 
     renderInitMessage: function () {

@@ -18,7 +18,7 @@ log('userscript');
 
 const HFA_LOAD_TIMEOUT_MS = 3000;
 const HFA_LOGS_ELEMENT_ID = "logs";
-const PLAYER_NAME_ELEMENT_CLASS = "playername";
+const HFA_PLAYER_NAME_ELEMENT_CLASS = "playername";
 const HFA_INIT_MESSAGE_LOG_ID = "log_hide_friends_activity_init";
 
 function log(msg) {
@@ -83,7 +83,7 @@ var bgaUserscriptHideFriendsActivityData = {
 
     processLogElement: function (logElement) {
         log(`Processing log element: ${logElement.outerHTML}`);
-        const nonParticipatingPlayerNames = Array.from(this.dojo.query(`.${PLAYER_NAME_ELEMENT_CLASS}`, logElement))
+        const nonParticipatingPlayerNames = Array.from(this.dojo.query(`.${HFA_PLAYER_NAME_ELEMENT_CLASS}`, logElement))
             .map(e => e.innerText)
             .filter(name => !this.players.includes(name));
         if (nonParticipatingPlayerNames.length) {
