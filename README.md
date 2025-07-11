@@ -1,70 +1,57 @@
-# BoardGameArena Userscripts
+# Board Game Arena Userscripts
 
-Userscripts for extending functionality of BGA
+Userscripts to extend functionality on Board Game Arena ([BGA](http://boardgamearena.com)).
 
 ## List of Userscripts
 
 ### Pull Updates
-
-Possibility to force pull of updates at BGA. Works in all games.
-
-Installation link: https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/pull-updates.bga.user.js
+**Force immediate update checks** on BGA. Works with all games.  
+Install: [https://github.com/.../pull-updates.bga.user.js](https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/pull-updates.bga.user.js)
 
 ### Hide Friends Activity
-
-Hide non-participating friends' activity in the game log. Works in all games.
-
-Installation link: https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/hide-friends-activity.bga.user.js
+**Hides non-participating friends' activity** in game logs. Works with all games.  
+Install: [https://github.com/.../hide-friends-activity.bga.user.js](https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/hide-friends-activity.bga.user.js)
 
 ### Can't Stop
-
-Extended statistics for [Can't Stop](https://boardgamearena.com/gamepanel?game=cantstop) game at BGA.
-
-Installation link: https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/cantstop.bga.user.js
+**Enhanced statistics** for [Can't Stop](https://boardgamearena.com/gamepanel?game=cantstop).  
+Install: [https://github.com/.../cantstop.bga.user.js](https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/cantstop.bga.user.js)
 
 ### Kingdom Builder
+**Enhanced statistics** for [Kingdom Builder](https://boardgamearena.com/gamepanel?game=kingdombuilder).  
+Install: [https://github.com/.../kingdom-builder.bga.user.js](https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/kingdom-builder.bga.user.js)
 
-Extended statistics for [Kingdom Builder](https://boardgamearena.com/gamepanel?game=kingdombuilder) game at BGA.
+## Installation
 
-Installation link: https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/kingdom-builder.bga.user.js
+### Using Tampermonkey
+1. Install the [Tampermonkey extension](https://www.tampermonkey.net/)
+2. Click any installation link above
 
-## Download and Install
-
-To download and install userscript you currently have the following options.
-
-**Tampermonkey** (Chrome/Firefox/Edge)
-
-Install Tampermonkey extension to your browser and after that click to the `installation link` of one of userscripts (see above):
-
-**Another extensions**
-
-You can choose another extension to enable support of userscripts in your browser. For example for Safari:
- - https://apps.apple.com/ru/app/userscripts/id1463298887
+### Other Browsers
+- **Safari**: [Userscripts app](https://apps.apple.com/us/app/userscripts/id1463298887)
+- **Firefox**: [Violentmonkey](https://violentmonkey.github.io/) or [Greasemonkey](https://www.greasespot.net/)
 
 ## Compatibility
+✅ **Tested in**:
+- Safari (Desktop & Mobile)
+- Chrome (Desktop)
 
-Userscripts tested in Safari (desktop, mobile) and Chrome (desktop). But there's no reason it shouldn't work in other browsers.
+⚠️ **Should work** in other modern browsers (Firefox, Edge, etc.)
 
 ## Roadmap
+Developed as a hobby project with **no fixed roadmap** or release guarantees.
 
-This component is developed as a hobby with no public roadmap or any guarantees of upcoming releases.
+## Reporting Issues
+Report bugs and request features on our [GitHub Issues page](https://github.com/indvd00m/bga-userscripts/issues).
 
-## Issue tracking
-
-The issues for this project are tracked on its github.com page. All bug reports and feature requests are appreciated.
-
-## Contributions
-
-Contributions are welcome, but there are no guarantees that they are accepted as such. Process for contributing is the following:
-- Fork this project
-- Create an issue to this project about the contribution (bug or feature) if there is no such issue about it already. Try to keep the scope minimal.
-- Develop and test the fix or functionality carefully. Only include minimum amount of code needed to fix the issue.
-- Refer to the fixed issue in commit
-- Send a pull request for the original project
-- Comment on the original issue that you have implemented a fix for it
+## Contributing
+Contributions are welcome! Please follow this process:
+1. Fork the repository
+2. Create an issue describing your proposed change (if none exists)
+3. Keep changes minimal and focused
+4. Reference the issue in commit messages
+5. Submit a pull request
+6. Comment on the related issue about your solution
 
 ## License & Author
-
-Userscripts is distributed under Apache License 2.0. For license terms, see LICENSE.
-
-Userscripts is written by David E. Veliev.
+© 2025 David E. Veliev
+Licensed under [Apache 2.0](LICENSE)
