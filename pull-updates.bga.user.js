@@ -15,7 +15,6 @@
 // TODO: @exclude-match
 
 // TODO: log into game log on button click
-// TODO: message about activating in mobile log
 
 log('userscript');
 
@@ -23,8 +22,10 @@ const PU_LOAD_TIMEOUT_MS = 3000;
 const PU_UPPER_RIGHT_MENU_ID = "upperrightmenu";
 const PU_PANEL_ID = "pull_updates_panel";
 const PU_BUTTON_ID = "pull_updates_button";
-const PU_LOGS_ELEMENT_ID = "logs";
-const PU_INIT_MESSAGE_LOG_ID = "log_pull_updates_init";
+const PU_LOGS_DESKTOP_ELEMENT_ID = "logs";
+const PU_LOGS_MOBILE_ELEMENT_ID_PREFIX = "chatwindowlogs_zone_tablelog_";
+const PU_LOG_DESKTOP_MESSAGE_ID_PREFIX = "log_PU_desktop_";
+const PU_LOG_MOBILE_MESSAGE_ID_PREFIX = "log_PU_mobile_";
 const PU_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
 
 function log(msg) {
@@ -99,11 +100,24 @@ var pullUpdatesBgaUserscriptData = {
     },
 
     showLogMessage: function (message) {
+        this.showLogDesktopMessage(message);
+        this.showLogMobileMessage(message);
+    },
+
+    showLogDesktopMessage: function (message) {
         const logElement =
-            `<div id="${PU_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `<div id="${PU_LOG_DESKTOP_MESSAGE_ID_PREFIX}${Date.now()}" class="log" style="height: auto; display: block; color: black;">` +
             `    <div class="roundedbox" style="background-color: lightgray;">PU: ${message}</div>` +
             `</div>`;
-        this.dojo.place(logElement, PU_LOGS_ELEMENT_ID, 'first');
+        this.dojo.place(logElement, PU_LOGS_DESKTOP_ELEMENT_ID, 'first');
+    },
+
+    showLogMobileMessage: function (message) {
+        const logElement =
+            `<div id="${PU_LOG_MOBILE_MESSAGE_ID_PREFIX}${Date.now()}" class="roundedbox log bga-link-inside" style="height: auto; display: block; color: black; background-color: lightgray;">` +
+            `    <div class="roundedboxinner">PU: ${message}</div>` +
+            `</div>`;
+        this.dojo.place(logElement, `${PU_LOGS_MOBILE_ELEMENT_ID_PREFIX}${this.bgaTableId}`, 'last');
     },
 
     renderPullUpdatesButton: function () {

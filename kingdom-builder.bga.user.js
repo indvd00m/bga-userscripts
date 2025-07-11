@@ -18,8 +18,10 @@
 
 log('userscript');
 
-const KB_LOGS_ELEMENT_ID = "logs";
-const KB_INIT_MESSAGE_LOG_ID = "log_kingdom_builder_init";
+const KB_LOGS_DESKTOP_ELEMENT_ID = "logs";
+const KB_LOGS_MOBILE_ELEMENT_ID_PREFIX = "chatwindowlogs_zone_tablelog_";
+const KB_LOG_DESKTOP_MESSAGE_ID_PREFIX = "log_KB_desktop_";
+const KB_LOG_MOBILE_MESSAGE_ID_PREFIX = "log_KB_mobile_";
 const KB_BGA_PLAYER_BOARDS_ID = "player_boards";
 const KB_BGA_PLAYER_BOARD_CLASS = "player-board";
 const KB_BGA_PLAYER_BOARD_ID_PREFIX = "overall_player_board_";
@@ -33,6 +35,7 @@ const KB_BGA_START_SETTLEMENTS_COUNT = 40;
 const KB_BGA_MANDATORY_SETTLEMENTS_BUILD_COUNT = 3;
 const KB_STATISTICS_PANEL_ID = "userscript_statistics_panel";
 const KB_STATISTICS_PANEL_CLASS = "userscript_statistics_panel_class";
+const KB_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
 
 const KB_BGA_QUADRANT_CLASS_NAME_PATTERN = /^quadrant-(?<index>\d+)$/;
 const KB_BGA_QUADRANT_FLIPPED_CLASS_NAME = 'flipped';
@@ -358,6 +361,7 @@ function add(accumulator, a) {
 var kingdomBuilderBgaUserscriptData = {
     dojo: null,
     game: null,
+    bgaTableId: 0,
     settlements: {},
     terrains: ['Grass', 'Canyon', 'Desert', 'Flower', 'Forest'],
     // unfortunetally we do not have language independent terrain name in actions history
@@ -429,7 +433,8 @@ var kingdomBuilderBgaUserscriptData = {
                 x: x,
                 y: y
             };
-        })
+        });
+        this.bgaTableId = KB_URL_TABLE_ID_PATTERN.exec(window.location.search).groups['tableId'];
         const myPlayer = this.game.fplayers.find(p => p.name === window.parent.gameui.current_player_name);
         if (myPlayer) {
             this.myPlayerId = parseInt(myPlayer.id);
@@ -1312,11 +1317,24 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     showLogMessage: function (message) {
+        this.showLogDesktopMessage(message);
+        this.showLogMobileMessage(message);
+    },
+
+    showLogDesktopMessage: function (message) {
         const logElement =
-            `<div id="${KB_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `<div id="${KB_LOG_DESKTOP_MESSAGE_ID_PREFIX}${Date.now()}" class="log" style="height: auto; display: block; color: black;">` +
             `    <div class="roundedbox" style="background-color: lightgray;">KB: ${message}</div>` +
             `</div>`;
-        this.dojo.place(logElement, KB_LOGS_ELEMENT_ID, 'first');
+        this.dojo.place(logElement, KB_LOGS_DESKTOP_ELEMENT_ID, 'first');
+    },
+
+    showLogMobileMessage: function (message) {
+        const logElement =
+            `<div id="${KB_LOG_MOBILE_MESSAGE_ID_PREFIX}${Date.now()}" class="roundedbox log bga-link-inside" style="height: auto; display: block; color: black; background-color: lightgray;">` +
+            `    <div class="roundedboxinner">KB: ${message}</div>` +
+            `</div>`;
+        this.dojo.place(logElement, `${KB_LOGS_MOBILE_ELEMENT_ID_PREFIX}${this.bgaTableId}`, 'last');
     },
 
     renderContainers: function () {

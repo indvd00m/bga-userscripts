@@ -17,9 +17,12 @@
 log('userscript');
 
 const HFA_LOAD_TIMEOUT_MS = 3000;
-const HFA_LOGS_ELEMENT_ID = "logs";
+const HFA_LOGS_DESKTOP_ELEMENT_ID = "logs";
+const HFA_LOGS_MOBILE_ELEMENT_ID_PREFIX = "chatwindowlogs_zone_tablelog_";
+const HFA_LOG_DESKTOP_MESSAGE_ID_PREFIX = "log_HFA_desktop_";
+const HFA_LOG_MOBILE_MESSAGE_ID_PREFIX = "log_HFA_mobile_";
 const HFA_PLAYER_NAME_ELEMENT_CLASS = "playername";
-const HFA_INIT_MESSAGE_LOG_ID = "log_hide_friends_activity_init";
+const HFA_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
 
 function log(msg) {
     console.log(`HFA: ${msg}`);
@@ -32,6 +35,7 @@ function sleep(ms) {
 var bgaUserscriptHideFriendsActivityData = {
     dojo: null,
     gameui: null,
+    bgaTableId: 0,
     players: null,
     observer: null,
 
@@ -44,6 +48,7 @@ var bgaUserscriptHideFriendsActivityData = {
         // init state
         this.dojo = window.parent.dojo;
         this.gameui = window.parent.gameui;
+        this.bgaTableId = HFA_URL_TABLE_ID_PATTERN.exec(window.location.search).groups['tableId'];
         this.players = this.getGamePlayers();
 
         this.registerObserver();
@@ -66,7 +71,7 @@ var bgaUserscriptHideFriendsActivityData = {
             childList: true,
             subtree: false,
         };
-        const logsElement = Array.from(this.dojo.query(`#${HFA_LOGS_ELEMENT_ID}`))[0];
+        const logsElement = Array.from(this.dojo.query(`#${HFA_LOGS_DESKTOP_ELEMENT_ID}`))[0];
         this.observer = new MutationObserver(this.logsElementObserverCallback.bind(this));
         this.observer.observe(logsElement, config);
     },
@@ -82,11 +87,24 @@ var bgaUserscriptHideFriendsActivityData = {
     },
 
     showLogMessage: function (message) {
+        this.showLogDesktopMessage(message);
+        this.showLogMobileMessage(message);
+    },
+
+    showLogDesktopMessage: function (message) {
         const logElement =
-            `<div id="${HFA_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `<div id="${HFA_LOG_DESKTOP_MESSAGE_ID_PREFIX}${Date.now()}" class="log" style="height: auto; display: block; color: black;">` +
             `    <div class="roundedbox" style="background-color: lightgray;">HFA: ${message}</div>` +
             `</div>`;
-        this.dojo.place(logElement, HFA_LOGS_ELEMENT_ID, 'first');
+        this.dojo.place(logElement, HFA_LOGS_DESKTOP_ELEMENT_ID, 'first');
+    },
+
+    showLogMobileMessage: function (message) {
+        const logElement =
+            `<div id="${HFA_LOG_MOBILE_MESSAGE_ID_PREFIX}${Date.now()}" class="roundedbox log bga-link-inside" style="height: auto; display: block; color: black; background-color: lightgray;">` +
+            `    <div class="roundedboxinner">HFA: ${message}</div>` +
+            `</div>`;
+        this.dojo.place(logElement, `${HFA_LOGS_MOBILE_ELEMENT_ID_PREFIX}${this.bgaTableId}`, 'last');
     },
 
     processLogElement: function (logElement) {

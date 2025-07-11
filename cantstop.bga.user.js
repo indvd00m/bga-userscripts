@@ -17,8 +17,10 @@
 log('userscript');
 
 const CS_LOAD_TIMEOUT_MS = 5000;
-const CS_LOGS_ELEMENT_ID = "logs";
-const CS_INIT_MESSAGE_LOG_ID = "log_cantstop_init";
+const CS_LOGS_DESKTOP_ELEMENT_ID = "logs";
+const CS_LOGS_MOBILE_ELEMENT_ID_PREFIX = "chatwindowlogs_zone_tablelog_";
+const CS_LOG_DESKTOP_MESSAGE_ID_PREFIX = "log_CS_desktop_";
+const CS_LOG_MOBILE_MESSAGE_ID_PREFIX = "log_CS_mobile_";
 const CS_MAX_CHIPS_COUNT = 3;
 const CS_DICE_SELECT_ID_PREFIX = "dice_select_";
 const CS_PROGRESS_STATE_PANEL_ID = "progress_state";
@@ -479,11 +481,24 @@ var cantStopBgaUserscriptData = {
     },
 
     showLogMessage: function (message) {
+        this.showLogDesktopMessage(message);
+        this.showLogMobileMessage(message);
+    },
+
+    showLogDesktopMessage: function (message) {
         const logElement =
-            `<div id="${CS_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `<div id="${CS_LOG_DESKTOP_MESSAGE_ID_PREFIX}${Date.now()}" class="log" style="height: auto; display: block; color: black;">` +
             `    <div class="roundedbox" style="background-color: lightgray;">CS: ${message}</div>` +
             `</div>`;
-        this.dojo.place(logElement, CS_LOGS_ELEMENT_ID, 'first');
+        this.dojo.place(logElement, CS_LOGS_DESKTOP_ELEMENT_ID, 'first');
+    },
+
+    showLogMobileMessage: function (message) {
+        const logElement =
+            `<div id="${CS_LOG_MOBILE_MESSAGE_ID_PREFIX}${Date.now()}" class="roundedbox log bga-link-inside" style="height: auto; display: block; color: black; background-color: lightgray;">` +
+            `    <div class="roundedboxinner">CS: ${message}</div>` +
+            `</div>`;
+        this.dojo.place(logElement, `${CS_LOGS_MOBILE_ELEMENT_ID_PREFIX}${this.bgaTableId}`, 'last');
     },
 
     renderMovesProbabilities: function (movesProbabilities) {
