@@ -14,8 +14,6 @@
 // TODO: @grant
 // TODO: @exclude-match
 
-// TODO: log into game log on button click
-
 log('userscript');
 
 const PU_LOAD_TIMEOUT_MS = 3000;
@@ -85,8 +83,13 @@ var pullUpdatesBgaUserscriptData = {
         window.parent.gameui.socket.on('connected', function (ctx) {
             log(`socket connected`);
             window.parent.pullUpdatesBgaUserscriptData.pullUpdates();
+            window.parent.pullUpdatesBgaUserscriptData.renderConnected();
+        }).on('connecting', function (ctx) {
+            log(`socket connecting`);
+            window.parent.pullUpdatesBgaUserscriptData.renderDisconnected();
         }).on('disconnected', function (ctx) {
             log(`socket disconnected`);
+            window.parent.pullUpdatesBgaUserscriptData.renderDisconnected();
         });
     },
 
@@ -96,6 +99,8 @@ var pullUpdatesBgaUserscriptData = {
     },
 
     onClickButton: function (e) {
+        this.showLogMessage('force reconnecting');
+        this.renderForceReconnecting();
         this.pullUpdates();
     },
 
@@ -121,7 +126,7 @@ var pullUpdatesBgaUserscriptData = {
     },
 
     renderPullUpdatesButton: function () {
-        const buttonElement = `<a id="${PU_BUTTON_ID}" class="globalaction icon20 icon20_warning self-center" href="#" style="top:0px"></a>`;
+        const buttonElement = `<a id="${PU_BUTTON_ID}" class="globalaction icon20 self-center" href="#" style="background-position: 0 -1320px; top:0px;"></a>`;
         const placedNode = this.dojo.place(buttonElement, PU_PANEL_ID, 'only');
         this.dojo.connect(placedNode, "onclick", this.onClickButton.bind(this));
     },
@@ -133,6 +138,29 @@ var pullUpdatesBgaUserscriptData = {
 
     renderInitMessage: function () {
         this.showLogMessage(`userscript activated`);
+    },
+
+    renderConnected: function () {
+        this.dojo.query(`#${PU_BUTTON_ID}`).style('filter', 'grayscale(0)');
+    },
+
+    renderDisconnected: function () {
+        this.dojo.query(`#${PU_BUTTON_ID}`).style('filter', 'grayscale(1)');
+    },
+
+    renderForceReconnecting: function () {
+        const spinning = [
+            {transform: "rotate(0)"},
+            {transform: "rotate(360deg)"},
+        ];
+
+        const timing = {
+            duration: 2000,
+            iterations: 1,
+        };
+        this.dojo.query(`#${PU_BUTTON_ID}`).forEach(element => {
+            element.animate(spinning, timing);
+        });
     },
 
 };
