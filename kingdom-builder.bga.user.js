@@ -1322,17 +1322,25 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     showLogDesktopMessage: function (message) {
+        const time = new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
         const logElement =
             `<div id="${KB_LOG_DESKTOP_MESSAGE_ID_PREFIX}${Date.now()}" class="log" style="height: auto; display: block; color: black;">` +
-            `    <div class="roundedbox" style="background-color: lightgray;">KB: ${message}</div>` +
+            `    <div class="roundedbox" style="background-color: lightgray;">KB: ${message}<div class="msgtime">${time}</div></div>` +
             `</div>`;
         this.dojo.place(logElement, KB_LOGS_DESKTOP_ELEMENT_ID, 'first');
     },
 
     showLogMobileMessage: function (message) {
+        const time = new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
         const logElement =
             `<div id="${KB_LOG_MOBILE_MESSAGE_ID_PREFIX}${Date.now()}" class="roundedbox log bga-link-inside" style="height: auto; display: block; color: black; background-color: lightgray;">` +
-            `    <div class="roundedboxinner">KB: ${message}</div>` +
+            `    <div class="roundedboxinner">KB: ${message}<div class="msgtime">${time}</div></div>` +
             `</div>`;
         this.dojo.place(logElement, `${KB_LOGS_MOBILE_ELEMENT_ID_PREFIX}${this.bgaTableId}`, 'last');
     },
