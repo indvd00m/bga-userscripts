@@ -478,6 +478,14 @@ var cantStopBgaUserscriptData = {
         sums.forEach(sum => this.currentLineCounts[sum - 1]++);
     },
 
+    showLogMessage: function (message) {
+        const logElement =
+            `<div id="${CS_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `    <div class="roundedbox" style="background-color: lightgray;">CS: ${message}</div>` +
+            `</div>`;
+        this.dojo.place(logElement, CS_LOGS_ELEMENT_ID, 'first');
+    },
+
     renderMovesProbabilities: function (movesProbabilities) {
         log(`renderMovesProbabilities ${JSON.stringify(movesProbabilities)}`);
         let maxVisibleSaveProgressProbability = 0;
@@ -711,11 +719,7 @@ var cantStopBgaUserscriptData = {
     },
 
     renderInitMessage: function () {
-        const logElement =
-            `<div id="${CS_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
-            `    <div class="roundedbox" style="background-color: lightgray;">CS userscript: activated</div>` +
-            `</div>`;
-        this.dojo.place(logElement, CS_LOGS_ELEMENT_ID, 'first');
+        this.showLogMessage(`userscript activated`);
     },
 
     formatDecimal: function (value, precision) {

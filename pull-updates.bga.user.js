@@ -15,7 +15,6 @@
 // TODO: @exclude-match
 
 // TODO: log into game log on button click
-// TODO: into game log show short script name
 // TODO: message about activating in mobile log
 
 log('userscript');
@@ -99,6 +98,14 @@ var pullUpdatesBgaUserscriptData = {
         this.pullUpdates();
     },
 
+    showLogMessage: function (message) {
+        const logElement =
+            `<div id="${PU_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `    <div class="roundedbox" style="background-color: lightgray;">PU: ${message}</div>` +
+            `</div>`;
+        this.dojo.place(logElement, PU_LOGS_ELEMENT_ID, 'first');
+    },
+
     renderPullUpdatesButton: function () {
         const buttonElement = `<a id="${PU_BUTTON_ID}" class="globalaction icon20 icon20_warning self-center" href="#" style="top:0px"></a>`;
         const placedNode = this.dojo.place(buttonElement, PU_PANEL_ID, 'only');
@@ -111,11 +118,7 @@ var pullUpdatesBgaUserscriptData = {
     },
 
     renderInitMessage: function () {
-        const logElement =
-            `<div id="${PU_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
-            `    <div class="roundedbox" style="background-color: lightgray;">PU userscript: activated</div>` +
-            `</div>`;
-        this.dojo.place(logElement, PU_LOGS_ELEMENT_ID, 'first');
+        this.showLogMessage(`userscript activated`);
     },
 
 };

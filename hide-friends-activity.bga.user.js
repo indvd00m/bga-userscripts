@@ -81,6 +81,14 @@ var bgaUserscriptHideFriendsActivityData = {
         }
     },
 
+    showLogMessage: function (message) {
+        const logElement =
+            `<div id="${HFA_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `    <div class="roundedbox" style="background-color: lightgray;">HFA: ${message}</div>` +
+            `</div>`;
+        this.dojo.place(logElement, HFA_LOGS_ELEMENT_ID, 'first');
+    },
+
     processLogElement: function (logElement) {
         log(`Processing log element: ${logElement.outerHTML}`);
         const nonParticipatingPlayerNames = Array.from(this.dojo.query(`.${HFA_PLAYER_NAME_ELEMENT_CLASS}`, logElement))
@@ -93,11 +101,7 @@ var bgaUserscriptHideFriendsActivityData = {
     },
 
     renderInitMessage: function () {
-        const logElement =
-            `<div id="${HFA_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
-            `    <div class="roundedbox" style="background-color: lightgray;">HFA userscript: activated</div>` +
-            `</div>`;
-        this.dojo.place(logElement, HFA_LOGS_ELEMENT_ID, 'first');
+        this.showLogMessage(`userscript activated`);
     },
 
 };

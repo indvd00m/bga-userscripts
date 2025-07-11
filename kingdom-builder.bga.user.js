@@ -1311,6 +1311,14 @@ var kingdomBuilderBgaUserscriptData = {
         return false;
     },
 
+    showLogMessage: function (message) {
+        const logElement =
+            `<div id="${KB_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
+            `    <div class="roundedbox" style="background-color: lightgray;">KB: ${message}</div>` +
+            `</div>`;
+        this.dojo.place(logElement, KB_LOGS_ELEMENT_ID, 'first');
+    },
+
     renderContainers: function () {
         this.dojo.place("<div id='" + KB_STATISTICS_PANEL_ID + "'"
             + " class='" + KB_BGA_PLAYER_BOARD_CLASS + "'"
@@ -1543,11 +1551,7 @@ var kingdomBuilderBgaUserscriptData = {
     },
 
     renderInitMessage: function () {
-        const logElement =
-            `<div id="${KB_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
-            `    <div class="roundedbox" style="background-color: lightgray;">KB userscript: activated</div>` +
-            `</div>`;
-        this.dojo.place(logElement, KB_LOGS_ELEMENT_ID, 'first');
+        this.showLogMessage(`userscript activated`);
     },
 
 };
