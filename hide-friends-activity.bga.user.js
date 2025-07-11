@@ -3,7 +3,7 @@
 // @description Hide non-participating friends' activity in the game log
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Creative Commons Attribution 3.0 Unported
-// @version 0.9.2
+// @version 1.0.0
 // @match https://boardgamearena.com/*/*?*table=*
 // @grant none
 // @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/hide-friends-activity.bga.user.js
@@ -17,9 +17,12 @@
 log('userscript');
 
 const HFA_LOAD_TIMEOUT_MS = 3000;
-const HFA_LOGS_ELEMENT_ID = "logs";
-const PLAYER_NAME_ELEMENT_CLASS = "playername";
-const HFA_INIT_MESSAGE_LOG_ID = "log_hide_friends_activity_init";
+const HFA_LOGS_DESKTOP_ELEMENT_ID = "logs";
+const HFA_LOGS_MOBILE_ELEMENT_ID_PREFIX = "chatwindowlogs_zone_tablelog_";
+const HFA_LOG_DESKTOP_MESSAGE_ID_PREFIX = "log_HFA_desktop_";
+const HFA_LOG_MOBILE_MESSAGE_ID_PREFIX = "log_HFA_mobile_";
+const HFA_PLAYER_NAME_ELEMENT_CLASS = "playername";
+const HFA_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
 
 function log(msg) {
     console.log(`HFA: ${msg}`);
@@ -32,6 +35,7 @@ function sleep(ms) {
 var bgaUserscriptHideFriendsActivityData = {
     dojo: null,
     gameui: null,
+    bgaTableId: 0,
     players: null,
     observer: null,
 
@@ -44,6 +48,7 @@ var bgaUserscriptHideFriendsActivityData = {
         // init state
         this.dojo = window.parent.dojo;
         this.gameui = window.parent.gameui;
+        this.bgaTableId = HFA_URL_TABLE_ID_PATTERN.exec(window.location.search).groups['tableId'];
         this.players = this.getGamePlayers();
 
         this.registerObserver();
@@ -66,7 +71,7 @@ var bgaUserscriptHideFriendsActivityData = {
             childList: true,
             subtree: false,
         };
-        const logsElement = Array.from(this.dojo.query(`#${HFA_LOGS_ELEMENT_ID}`))[0];
+        const logsElement = Array.from(this.dojo.query(`#${HFA_LOGS_DESKTOP_ELEMENT_ID}`))[0];
         this.observer = new MutationObserver(this.logsElementObserverCallback.bind(this));
         this.observer.observe(logsElement, config);
     },
@@ -81,9 +86,38 @@ var bgaUserscriptHideFriendsActivityData = {
         }
     },
 
+    showLogMessage: function (message) {
+        this.showLogDesktopMessage(message);
+        this.showLogMobileMessage(message);
+    },
+
+    showLogDesktopMessage: function (message) {
+        const time = new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+        const logElement =
+            `<div id="${HFA_LOG_DESKTOP_MESSAGE_ID_PREFIX}${Date.now()}" class="log" style="height: auto; display: block; color: black;">` +
+            `    <div class="roundedbox" style="background-color: lightgray;">HFA: ${message}<div class="msgtime">${time}</div></div>` +
+            `</div>`;
+        this.dojo.place(logElement, HFA_LOGS_DESKTOP_ELEMENT_ID, 'first');
+    },
+
+    showLogMobileMessage: function (message) {
+        const time = new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+        const logElement =
+            `<div id="${HFA_LOG_MOBILE_MESSAGE_ID_PREFIX}${Date.now()}" class="roundedbox log bga-link-inside" style="height: auto; display: block; color: black; background-color: lightgray;">` +
+            `    <div class="roundedboxinner">HFA: ${message}<div class="msgtime">${time}</div></div>` +
+            `</div>`;
+        this.dojo.place(logElement, `${HFA_LOGS_MOBILE_ELEMENT_ID_PREFIX}${this.bgaTableId}`, 'last');
+    },
+
     processLogElement: function (logElement) {
         log(`Processing log element: ${logElement.outerHTML}`);
-        const nonParticipatingPlayerNames = Array.from(this.dojo.query(`.${PLAYER_NAME_ELEMENT_CLASS}`, logElement))
+        const nonParticipatingPlayerNames = Array.from(this.dojo.query(`.${HFA_PLAYER_NAME_ELEMENT_CLASS}`, logElement))
             .map(e => e.innerText)
             .filter(name => !this.players.includes(name));
         if (nonParticipatingPlayerNames.length) {
@@ -93,11 +127,7 @@ var bgaUserscriptHideFriendsActivityData = {
     },
 
     renderInitMessage: function () {
-        const logElement =
-            `<div id="${HFA_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
-            `    <div class="roundedbox" style="background-color: lightgray;">HFA userscript: activated</div>` +
-            `</div>`;
-        this.dojo.place(logElement, HFA_LOGS_ELEMENT_ID, 'first');
+        this.showLogMessage(`userscript activated`);
     },
 
 };
