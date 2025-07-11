@@ -14,6 +14,11 @@
 // TODO: @grant
 // TODO: @exclude-match
 
+// TODO: unique name for constants per script
+// TODO: log into game log on button click
+// TODO: into game log show short script name
+// TODO: message about activating in mobile log
+
 log('userscript');
 
 const PU_LOAD_TIMEOUT_MS = 3000;
