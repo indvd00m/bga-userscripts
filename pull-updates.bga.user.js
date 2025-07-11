@@ -3,7 +3,7 @@
 // @description Possibility to force pull of updates at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Apache License 2.0
-// @version 1.2.0
+// @version 1.3.0
 // @match https://boardgamearena.com/*/*?*table=*
 // @grant none
 // @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/pull-updates.bga.user.js
