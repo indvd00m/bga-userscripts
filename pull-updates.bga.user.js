@@ -103,7 +103,7 @@ var pullUpdatesBgaUserscriptData = {
     renderPullUpdatesButton: function () {
         const buttonElement = `<a id="${PULL_UPDATES_BUTTON_ID}" class="globalaction icon20 icon20_warning self-center" href="#" style="top:0px"></a>`;
         const placedNode = this.dojo.place(buttonElement, PULL_UPDATES_PANEL_ID, 'only');
-        this.dojo.connect(placedNode, "onclick", this.onClickButton);
+        this.dojo.connect(placedNode, "onclick", this.onClickButton.bind(this));
     },
 
     renderContainers: function () {
@@ -114,7 +114,7 @@ var pullUpdatesBgaUserscriptData = {
     renderInitMessage: function () {
         const logElement =
             `<div id="${PU_INIT_MESSAGE_LOG_ID}" class="log" style="height: auto; display: block; color: black;">` +
-            `    <div class="roundedbox" style="background-color: lightgray;">Pull Updates userscript: activated</div>` +
+            `    <div class="roundedbox" style="background-color: lightgray;">PU userscript: activated</div>` +
             `</div>`;
         this.dojo.place(logElement, PU_LOGS_ELEMENT_ID, 'first');
     },
