@@ -2,8 +2,8 @@
 // @name bga-kingdom-builder
 // @description Extended statistics for Kingdom Builder game at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
-// @license Creative Commons Attribution 3.0 Unported
-// @version 1.1.0
+// @license Apache License 2.0
+// @version 1.2.0
 // @match https://boardgamearena.com/*/kingdombuilder*
 // @grant none
 // @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/kingdom-builder.bga.user.js

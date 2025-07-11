@@ -2,8 +2,8 @@
 // @name bga-hide-friends-activity
 // @description Hide non-participating friends' activity in the game log
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
-// @license Creative Commons Attribution 3.0 Unported
-// @version 1.0.0
+// @license Apache License 2.0
+// @version 1.1.0
 // @match https://boardgamearena.com/*/*?*table=*
 // @grant none
 // @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/hide-friends-activity.bga.user.js
