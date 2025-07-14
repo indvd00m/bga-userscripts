@@ -11,12 +11,12 @@ If your browser loses connection to the BGA server for an extended period (minut
 
 This script automatically forces reconnection and resubscription to retrieve these missed events. It adds a status icon before to the sound toggle button in the game table's upper right corner:
 
-🟢 Green: Active connection (receiving all events)
-⚪ Gray: Disconnected from server
+ - Green: Active connection (receiving all events).
+ - Gray: Disconnected from server.
 
 Click the icon to manually force reconnection at any time.
 
-Works with all games.  
+Works with all games.
 
 Install: [https://github.com/.../pull-updates.bga.user.js](https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/pull-updates.bga.user.js)
 
@@ -68,6 +68,22 @@ Play the odds, not your nerves. Still hurts to lose? Maybe just a little less. :
 
 Install: [https://github.com/.../cantstop.bga.user.js](https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/cantstop.bga.user.js)
 
+```
+Additional: Key differences between n_max and E[X]
+1. E[X] (Expected Value): Estimates the long-run average number of rolls you'll make before losing progress over many repeated turns.
+2. n_max: Finds the maximum safe rolls for a single turn where the probability of making all those rolls without losing progress is greater than 50%.
+3. Calculation of E[X]: E[X] = 1 / p_fail (uses the probability of failing on a single roll). For lines 6-7-8, p_fail ≈ 0.084, so E[X] ≈ 12.
+4. Calculation of n_max: n_max = floor( ln(0.5) / ln(p_success) ) (uses the probability of succeeding on a single roll). For lines 6-7-8, p_success ≈ 0.916, so n_max = 7.
+5. E[X] > n_max always holds. E[X] includes rare, very long sequences of success (luck) which pull the average up. n_max ignores these, focusing only on what's reliably safe (>50%) now.
+6. E[X] ≈ 12 Interpretation: Over many games controlling lines 6-7-8, you'll lose progress on average around the 12th roll. This measures the inherent power of the lines.
+7. n_max = 7 Interpretation: If you stop after exactly 7 rolls in your current turn, there's a ~54% chance you never lost progress during those rolls. It's a safe stopping point.
+8. Strategic Use for E[X]: Helps choose which lines to claim. High E[X] lines (like 6-7-8) let you progress further on average than low E[X] lines (like 2-3-12).
+9. Tactical Use for n_max: Tells you when to stop during your turn. Use it to minimize the risk of losing hard-earned progress, especially near victory.
+10. Risk Profile: n_max is risk-averse (guarantees >50% chance of zero failure this turn). E[X] is optimistic (predicts long-term average, including lucky streaks).
+11. Core Difference: E[X] tells you how long you'll likely last until failure. n_max tells you how far you can push safely (>50%) without failing at all.
+12. Winning Play: Maximize long-term gains using E[X] to pick lines. Secure critical progress using n_max to decide when to bank your gains.
+```
+
 ### Kingdom Builder
 **Enhanced statistics** for [Kingdom Builder](https://boardgamearena.com/gamepanel?game=kingdombuilder).
 
@@ -98,15 +114,15 @@ Install: [https://github.com/.../kingdom-builder.bga.user.js](https://github.com
 2. Click any installation link above
 
 ### Other Browsers
-- **Safari**: [Userscripts app](https://apps.apple.com/us/app/userscripts/id1463298887)
-- **Firefox**: [Violentmonkey](https://violentmonkey.github.io/) or [Greasemonkey](https://www.greasespot.net/)
+- Safari: [Userscripts app](https://apps.apple.com/us/app/userscripts/id1463298887)
+- Firefox: [Violentmonkey](https://violentmonkey.github.io/) or [Greasemonkey](https://www.greasespot.net/)
 
 ## Compatibility
-✅ **Tested in**:
+**Tested in**:
 - Safari (Desktop & Mobile)
 - Chrome (Desktop)
 
-⚠️ **Should work** in other modern browsers (Firefox, Edge, etc.)
+**Should work** in other modern browsers (Firefox, Edge, etc.)
 
 ## Roadmap
 Developed as a hobby project with **no fixed roadmap** or release guarantees.
