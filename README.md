@@ -69,7 +69,7 @@ Play the odds, not your nerves. Still hurts to lose? Maybe just a little less. :
 Install: [https://github.com/.../cantstop.bga.user.js](https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/cantstop.bga.user.js)
 
 ```
-Additional: Key differences between n_max and E[X]
+Key differences between n_max and E[X]
 1. E[X] (Expected Value): Estimates the long-run average number of rolls you'll make before losing progress over many repeated turns.
 2. n_max: Finds the maximum safe rolls for a single turn where the probability of making all those rolls without losing progress is greater than 50%.
 3. Calculation of E[X]: E[X] = 1 / p_fail (uses the probability of failing on a single roll). For lines 6-7-8, p_fail ≈ 0.084, so E[X] ≈ 12.
