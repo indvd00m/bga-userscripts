@@ -37,7 +37,8 @@ const CS_DEFAULT_STATE = {
         saveProgressProbability: 0,
         saveProgressExpectation: 0,
         saveProgressNMax50PercentSuccess: 0,
-        rollingDiceCount: 0
+        rollingDiceCount: 0,
+        seriesSuccessSaveProgressProbability: 1
     },
     playersStats: {},
 };
@@ -212,6 +213,9 @@ var cantStopBgaUserscriptData = {
                 };
             });
         }
+        if (state.progressState.seriesSuccessSaveProgressProbability == null) {
+            state.progressState.seriesSuccessSaveProgressProbability = 1;
+        }
     },
 
     updateProgressStateProbability: function (playerId) {
@@ -245,9 +249,15 @@ var cantStopBgaUserscriptData = {
         if (success) {
             const state = this.readState();
             const progressState = state.progressState;
-            const prevRdCountProbability = state.playersStats[playerId].minSuccessSaveProgressProbability;
-            const rdCountProbability = this.calculateRollingDiceCountProbability(progressState.saveProgressProbability, progressState.rollingDiceCount);
-            state.playersStats[playerId].minSuccessSaveProgressProbability = Math.min(prevRdCountProbability, rdCountProbability);
+            const playerChanged = playerId !== progressState.playerId;
+            if (!playerChanged) {
+                const prevRdCountProbability = state.playersStats[playerId].minSuccessSaveProgressProbability;
+                const rdCountProbability = this.calculateRollingDiceCountProbability(progressState);
+                progressState.seriesSuccessSaveProgressProbability = rdCountProbability;
+                state.playersStats[playerId].minSuccessSaveProgressProbability = Math.min(prevRdCountProbability, rdCountProbability);
+            } else {
+                progressState.seriesSuccessSaveProgressProbability = progressState.saveProgressProbability;
+            }
             this.saveState(state);
         }
     },
@@ -356,8 +366,8 @@ var cantStopBgaUserscriptData = {
         return saveProgressProbability === 1 ? Infinity : 1 / (1 - saveProgressProbability);
     },
 
-    calculateRollingDiceCountProbability: function (saveProgressProbability, rollingDiceCount) {
-        return saveProgressProbability ** rollingDiceCount;
+    calculateRollingDiceCountProbability: function (progressState) {
+        return progressState.seriesSuccessSaveProgressProbability * progressState.saveProgressProbability;
     },
 
     getUnsavedColumns: function () {
@@ -647,7 +657,7 @@ var cantStopBgaUserscriptData = {
         if (spExpectation > 0 && spExpectation / minDangerZoneFactor > scaleMaxValue) {
             scaleMaxValue = Math.ceil(spExpectation / minDangerZoneFactor);
         }
-        const rdCountProbability = this.calculateRollingDiceCountProbability(progressState.saveProgressProbability, progressState.rollingDiceCount);
+        const rdCountProbability = progressState.seriesSuccessSaveProgressProbability;
 
         let nMaxPercentage;
         let expectationPercentage;
