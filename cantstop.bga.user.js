@@ -3,7 +3,7 @@
 // @description Extended statistics for Can't Stop game at BGA
 // @author indvd00m <gotoindvdum [at] gmail [dot] com>
 // @license Apache License 2.0
-// @version 1.8.0
+// @version 1.9.0
 // @match https://boardgamearena.com/*/cantstop*
 // @grant none
 // @updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/cantstop.bga.user.js
@@ -21,7 +21,7 @@ const CS_LOGS_DESKTOP_ELEMENT_ID = "logs";
 const CS_LOGS_MOBILE_ELEMENT_ID_PREFIX = "chatwindowlogs_zone_tablelog_";
 const CS_LOG_DESKTOP_MESSAGE_ID_PREFIX = "log_CS_desktop_";
 const CS_LOG_MOBILE_MESSAGE_ID_PREFIX = "log_CS_mobile_";
-const CS_MAX_CHIPS_COUNT = 3;
+const CS_DEFAULT_MAX_CHIPS_COUNT = 3;
 const CS_DICE_SELECT_ID_PREFIX = "dice_select_";
 const CS_PROGRESS_STATE_PANEL_ID = "progress_state";
 const CS_LINE_PROBABILITIES_PANEL_ID = "line_probabilities";
@@ -73,6 +73,7 @@ var cantStopBgaUserscriptData = {
     lineProbabilities: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     currentLineCounts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     bgaTableId: 0,
+    maxChipsCount: CS_DEFAULT_MAX_CHIPS_COUNT,
     rollDiceLog: [],
     parseLog: false,
 
@@ -94,6 +95,9 @@ var cantStopBgaUserscriptData = {
         if (myPlayerId) {
             this.myPlayerId = parseInt(myPlayerId);
         }
+        if (this.game.required_column_count != null) {
+            this.maxChipsCount = parseInt(this.game.required_column_count);
+        }
 
         const stats = this.calcStats();
         this.possibleOutcomesValues = stats.possibleOutcomesValues;
@@ -112,7 +116,7 @@ var cantStopBgaUserscriptData = {
 
         this.renderContainers();
 
-        if (this.game.gamestate.args) {
+        if (this.game.gamestate.args && this.game.gamestate.args.result == null) { // game is not finished
             this.processPossibleMoves(this.game.gamestate.args, this.getUnsavedColumns());
         }
         this.recalculateAndSaveProgressState();
@@ -335,7 +339,19 @@ var cantStopBgaUserscriptData = {
     parseColumns: function () {
         const columns = {};
         const savedTokensElements = this.dojo.query('#game_board>.token:not(.color_000000):not(.unmoving)');
-        savedTokensElements.forEach((tokenElement) => {
+        this.extractColumnsFromTokenElements(savedTokensElements, columns);
+        return columns;
+    },
+
+    parseColumnsIncludingUnsavedClosed: function () {
+        const columns = this.parseColumns();
+        const unsavedClosedTokensElements = this.dojo.query('#game_board>.token.color_000000:not(.unmoving)[data-height="0"]');
+        this.extractColumnsFromTokenElements(unsavedClosedTokensElements, columns);
+        return columns;
+    },
+
+    extractColumnsFromTokenElements: function (tokenElements, columns) {
+        tokenElements.forEach((tokenElement) => {
             const column = parseInt(this.dojo.getAttr(tokenElement, 'data-column'));
             const height = parseInt(this.dojo.getAttr(tokenElement, 'data-height'));
             const id = this.dojo.getAttr(tokenElement, 'id');
@@ -344,13 +360,23 @@ var cantStopBgaUserscriptData = {
                 columns[column] = {};
             }
             columns[column][playerId] = height;
-        })
-        return columns;
+        });
     },
 
     getClosedColumns: function () {
         const closedColumns = {};
         const columns = this.parseColumns();
+        objectKeys(columns).map(s => parseInt(s)).forEach(c => {
+            if (objectValues(columns[c]).map(s => parseInt(s)).some(v => v === 0)) {
+                closedColumns[c] = columns[c];
+            }
+        });
+        return closedColumns;
+    },
+
+    getClosedColumnsIncludingUnsaved: function () {
+        const closedColumns = {};
+        const columns = this.parseColumnsIncludingUnsavedClosed();
         objectKeys(columns).map(s => parseInt(s)).forEach(c => {
             if (objectValues(columns[c]).map(s => parseInt(s)).some(v => v === 0)) {
                 closedColumns[c] = columns[c];
@@ -412,13 +438,13 @@ var cantStopBgaUserscriptData = {
     },
 
     getOpenDesiredOutcomesCountFromArray(args) {
-        const closedColumnNumbers = objectKeys(this.getClosedColumns()).map(s => parseInt(s));
+        const closedColumnNumbers = objectKeys(this.getClosedColumnsIncludingUnsaved()).map(s => parseInt(s));
         return this.possibleOutcomesValues
             .filter(sums =>
                     !sums.every(s => closedColumnNumbers.includes(s))
                     && (
                         args.some(a => sums.includes(a))
-                        || args.length < CS_MAX_CHIPS_COUNT
+                        || args.length < this.maxChipsCount
                     )
             ).length;
     },
