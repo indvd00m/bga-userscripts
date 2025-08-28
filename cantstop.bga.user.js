@@ -116,7 +116,7 @@ var cantStopBgaUserscriptData = {
 
         this.renderContainers();
 
-        if (this.game.gamestate.args) {
+        if (this.game.gamestate.args && this.game.gamestate.args.result == null) { // game is not finished
             this.processPossibleMoves(this.game.gamestate.args, this.getUnsavedColumns());
         }
         this.recalculateAndSaveProgressState();
