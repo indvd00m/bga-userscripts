@@ -819,7 +819,7 @@ var cantStopBgaUserscriptData = {
             `    <tr id="line_stats_header">` +
             `        <th>#</th>` +
             `        <th>Player</th>` +
-            `        <th>Most lucky series of rolls</th>` +
+            `        <th>Luck Score (minimum series probability)</th>` +
             `    </tr>` +
             `    </tbody>`;
         for (let i = 0; i < sortedPlayersStats.length; i++) {
@@ -843,12 +843,12 @@ var cantStopBgaUserscriptData = {
             const probabilityElement = `<div id="${probabilityElementId}" class="${CS_PROBABILITY_PANEL_CLASS}"></div>`;
             this.dojo.place(probabilityElement, buttonSelectElement, 'after');
         });
-        const playersStatsElement = `<div id="${CS_PLAYERS_STATS_PANEL_ID}" style="width: 100%;"></div>`;
-        this.dojo.place(playersStatsElement, CS_GAME_BOARD_WRAP_ID, 'first');
         const lineProbabilitiesElement = `<div id="${CS_LINE_PROBABILITIES_PANEL_ID}" style="width: 100%;"></div>`;
         this.dojo.place(lineProbabilitiesElement, CS_GAME_BOARD_WRAP_ID, 'first');
         const progressStateElement = `<div id="${CS_PROGRESS_STATE_PANEL_ID}" style="width: 100%;"></div>`;
         this.dojo.place(progressStateElement, CS_GAME_BOARD_WRAP_ID, 'first');
+        const playersStatsElement = `<div id="${CS_PLAYERS_STATS_PANEL_ID}" style="width: 100%; order: 3;"></div>`;
+        this.dojo.place(playersStatsElement, CS_GAME_BOARD_WRAP_ID, 'last');
     },
 
     renderInitMessage: function () {
