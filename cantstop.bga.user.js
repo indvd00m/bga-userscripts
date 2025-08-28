@@ -25,19 +25,23 @@ const CS_DEFAULT_MAX_CHIPS_COUNT = 3;
 const CS_DICE_SELECT_ID_PREFIX = "dice_select_";
 const CS_PROGRESS_STATE_PANEL_ID = "progress_state";
 const CS_LINE_PROBABILITIES_PANEL_ID = "line_probabilities";
+const CS_PLAYERS_STATS_PANEL_ID = "players_stats";
 const CS_GAME_BOARD_WRAP_ID = "game_board_wrap";
 const CS_PROBABILITY_PANEL_ID_PREFIX = "dice_probability_";
 const CS_PROBABILITY_PANEL_CLASS = "dice_probability_cell";
 const CS_BGA_TOKEN_NAME_PATTERN = /^token_(?<playerId>\d+)_(?<number>\d+)$/;
 const CS_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
-const CS_DEFAULT_PROGRESS_STATE = {
-    playerId: -1,
-    saveProgressProbability: 0,
-    saveProgressExpectation: 0,
-    saveProgressNMax50PercentSuccess: 0,
-    rollingDiceCount: 0,
+const CS_DEFAULT_STATE = {
+    progressState: {
+        playerId: -1,
+        saveProgressProbability: 0,
+        saveProgressExpectation: 0,
+        saveProgressNMax50PercentSuccess: 0,
+        rollingDiceCount: 0
+    },
+    playersStats: {},
 };
-const CS_PROGRESS_STATE_KEY_PREFIX = "cantStopUserscriptProgressState-";
+const CS_STATE_KEY_PREFIX = "cantStopUserscriptState-";
 
 function log(msg) {
     console.log(`CS: ${msg}`);
@@ -67,8 +71,6 @@ var cantStopBgaUserscriptData = {
     dojo: null,
     game: null,
     myPlayerId: -1,
-    playersStats: {},
-    playersServerStats: {},
     possibleOutcomesValues: null,
     lineProbabilities: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     currentLineCounts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -103,6 +105,10 @@ var cantStopBgaUserscriptData = {
         this.possibleOutcomesValues = stats.possibleOutcomesValues;
         this.lineProbabilities = stats.lineProbabilities;
 
+        const state = this.readState();
+        this.updateForBackwardCompatibility(state);
+        this.saveState(state);
+
         if (this.parseLog) {
             this.parseHistoryRollDices();
         }
@@ -123,6 +129,7 @@ var cantStopBgaUserscriptData = {
 
         this.renderProgressState();
         this.renderLineProbabilities();
+        this.renderPlayersStats();
         this.renderInitMessage();
 
         return this;
@@ -149,30 +156,33 @@ var cantStopBgaUserscriptData = {
         this.addRollDiceEventToLog(e);
         this.processPossibleMoves(e.args, this.getUnsavedColumns());
         let playerId = parseInt(e.args.player_id);
+        const success = e.args.fail != true;
         this.updateProgressStateRollingDiceCount(playerId);
+        this.updatePlayerStats(playerId, success);
         this.renderProgressState();
         this.renderLineProbabilities();
+        this.renderPlayersStats();
     },
 
-    saveProgressState: function (state) {
-        log("saveProgressState");
-        sessionStorage.setItem(CS_PROGRESS_STATE_KEY_PREFIX + this.bgaTableId, JSON.stringify(state));
+    saveState: function (state) {
+        log("saveState");
+        sessionStorage.setItem(CS_STATE_KEY_PREFIX + this.bgaTableId, JSON.stringify(state));
     },
 
-    readProgressState: function () {
-        log("readProgressState");
-        const sState = sessionStorage.getItem(CS_PROGRESS_STATE_KEY_PREFIX + this.bgaTableId);
+    readState: function () {
+        log("readState");
+        const sState = sessionStorage.getItem(CS_STATE_KEY_PREFIX + this.bgaTableId);
         if (sState == null) {
-            return CS_DEFAULT_PROGRESS_STATE;
+            return CS_DEFAULT_STATE;
         }
         const state = JSON.parse(sState);
 
         // Infinity not exists in JSON
-        if (state.saveProgressExpectation == null) {
-            state.saveProgressExpectation = Infinity;
+        if (state.progressState.saveProgressExpectation == null) {
+            state.progressState.saveProgressExpectation = Infinity;
         }
-        if (state.saveProgressNMax50PercentSuccess == null) {
-            state.saveProgressNMax50PercentSuccess = Infinity;
+        if (state.progressState.saveProgressNMax50PercentSuccess == null) {
+            state.progressState.saveProgressNMax50PercentSuccess = Infinity;
         }
 
         return state;
@@ -180,39 +190,75 @@ var cantStopBgaUserscriptData = {
 
     resetProgressState: function () {
         log("resetProgressState");
-        sessionStorage.setItem(CS_PROGRESS_STATE_KEY_PREFIX + this.bgaTableId, JSON.stringify(CS_DEFAULT_PROGRESS_STATE));
+        const defaultProgressState = CS_DEFAULT_STATE.progressState;
+        const state = this.readState();
+        state.progressState = defaultProgressState;
+        this.saveState(state);
+    },
+
+    updateForBackwardCompatibility: function (state) {
+        log("updateForBackwardCompatibility");
+        // 2.0.0 changes
+        if (state.playersStats == null) {
+            state.playersStats = {};
+        }
+        if (objectKeys(state.playersStats).length === 0) {
+            objectValues(this.game.players).forEach(player => {
+                const id = parseInt(player.player_id);
+                state.playersStats[id] = {
+                    id: id,
+                    name: player.name,
+                    minSuccessSaveProgressProbability: 1.0
+                };
+            });
+        }
     },
 
     updateProgressStateProbability: function (playerId) {
         log("updateProgressStateProbability");
-        const progressState = this.readProgressState();
+        const state = this.readState();
+        const progressState = state.progressState;
         const prevSPProbability = progressState.saveProgressProbability;
         this.recalculateProgressState(progressState, playerId);
         if (prevSPProbability !== progressState.saveProgressProbability) {
             log('reset rolling dice count');
             progressState.rollingDiceCount = 0;
         }
-        this.saveProgressState(progressState);
+        this.saveState(state);
     },
 
     updateProgressStateRollingDiceCount: function (playerId) {
         log("updateProgressStateRollingDiceCount");
-        const progressState = this.readProgressState();
+        const state = this.readState();
+        const progressState = state.progressState;
         const playerChanged = playerId !== progressState.playerId;
         this.recalculateProgressState(progressState, playerId);
         if (!playerChanged && progressState.saveProgressProbability < 1) {
             progressState.rollingDiceCount++;
             log('increment rolling dice count to ' + progressState.rollingDiceCount);
         }
-        this.saveProgressState(progressState);
+        this.saveState(state);
+    },
+
+    updatePlayerStats: function (playerId, success) {
+        log("updatePlayerStats");
+        if (success) {
+            const state = this.readState();
+            const progressState = state.progressState;
+            const prevRdCountProbability = state.playersStats[playerId].minSuccessSaveProgressProbability;
+            const rdCountProbability = this.calculateRollingDiceCountProbability(progressState.saveProgressProbability, progressState.rollingDiceCount);
+            state.playersStats[playerId].minSuccessSaveProgressProbability = Math.min(prevRdCountProbability, rdCountProbability);
+            this.saveState(state);
+        }
     },
 
     recalculateAndSaveProgressState: function () {
         log("recalculateAndSaveProgressState");
         const activePlayerId = parseInt(this.game.gamestate.active_player);
-        const progressState = this.readProgressState();
+        const state = this.readState();
+        const progressState = state.progressState;
         this.recalculateProgressState(progressState, activePlayerId);
-        this.saveProgressState(progressState);
+        this.saveState(state);
     },
 
     recalculateProgressState: function (progressState, playerId) {
@@ -308,6 +354,10 @@ var cantStopBgaUserscriptData = {
 
     calculateExpectation: function (saveProgressProbability) {
         return saveProgressProbability === 1 ? Infinity : 1 / (1 - saveProgressProbability);
+    },
+
+    calculateRollingDiceCountProbability: function (saveProgressProbability, rollingDiceCount) {
+        return saveProgressProbability ** rollingDiceCount;
     },
 
     getUnsavedColumns: function () {
@@ -587,7 +637,8 @@ var cantStopBgaUserscriptData = {
     },
 
     renderProgressState: function () {
-        const progressState = this.readProgressState();
+        const state = this.readState();
+        const progressState = state.progressState;
         const nMax = progressState.saveProgressNMax50PercentSuccess;
         const spExpectation = progressState.saveProgressExpectation;
         const rdCount = progressState.rollingDiceCount;
@@ -596,6 +647,7 @@ var cantStopBgaUserscriptData = {
         if (spExpectation > 0 && spExpectation / minDangerZoneFactor > scaleMaxValue) {
             scaleMaxValue = Math.ceil(spExpectation / minDangerZoneFactor);
         }
+        const rdCountProbability = this.calculateRollingDiceCountProbability(progressState.saveProgressProbability, progressState.rollingDiceCount);
 
         let nMaxPercentage;
         let expectationPercentage;
@@ -694,21 +746,22 @@ var cantStopBgaUserscriptData = {
         const formattedNMax = this.formatDecimal(nMax, 0);
         const formattedExpectation = this.formatDecimal(spExpectation, 0);
         const formattedSaveProgressProbability = this.formatDecimal(progressState.saveProgressProbability * 100, 2);
+        const formattedRdCountProbability = this.formatDecimal(rdCountProbability * 100, 2);
 
         const stateProgressBarElement =
             `<div class="progressbar_with_info">` +
             `   <div class="progressbar_inner">` +
             `       <div class="progressbar" style="background-color: darkgray;">` +
-            `           <div class="progressbar_label" style="background-color: #0099FF; width: 100px;">` +
-            `               <span class="symbol icon20 ${icon}" style="position: relative;top:2px;"></span>` +
-            `               <span style="position: relative;top:-2px;">${formattedSaveProgressProbability}%</span>` +
+            `           <div class="progressbar_label" style="background-color: #0099FF; width: 80px;">` +
+            `               <span>${formattedSaveProgressProbability}%</span>` +
             `           </div>` +
-            `           <div class="progressbar_bar" style="margin-left: 100px;">` +
+            `           <div class="progressbar_bar" style="margin-left: 80px;">` +
             `               <div class="progressbar_content" style="width: ${rdCountPercentage}%; background-color: ${color};">` +
-            `                    <span class="progressbar_valuename"></span>` +
+            `                    <span class="progressbar_valuename" style="position:absolute; left: auto; right: 2px;">${rdCount}</span>` +
             `               </div>` +
             `               <div class="grad" style="left: 0%; background-color: darkgray;">` +
-            `                    <span style="position: absolute; top: 50%; left: 5px; transform: translate(0%, -50%); color: white; font-size: 75%;">${rdCount}</span>` +
+            `                    <span class="symbol icon20 ${icon}" style="position: absolute; top: 50%; left: 5px; transform: translate(0%, -50%);"></span>` +
+            `                    <span style="position: absolute; top: 50%; left: 30px; transform: translate(0%, -50%); color: white; font-size: 75%;">${formattedRdCountProbability}%</span>` +
             `               </div>` +
             `               <div class="grad" style="left: ${nMaxPercentage}%; background-color: blue;">` +
             `                    <span style="position: absolute; top: 50%; left: 2px; transform: translate(0%, -50%); color: blue; font-size: 75%;">${formattedNMax}</span>` +
@@ -754,6 +807,35 @@ var cantStopBgaUserscriptData = {
         this.dojo.place(lineProbabilitiesElement, CS_LINE_PROBABILITIES_PANEL_ID, 'only');
     },
 
+    renderPlayersStats: function () {
+        const state = this.readState();
+        const playersStats = state.playersStats;
+        const sortedPlayersStats = objectValues(playersStats).sort((p1, p2) => {
+            return p1.minSuccessSaveProgressProbability - p2.minSuccessSaveProgressProbability;
+        });
+        let playersStatsTableElement =
+            `<table class="statstable" id="players_stats_table" style="font-size: 60%; table-layout: fixed; max-width: 500px; margin: 5px auto;">` +
+            `    <tbody>` +
+            `    <tr id="line_stats_header">` +
+            `        <th>#</th>` +
+            `        <th>Player</th>` +
+            `        <th>Most lucky series of rolls</th>` +
+            `    </tr>` +
+            `    </tbody>`;
+        for (let i = 0; i < sortedPlayersStats.length; i++) {
+            const player = sortedPlayersStats[i];
+            playersStatsTableElement +=
+                `    <tr>` +
+                `        <td>${i + 1}</td>` +
+                `        <td>${player.name}</td>` +
+                `        <td>${this.formatDecimal(player.minSuccessSaveProgressProbability * 100, 2)}%</td>` +
+                `    </tr>`;
+        }
+        playersStatsTableElement +=
+            `</table>`;
+        this.dojo.place(playersStatsTableElement, CS_PLAYERS_STATS_PANEL_ID, 'only');
+    },
+
     renderContainers: function () {
         this.dojo.query('#dice_select_zone .dice_button_cell').forEach(buttonSelectElement => {
             const buttonSelectId = this.dojo.getAttr(buttonSelectElement, 'id');
@@ -761,6 +843,8 @@ var cantStopBgaUserscriptData = {
             const probabilityElement = `<div id="${probabilityElementId}" class="${CS_PROBABILITY_PANEL_CLASS}"></div>`;
             this.dojo.place(probabilityElement, buttonSelectElement, 'after');
         });
+        const playersStatsElement = `<div id="${CS_PLAYERS_STATS_PANEL_ID}" style="width: 100%;"></div>`;
+        this.dojo.place(playersStatsElement, CS_GAME_BOARD_WRAP_ID, 'first');
         const lineProbabilitiesElement = `<div id="${CS_LINE_PROBABILITIES_PANEL_ID}" style="width: 100%;"></div>`;
         this.dojo.place(lineProbabilitiesElement, CS_GAME_BOARD_WRAP_ID, 'first');
         const progressStateElement = `<div id="${CS_PROGRESS_STATE_PANEL_ID}" style="width: 100%;"></div>`;
