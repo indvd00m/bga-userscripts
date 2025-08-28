@@ -21,7 +21,7 @@ const CS_LOGS_DESKTOP_ELEMENT_ID = "logs";
 const CS_LOGS_MOBILE_ELEMENT_ID_PREFIX = "chatwindowlogs_zone_tablelog_";
 const CS_LOG_DESKTOP_MESSAGE_ID_PREFIX = "log_CS_desktop_";
 const CS_LOG_MOBILE_MESSAGE_ID_PREFIX = "log_CS_mobile_";
-const CS_MAX_CHIPS_COUNT = 3;
+const CS_DEFAULT_MAX_CHIPS_COUNT = 3;
 const CS_DICE_SELECT_ID_PREFIX = "dice_select_";
 const CS_PROGRESS_STATE_PANEL_ID = "progress_state";
 const CS_LINE_PROBABILITIES_PANEL_ID = "line_probabilities";
@@ -73,6 +73,7 @@ var cantStopBgaUserscriptData = {
     lineProbabilities: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     currentLineCounts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     bgaTableId: 0,
+    maxChipsCount: CS_DEFAULT_MAX_CHIPS_COUNT,
     rollDiceLog: [],
     parseLog: false,
 
@@ -93,6 +94,9 @@ var cantStopBgaUserscriptData = {
                 window.parent.gameui.gamedatas.players[k].name === window.parent.gameui.current_player_name);
         if (myPlayerId) {
             this.myPlayerId = parseInt(myPlayerId);
+        }
+        if (this.game.required_column_count != null) {
+            this.maxChipsCount = parseInt(this.game.required_column_count);
         }
 
         const stats = this.calcStats();
@@ -440,7 +444,7 @@ var cantStopBgaUserscriptData = {
                     !sums.every(s => closedColumnNumbers.includes(s))
                     && (
                         args.some(a => sums.includes(a))
-                        || args.length < CS_MAX_CHIPS_COUNT
+                        || args.length < this.maxChipsCount
                     )
             ).length;
     },
