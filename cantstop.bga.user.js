@@ -106,7 +106,6 @@ var cantStopBgaUserscriptData = {
 
         const stats = this.calcStats();
         this.possibleOutcomesValues = stats.possibleOutcomesValues;
-        this.lineProbabilities = stats.lineProbabilities;
 
         const state = this.readState();
         this.updateForBackwardCompatibility(state);
@@ -129,6 +128,7 @@ var cantStopBgaUserscriptData = {
             this.processPossibleMoves(this.game.gamestate.args, this.getUnsavedColumns());
         }
         this.recalculateAndSaveProgressState();
+        this.recalculateLineProbabilities();
 
         this.renderProgressState();
         this.renderLineProbabilities();
@@ -150,7 +150,9 @@ var cantStopBgaUserscriptData = {
         log(JSON.stringify(e));
         const playerId = parseInt(e.args.player_id);
         this.updateProgressStateProbability(playerId);
+        this.recalculateLineProbabilities();
         this.renderProgressState();
+        this.renderLineProbabilities();
     },
 
     onEventRollDice: function (e) {
@@ -163,7 +165,6 @@ var cantStopBgaUserscriptData = {
         this.updateProgressStateRollingDiceCount(playerId);
         this.updatePlayerStats(playerId, success);
         this.renderProgressState();
-        this.renderLineProbabilities();
         this.renderPlayersStats();
     },
 
@@ -288,6 +289,11 @@ var cantStopBgaUserscriptData = {
         progressState.saveProgressExpectation = spExpectation;
         progressState.saveProgressNMax50PercentSuccess = spNMax;
         return progressState;
+    },
+
+    recalculateLineProbabilities: function () {
+        log("recalculateLineProbabilities");
+        this.lineProbabilities = this.calcLineProbabilities();
     },
 
     processPossibleMoves: function (args, unsavedColumns) {
@@ -483,6 +489,17 @@ var cantStopBgaUserscriptData = {
         }
         log(`calc time=${Date.now() - start}ms`);
         return stats;
+    },
+
+    calcLineProbabilities() {
+        const openColumns = {2: {}, 3: {}, 4: {}, 5: {}, 6: {}, 7: {}, 8: {}, 9: {}, 10: {}, 11: {}, 12: {},};
+        objectKeys(this.getClosedColumnsIncludingUnsaved()).map(s => parseInt(s))
+            .forEach((n) => delete openColumns[n]);
+        const lineCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        for (const lines of this.possibleOutcomesValues) {
+            lines.filter(line => openColumns[line]).forEach(line => lineCounts[line - 1]++);
+        }
+        return lineCounts.map(count => count / this.possibleOutcomesValues.length)
     },
 
     getCommonDesiredOutcomesCount() {
