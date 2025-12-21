@@ -610,6 +610,11 @@ var cantStopBgaUserscriptData = {
                     moveCounts[line] += possibleMoveCounts[line];
                 });
                 const possibleValue = this.calculateCurrentValue(moveCounts);
+                let needStop = false;
+                if (columns.length === CS_DEFAULT_BLACK_CHIPS_COUNT) {
+                    const line = this.getLineThreshold(columns);
+                    needStop = possibleValue >= line.ew * line.k;
+                }
                 movesProbabilities[index1][index2] = {
                     progressProbability: pProbability,
                     saveProgressProbability: spProbability,
@@ -619,6 +624,7 @@ var cantStopBgaUserscriptData = {
                     move: move1,
                     possibleMoveCounts: possibleMoveCounts,
                     possibleValue: possibleValue,
+                    needStop: needStop,
                 };
                 log(`${index1},${index2} with dice ${JSON.stringify(dice1)} and sum ${sum1} has probability ${pProbability}`);
             }
@@ -650,6 +656,11 @@ var cantStopBgaUserscriptData = {
                     moveCounts[line] += possibleMoveCounts[line];
                 });
                 const possibleValue = this.calculateCurrentValue(moveCounts);
+                let needStop = false;
+                if (columns.length === CS_DEFAULT_BLACK_CHIPS_COUNT) {
+                    const line = this.getLineThreshold(columns);
+                    needStop = possibleValue >= line.ew * line.k;
+                }
                 movesProbabilities[index1][index2] = {
                     progressProbability: pProbability,
                     saveProgressProbability: spProbability,
@@ -659,6 +670,7 @@ var cantStopBgaUserscriptData = {
                     move: move2,
                     possibleMoveCounts: possibleMoveCounts,
                     possibleValue: possibleValue,
+                    needStop: needStop,
                 };
                 log(`${index1},${index2} with dice ${JSON.stringify(dice2)} and sum ${sum2} has probability ${pProbability}`);
             }
@@ -1024,7 +1036,7 @@ var cantStopBgaUserscriptData = {
             `<span style='${maxVisibleSaveProgressProbability ? `font-weight: bolder; color: ${moveProbability.saveProgressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(A)=${formattedSaveProgressProbability}% E[X]=${formattedSaveProgressExpectation} n_max=${formattedSaveProgressNMax50PercentSuccess}</span>`;
         const progressProbabilityElement = `<span style='${maxVisibleProgressProbability ? 'font-weight: bolder;' +
             ` color: ${moveProbability.progressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(⧡)=${formattedProgressProbability}%</span>`;
-        const valueElement = `<span>v=${formattedPossibleValue}</span>`;
+        const valueElement = `<span style="color: ${moveProbability.needStop ? '#FF3333' : 'currentColor'};">v=${formattedPossibleValue}</span>`;
         const line1Element = `<div>${saveProgressProbabilityElement}</div>`;
         const line2Element = `<div>${progressProbabilityElement} ${valueElement}</div>`;
         const probabilityElement = `<div style='font-size: 60%; font-family: monospace;'>${visible ? `${line1Element} ${line2Element}` : ''}</div>`;
