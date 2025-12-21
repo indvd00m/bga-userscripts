@@ -582,16 +582,25 @@ var cantStopBgaUserscriptData = {
             const move1 = possibleMove[0].move;
             const move2 = possibleMove[1].move;
             const possibleOutcomeValuesCount = this.possibleOutcomesValues.length;
-            const possibleMoveCounts = {};
-            let possibleValue = 0;
             {
-                // move counts
+                const index2 = 0;
+                let columns = [];
+                const possibleMoveCounts = {};
+                objectKeys(unsavedColumns).map(s => parseInt(s)).forEach((c) => columns.push(c));
                 if (possibleMove.both) {
+                    columns.push(sum1);
+                    columns.push(sum2);
                     this.incrementField(possibleMoveCounts, sum1);
                     this.incrementField(possibleMoveCounts, sum2);
                 } else {
+                    columns.push(sum1);
                     this.incrementField(possibleMoveCounts, sum1);
                 }
+                columns = columns.filter(onlyUnique);
+                const pProbability = this.getCommonDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
+                const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
+                const spExpectation = this.calculateExpectation(spProbability);
+                const spNMax = this.calculateNMax(spProbability);
                 // value
                 const moveCounts = JSON.parse(JSON.stringify(state.progressState.moveCounts));
                 objectKeys(possibleMoveCounts).map(line => parseInt(line)).forEach(line => {
@@ -600,23 +609,7 @@ var cantStopBgaUserscriptData = {
                     }
                     moveCounts[line] += possibleMoveCounts[line];
                 });
-                possibleValue = this.calculateCurrentValue(moveCounts);
-            }
-            {
-                const index2 = 0;
-                let columns = [];
-                objectKeys(unsavedColumns).map(s => parseInt(s)).forEach((c) => columns.push(c));
-                if (possibleMove.both) {
-                    columns.push(sum1);
-                    columns.push(sum2);
-                } else {
-                    columns.push(sum1);
-                }
-                columns = columns.filter(onlyUnique);
-                const pProbability = this.getCommonDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
-                const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
-                const spExpectation = this.calculateExpectation(spProbability);
-                const spNMax = this.calculateNMax(spProbability);
+                const possibleValue = this.calculateCurrentValue(moveCounts);
                 movesProbabilities[index1][index2] = {
                     progressProbability: pProbability,
                     saveProgressProbability: spProbability,
@@ -632,18 +625,31 @@ var cantStopBgaUserscriptData = {
             {
                 const index2 = 1;
                 let columns = [];
+                const possibleMoveCounts = {};
                 objectKeys(unsavedColumns).map(s => parseInt(s)).forEach((c) => columns.push(c));
                 if (possibleMove.both) {
                     columns.push(sum1);
                     columns.push(sum2);
+                    this.incrementField(possibleMoveCounts, sum1);
+                    this.incrementField(possibleMoveCounts, sum2);
                 } else {
                     columns.push(sum2);
+                    this.incrementField(possibleMoveCounts, sum2);
                 }
                 columns = columns.filter(onlyUnique);
                 const pProbability = this.getCommonDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
                 const spProbability = this.getOpenDesiredOutcomesCountFromArray(columns) / possibleOutcomeValuesCount;
                 const spExpectation = this.calculateExpectation(spProbability);
                 const spNMax = this.calculateNMax(spProbability);
+                // value
+                const moveCounts = JSON.parse(JSON.stringify(state.progressState.moveCounts));
+                objectKeys(possibleMoveCounts).map(line => parseInt(line)).forEach(line => {
+                    if (moveCounts[line] == null) {
+                        moveCounts[line] = 0;
+                    }
+                    moveCounts[line] += possibleMoveCounts[line];
+                });
+                const possibleValue = this.calculateCurrentValue(moveCounts);
                 movesProbabilities[index1][index2] = {
                     progressProbability: pProbability,
                     saveProgressProbability: spProbability,
