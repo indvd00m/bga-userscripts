@@ -462,7 +462,7 @@ var cantStopBgaUserscriptData = {
         const ev = this.calculateExpectedValue(lines);
         value.expected = ev.expectedValue;
         value.successProb = ev.successProb;
-        if (lines.length < 3) {
+        if (lines.length < CS_DEFAULT_BLACK_CHIPS_COUNT) {
             value.k = 0;
             value.expectedK = 0;
             value.needStop = false;
