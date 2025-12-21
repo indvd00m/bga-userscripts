@@ -342,6 +342,7 @@ var cantStopBgaUserscriptData = {
         const movedLine = parseInt(e.args.column_id);
         this.updateProgressStateMovesCount(playerId, movedLine);
         this.updateProgressStateValue();
+        this.renderLineProbabilities();
         this.renderProgressState();
         this.renderProgressValue();
     },
@@ -961,7 +962,6 @@ var cantStopBgaUserscriptData = {
     renderProgressState: function () {
         const state = this.readState();
         const progressState = state.progressState;
-        const needStop = progressState.value.needStop;
         const nMax = progressState.saveProgressNMax50PercentSuccess;
         const spExpectation = progressState.saveProgressExpectation;
         const rdCount = progressState.rollingDiceCount;
@@ -1075,7 +1075,7 @@ var cantStopBgaUserscriptData = {
             `<div class="progressbar_with_info">` +
             `   <div class="progressbar_inner">` +
             `       <div class="progressbar" style="background-color: darkgray;">` +
-            `           <div class="progressbar_label" style="background-color: ${needStop ? '#FF0000' : '#0099FF'}; width: 80px;">` +
+            `           <div class="progressbar_label" style="background-color: #0099FF; width: 80px;">` +
             `               <span>${formattedSaveProgressProbability}%</span>` +
             `           </div>` +
             `           <div class="progressbar_bar" style="margin-left: 80px;">` +
@@ -1115,6 +1115,9 @@ var cantStopBgaUserscriptData = {
     },
 
     renderLineProbabilities: function () {
+        const state = this.readState();
+        const moveCounts = state.progressState.moveCounts;
+        const value = state.progressState.value;
         let linesTableElement =
             `<table class="statstable" id="line_stats_table" style="font-size: 60%; table-layout: fixed; max-width: 500px; margin: 0 auto;">` +
             `    <tbody>` +
@@ -1135,6 +1138,32 @@ var cantStopBgaUserscriptData = {
                 `    <td>${this.formatDecimal(probability * 100, 2)}%</td>`;
         }
         linesTableElement +=
+            `    </tr>` +
+            `    <tr>` +
+            `        <th>Weight</th>`;
+        for (let i = 1; i < this.lineWeights.length; i++) {
+            const weight = this.lineWeights[i];
+            linesTableElement +=
+                `    <td>${this.formatDecimal(weight, 2)}</td>`;
+        }
+        linesTableElement +=
+            `    </tr>` +
+            `    <tr>` +
+            `        <th>Moves</th>`;
+        for (let i = 1; i < this.lineWeights.length; i++) {
+            const count = moveCounts[i + 1] ? moveCounts[i + 1] : 0;
+            linesTableElement +=
+                `    <td>${count > 0 ? count : ''}</td>`;
+        }
+        linesTableElement +=
+            `    </tr>` +
+            `    <tr>` +
+            `        <th>Value</th>` +
+            `        <td colspan="2">current=${this.formatDecimal(value.current, 2)}</td>` +
+            `        <td colspan="2">expected=${this.formatDecimal(value.expected, 2)}</td>` +
+            `        <td colspan="2">k=${this.formatDecimal(value.k, 2)}</td>` +
+            `        <td colspan="2">expected_k=${this.formatDecimal(value.expectedK, 2)}</td>` +
+            `        <td colspan="3" style="background-color: ${value.needStop ? '#FF3333' : '#009966'};">needStop=${value.needStop}</td>` +
             `    </tr>` +
             `</table>`;
         const lineProbabilitiesElement = `${linesTableElement}`;
