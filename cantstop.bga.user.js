@@ -537,20 +537,41 @@ var cantStopBgaUserscriptData = {
 
     processPossibleMoves: function (args, unsavedColumns) {
         log(`processPossibleMoves with unsavedColumns ${JSON.stringify(unsavedColumns)}`);
+        const state = this.readState();
         let diceArray = args.dice;
         let playerId = parseInt(args.player_id);
         let possibleMovesArray = args.possibleMoves;
         const movesProbabilities = Array.from(Array(possibleMovesArray.length), () => new Array(2));
         for (let i = 0; i < possibleMovesArray.length; i++) {
-            let index1 = i;
-            let possibleMove = possibleMovesArray[i];
-            let dice1 = possibleMove[0].dice;
-            let dice2 = possibleMove[1].dice;
-            let sum1 = dice1[0] + dice1[1];
-            let sum2 = dice2[0] + dice2[1];
-            let move1 = possibleMove[0].move;
-            let move2 = possibleMove[1].move;
+            const index1 = i;
+            const possibleMove = possibleMovesArray[i];
+            const dice1 = possibleMove[0].dice;
+            const dice2 = possibleMove[1].dice;
+            const sum1 = dice1[0] + dice1[1];
+            const sum2 = dice2[0] + dice2[1];
+            const move1 = possibleMove[0].move;
+            const move2 = possibleMove[1].move;
             const possibleOutcomeValuesCount = this.possibleOutcomesValues.length;
+            const possibleMoveCounts = {};
+            let possibleValue = 0;
+            {
+                // move counts
+                if (possibleMove.both) {
+                    this.incrementField(possibleMoveCounts, sum1);
+                    this.incrementField(possibleMoveCounts, sum2);
+                } else {
+                    this.incrementField(possibleMoveCounts, sum1);
+                }
+                // value
+                const moveCounts = JSON.parse(JSON.stringify(state.progressState.moveCounts));
+                objectKeys(possibleMoveCounts).map(line => parseInt(line)).forEach(line => {
+                    if (moveCounts[line] == null) {
+                        moveCounts[line] = 0;
+                    }
+                    moveCounts[line] += possibleMoveCounts[line];
+                });
+                possibleValue = this.calculateCurrentValue(moveCounts);
+            }
             {
                 const index2 = 0;
                 let columns = [];
@@ -573,6 +594,8 @@ var cantStopBgaUserscriptData = {
                     saveProgressNMax50PercentSuccess: spNMax,
                     both: possibleMove.both,
                     move: move1,
+                    possibleMoveCounts: possibleMoveCounts,
+                    possibleValue: possibleValue,
                 };
                 log(`${index1},${index2} with dice ${JSON.stringify(dice1)} and sum ${sum1} has probability ${pProbability}`);
             }
@@ -598,11 +621,20 @@ var cantStopBgaUserscriptData = {
                     saveProgressNMax50PercentSuccess: spNMax,
                     both: possibleMove.both,
                     move: move2,
+                    possibleMoveCounts: possibleMoveCounts,
+                    possibleValue: possibleValue,
                 };
                 log(`${index1},${index2} with dice ${JSON.stringify(dice2)} and sum ${sum2} has probability ${pProbability}`);
             }
         }
         this.renderMovesProbabilities(movesProbabilities);
+    },
+
+    incrementField: function (obj, field) {
+        if (obj[field] == null) {
+            obj[field] = 0;
+        }
+        obj[field]++;
     },
 
     calculateNMax: function (saveProgressProbability) {
@@ -951,11 +983,15 @@ var cantStopBgaUserscriptData = {
         const formattedSaveProgressProbability = this.formatDecimal(moveProbability.saveProgressProbability * 100, 2);
         const formattedSaveProgressExpectation = this.formatDecimal(moveProbability.saveProgressExpectation, 2);
         const formattedSaveProgressNMax50PercentSuccess = this.formatDecimal(moveProbability.saveProgressNMax50PercentSuccess, 0);
+        const formattedPossibleValue = this.formatDecimal(moveProbability.possibleValue, 2);
         const saveProgressProbabilityElement =
-            `<div style='${maxVisibleSaveProgressProbability ? `font-weight: bolder; color: ${moveProbability.saveProgressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(A)=${formattedSaveProgressProbability}% E[X]=${formattedSaveProgressExpectation} n_max=${formattedSaveProgressNMax50PercentSuccess}</div>`;
-        const progressProbabilityElement = `<div style='${maxVisibleProgressProbability ? 'font-weight: bolder;' +
-            ` color: ${moveProbability.progressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(⧡)=${formattedProgressProbability}%</div>`;
-        const probabilityElement = `<div style='font-size: 60%; font-family: monospace;'>${visible ? `${saveProgressProbabilityElement} ${progressProbabilityElement}` : ''}</div>`;
+            `<span style='${maxVisibleSaveProgressProbability ? `font-weight: bolder; color: ${moveProbability.saveProgressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(A)=${formattedSaveProgressProbability}% E[X]=${formattedSaveProgressExpectation} n_max=${formattedSaveProgressNMax50PercentSuccess}</span>`;
+        const progressProbabilityElement = `<span style='${maxVisibleProgressProbability ? 'font-weight: bolder;' +
+            ` color: ${moveProbability.progressProbability === 1 ? 'green' : '#6633FF'};` : ''}'>P(⧡)=${formattedProgressProbability}%</span>`;
+        const valueElement = `<span>v=${formattedPossibleValue}</span>`;
+        const line1Element = `<div>${saveProgressProbabilityElement}</div>`;
+        const line2Element = `<div>${progressProbabilityElement} ${valueElement}</div>`;
+        const probabilityElement = `<div style='font-size: 60%; font-family: monospace;'>${visible ? `${line1Element} ${line2Element}` : ''}</div>`;
         this.dojo.place(probabilityElement, `${CS_PROBABILITY_PANEL_ID_PREFIX}${index1}_${index2}`, 'only');
     },
 
