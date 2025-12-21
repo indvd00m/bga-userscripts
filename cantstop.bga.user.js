@@ -33,6 +33,7 @@ const CS_PROBABILITY_PANEL_ID_PREFIX = "dice_probability_";
 const CS_PROBABILITY_PANEL_CLASS = "dice_probability_cell";
 const CS_BGA_TOKEN_NAME_PATTERN = /^token_(?<playerId>\d+)_(?<number>\d+)$/;
 const CS_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
+const CS_DICE_PAIR_LIST_PATTERN = /\(\d+,\s*\d+\)/g;
 const CS_LINE_THRESHOLDS = [
     {"lines": [2, 3, 4], "ew": 2.456, "psuccess": 0.278, "optimal_cw": 9.3, "k": 3.78},
     {"lines": [2, 3, 5], "ew": 2.456, "psuccess": 0.278, "optimal_cw": 9.3, "k": 3.78},
@@ -340,7 +341,8 @@ var cantStopBgaUserscriptData = {
         const playerId = parseInt(e.args.player_id);
         this.updateProgressStateProbability(playerId);
         const movedLine = parseInt(e.args.column_id);
-        this.updateProgressStateMovesCount(playerId, movedLine);
+        const moveCount = this.extractMovesCount(e);
+        this.updateProgressStateMovesCount(playerId, movedLine, moveCount);
         this.updateProgressStateValue();
         this.renderLineProbabilities();
         this.renderProgressState();
@@ -429,6 +431,20 @@ var cantStopBgaUserscriptData = {
         }
     },
 
+    extractMovesCount: function (moveTokenEvent) {
+        // it seems this is the only way to detect double moves
+        if (moveTokenEvent.args.dice_pair_list) {
+            const matches = moveTokenEvent.args.dice_pair_list.match(CS_DICE_PAIR_LIST_PATTERN);
+            if (matches) {
+                return matches.length;
+            } else {
+                return 1;
+            }
+        } else {
+            return 1;
+        }
+    },
+
     updateProgressStateValue: function () {
         log("updateProgressStateValue");
         const state = this.readState();
@@ -451,14 +467,14 @@ var cantStopBgaUserscriptData = {
         this.saveState(state);
     },
 
-    updateProgressStateMovesCount: function (playerId, movedLine) {
+    updateProgressStateMovesCount: function (playerId, movedLine, moveCount) {
         log("updateProgressStateMovesCount");
         const state = this.readState();
         const progressState = state.progressState;
         if (progressState.moveCounts[movedLine] == null) {
             progressState.moveCounts[movedLine] = 0;
         }
-        progressState.moveCounts[movedLine]++;
+        progressState.moveCounts[movedLine] += moveCount;
         this.saveState(state);
     },
 
