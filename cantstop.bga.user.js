@@ -1246,7 +1246,7 @@ var cantStopBgaUserscriptData = {
         const state = this.readState();
         const playersStats = state.playersStats;
         const sortedPlayersStats = objectValues(playersStats).sort((p1, p2) => {
-            return p1.minSuccessSaveProgressProbability - p2.minSuccessSaveProgressProbability;
+            return p1.name.localeCompare(p2.name);
         });
         let playersStatsTableElement =
             `<table class="statstable" id="players_stats_table" style="font-size: 60%; table-layout: fixed; max-width: 500px; margin: 5px auto;">` +
