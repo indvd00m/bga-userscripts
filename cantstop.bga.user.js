@@ -1233,8 +1233,8 @@ var cantStopBgaUserscriptData = {
             `        <th>Value</th>` +
             `        <td colspan="2">current=${this.formatDecimal(value.current, 2)}</td>` +
             `        <td colspan="2">expected=${this.formatDecimal(value.expected, 2)}</td>` +
-            `        <td colspan="2">k=${this.formatDecimal(value.k, 2)}</td>` +
-            `        <td colspan="2">expected_k=${this.formatDecimal(value.expectedK, 2)}</td>` +
+            `        <td colspan="1">k=${this.formatDecimal(value.k, 2)}</td>` +
+            `        <td colspan="3">expected_k=${this.formatDecimal(value.expectedK, 2)}</td>` +
             `        <td colspan="3" style="background-color: ${value.needStop ? '#FF3333' : '#009966'};">needStop=${value.needStop}</td>` +
             `    </tr>` +
             `</table>`;
