@@ -344,8 +344,10 @@ var cantStopBgaUserscriptData = {
         const moveCount = this.extractMovesCount(e);
         this.updateProgressStateMovesCount(playerId, movedLine, moveCount);
         this.updateProgressStateValue();
-        this.renderLineProbabilities();
+        this.updatePlayerStats(playerId, true);
         this.renderProgressState();
+        this.renderLineProbabilities();
+        this.renderPlayersStats();
         this.renderProgressValue();
     },
 
@@ -429,6 +431,11 @@ var cantStopBgaUserscriptData = {
                 needStop: false
             };
         }
+        objectValues(state.playersStats).forEach(stat => {
+            if (stat.maxProgressValue == null) {
+                stat.maxProgressValue = 0;
+            }
+        })
     },
 
     extractMovesCount: function (moveTokenEvent) {
@@ -513,6 +520,7 @@ var cantStopBgaUserscriptData = {
             const state = this.readState();
             const progressState = state.progressState;
             const playerChanged = playerId !== progressState.playerId;
+            // minSuccessSaveProgressProbability
             if (!playerChanged) {
                 const prevRdCountProbability = state.playersStats[playerId].minSuccessSaveProgressProbability;
                 const rdCountProbability = this.calculateRollingDiceCountProbability(progressState);
@@ -520,6 +528,12 @@ var cantStopBgaUserscriptData = {
                 state.playersStats[playerId].minSuccessSaveProgressProbability = Math.min(prevRdCountProbability, rdCountProbability);
             } else {
                 progressState.seriesSuccessSaveProgressProbability = progressState.saveProgressProbability;
+            }
+            // maxProgressValue
+            if (!playerChanged) {
+                const prevMaxProgressValue = state.playersStats[playerId].maxProgressValue;
+                const value = state.progressState.value.current;
+                state.playersStats[playerId].maxProgressValue = Math.max(prevMaxProgressValue, value);
             }
             this.saveState(state);
         }
@@ -1235,6 +1249,7 @@ var cantStopBgaUserscriptData = {
             `        <th>#</th>` +
             `        <th>Player</th>` +
             `        <th>Luck Score (minimum series probability)</th>` +
+            `        <th>Max value</th>` +
             `    </tr>` +
             `    </tbody>`;
         for (let i = 0; i < sortedPlayersStats.length; i++) {
@@ -1244,6 +1259,7 @@ var cantStopBgaUserscriptData = {
                 `        <td>${i + 1}</td>` +
                 `        <td>${player.name}</td>` +
                 `        <td>${this.formatDecimal(player.minSuccessSaveProgressProbability * 100, 2)}%</td>` +
+                `        <td>${this.formatDecimal(player.maxProgressValue, 2)}</td>` +
                 `    </tr>`;
         }
         playersStatsTableElement +=
