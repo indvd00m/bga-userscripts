@@ -25,6 +25,7 @@ const CS_DEFAULT_WIN_CHIPS_COUNT = 3;
 const CS_DEFAULT_BLACK_CHIPS_COUNT = 3;
 const CS_DICE_SELECT_ID_PREFIX = "dice_select_";
 const CS_PROGRESS_STATE_PANEL_ID = "progress_state";
+const CS_PROGRESS_VALUE_PANEL_ID = "progress_value";
 const CS_LINE_PROBABILITIES_PANEL_ID = "line_probabilities";
 const CS_PLAYERS_STATS_PANEL_ID = "players_stats";
 const CS_GAME_BOARD_WRAP_ID = "game_board_wrap";
@@ -32,6 +33,173 @@ const CS_PROBABILITY_PANEL_ID_PREFIX = "dice_probability_";
 const CS_PROBABILITY_PANEL_CLASS = "dice_probability_cell";
 const CS_BGA_TOKEN_NAME_PATTERN = /^token_(?<playerId>\d+)_(?<number>\d+)$/;
 const CS_URL_TABLE_ID_PATTERN = /table=(?<tableId>\d+)/;
+const CS_LINE_THRESHOLDS = [
+    {"lines": [2, 3, 4], "ew": 2.456, "psuccess": 0.278, "optimal_cw": 9.3, "k": 3.78},
+    {"lines": [2, 3, 5], "ew": 2.456, "psuccess": 0.278, "optimal_cw": 9.3, "k": 3.78},
+    {"lines": [2, 3, 6], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [2, 3, 7], "ew": 2.745, "psuccess": 0.776, "optimal_cw": 9.0, "k": 3.28},
+    {"lines": [2, 3, 8], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [2, 3, 9], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [2, 3, 10], "ew": 2.912, "psuccess": 0.456, "optimal_cw": 9.8, "k": 3.36},
+    {"lines": [2, 3, 11], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [2, 3, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [2, 4, 5], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 9.0, "k": 3.36},
+    {"lines": [2, 4, 6], "ew": 2.512, "psuccess": 0.890, "optimal_cw": 7.7, "k": 3.06},
+    {"lines": [2, 4, 7], "ew": 2.658, "psuccess": 0.877, "optimal_cw": 8.1, "k": 3.05},
+    {"lines": [2, 4, 8], "ew": 2.512, "psuccess": 0.890, "optimal_cw": 7.7, "k": 3.06},
+    {"lines": [2, 4, 9], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [2, 4, 10], "ew": 2.912, "psuccess": 0.456, "optimal_cw": 9.8, "k": 3.36},
+    {"lines": [2, 4, 11], "ew": 2.912, "psuccess": 0.456, "optimal_cw": 9.8, "k": 3.36},
+    {"lines": [2, 4, 12], "ew": 2.912, "psuccess": 0.456, "optimal_cw": 9.8, "k": 3.36},
+    {"lines": [2, 5, 6], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 9.0, "k": 3.36},
+    {"lines": [2, 5, 7], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 9.0, "k": 3.36},
+    {"lines": [2, 5, 8], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 9.0, "k": 3.36},
+    {"lines": [2, 5, 9], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 9.0, "k": 3.36},
+    {"lines": [2, 5, 10], "ew": 2.876, "psuccess": 0.712, "optimal_cw": 9.2, "k": 3.20},
+    {"lines": [2, 5, 11], "ew": 2.876, "psuccess": 0.712, "optimal_cw": 9.2, "k": 3.20},
+    {"lines": [2, 5, 12], "ew": 2.876, "psuccess": 0.712, "optimal_cw": 9.2, "k": 3.20},
+    {"lines": [2, 6, 7], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 6, 8], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 6, 9], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 6, 10], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 6, 11], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 6, 12], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 7, 8], "ew": 2.991, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 7, 9], "ew": 2.991, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 7, 10], "ew": 2.991, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 7, 11], "ew": 2.991, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 7, 12], "ew": 2.991, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 8, 9], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 8, 10], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 8, 11], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 8, 12], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 9, 10], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 9, 11], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 9, 12], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 10, 11], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 10, 12], "ew": 2.989, "psuccess": 0.781, "optimal_cw": 9.5, "k": 3.18},
+    {"lines": [2, 11, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [3, 4, 5], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [3, 4, 6], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [3, 4, 7], "ew": 2.745, "psuccess": 0.776, "optimal_cw": 9.0, "k": 3.28},
+    {"lines": [3, 4, 8], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [3, 4, 9], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [3, 4, 10], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [3, 4, 11], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [3, 4, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [3, 5, 6], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [3, 5, 7], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [3, 5, 8], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [3, 5, 9], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [3, 5, 10], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [3, 5, 11], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [3, 5, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [3, 6, 7], "ew": 2.745, "psuccess": 0.776, "optimal_cw": 9.0, "k": 3.28},
+    {"lines": [3, 6, 8], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [3, 6, 9], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [3, 6, 10], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [3, 6, 11], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [3, 6, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [3, 7, 8], "ew": 2.745, "psuccess": 0.776, "optimal_cw": 9.0, "k": 3.28},
+    {"lines": [3, 7, 9], "ew": 2.745, "psuccess": 0.776, "optimal_cw": 9.0, "k": 3.28},
+    {"lines": [3, 7, 10], "ew": 2.745, "psuccess": 0.776, "optimal_cw": 9.0, "k": 3.28},
+    {"lines": [3, 7, 11], "ew": 2.745, "psuccess": 0.776, "optimal_cw": 9.0, "k": 3.28},
+    {"lines": [3, 7, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [3, 8, 9], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [3, 8, 10], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [3, 8, 11], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [3, 8, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [3, 9, 10], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [3, 9, 11], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [3, 9, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [3, 10, 11], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [3, 10, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [3, 11, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [4, 5, 6], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [4, 5, 7], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [4, 5, 8], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [4, 5, 9], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [4, 5, 10], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [4, 5, 11], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [4, 5, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [4, 6, 7], "ew": 2.658, "psuccess": 0.877, "optimal_cw": 8.1, "k": 3.05},
+    {"lines": [4, 6, 8], "ew": 2.512, "psuccess": 0.890, "optimal_cw": 7.7, "k": 3.06},
+    {"lines": [4, 6, 9], "ew": 2.512, "psuccess": 0.890, "optimal_cw": 7.7, "k": 3.06},
+    {"lines": [4, 6, 10], "ew": 2.512, "psuccess": 0.890, "optimal_cw": 7.7, "k": 3.06},
+    {"lines": [4, 6, 11], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [4, 6, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [4, 7, 8], "ew": 2.658, "psuccess": 0.877, "optimal_cw": 8.1, "k": 3.05},
+    {"lines": [4, 7, 9], "ew": 2.658, "psuccess": 0.877, "optimal_cw": 8.1, "k": 3.05},
+    {"lines": [4, 7, 10], "ew": 2.658, "psuccess": 0.877, "optimal_cw": 8.1, "k": 3.05},
+    {"lines": [4, 7, 11], "ew": 2.745, "psuccess": 0.776, "optimal_cw": 9.0, "k": 3.28},
+    {"lines": [4, 7, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [4, 8, 9], "ew": 2.512, "psuccess": 0.890, "optimal_cw": 7.7, "k": 3.06},
+    {"lines": [4, 8, 10], "ew": 2.512, "psuccess": 0.890, "optimal_cw": 7.7, "k": 3.06},
+    {"lines": [4, 8, 11], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [4, 8, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [4, 9, 10], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [4, 9, 11], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [4, 9, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [4, 10, 11], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [4, 10, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [4, 11, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [5, 6, 7], "ew": 2.264, "psuccess": 0.887, "optimal_cw": 7.1, "k": 3.13},
+    {"lines": [5, 6, 8], "ew": 2.300, "psuccess": 0.887, "optimal_cw": 7.1, "k": 3.13},
+    {"lines": [5, 6, 9], "ew": 2.300, "psuccess": 0.887, "optimal_cw": 7.1, "k": 3.13},
+    {"lines": [5, 6, 10], "ew": 2.512, "psuccess": 0.890, "optimal_cw": 7.7, "k": 3.06},
+    {"lines": [5, 6, 11], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [5, 6, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [5, 7, 8], "ew": 2.278, "psuccess": 0.853, "optimal_cw": 7.4, "k": 3.25},
+    {"lines": [5, 7, 9], "ew": 2.326, "psuccess": 0.853, "optimal_cw": 7.4, "k": 3.18},
+    {"lines": [5, 7, 10], "ew": 2.658, "psuccess": 0.877, "optimal_cw": 8.1, "k": 3.05},
+    {"lines": [5, 7, 11], "ew": 2.745, "psuccess": 0.776, "optimal_cw": 9.0, "k": 3.28},
+    {"lines": [5, 7, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [5, 8, 9], "ew": 2.300, "psuccess": 0.887, "optimal_cw": 7.1, "k": 3.13},
+    {"lines": [5, 8, 10], "ew": 2.512, "psuccess": 0.890, "optimal_cw": 7.7, "k": 3.06},
+    {"lines": [5, 8, 11], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [5, 8, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [5, 9, 10], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [5, 9, 11], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [5, 9, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [5, 10, 11], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [5, 10, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [5, 11, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [6, 7, 8], "ew": 2.277, "psuccess": 0.920, "optimal_cw": 7.0, "k": 3.07},
+    {"lines": [6, 7, 9], "ew": 2.278, "psuccess": 0.853, "optimal_cw": 7.4, "k": 3.25},
+    {"lines": [6, 7, 10], "ew": 2.658, "psuccess": 0.877, "optimal_cw": 8.1, "k": 3.05},
+    {"lines": [6, 7, 11], "ew": 2.745, "psuccess": 0.776, "optimal_cw": 9.0, "k": 3.28},
+    {"lines": [6, 7, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [6, 8, 9], "ew": 2.300, "psuccess": 0.887, "optimal_cw": 7.1, "k": 3.13},
+    {"lines": [6, 8, 10], "ew": 2.512, "psuccess": 0.890, "optimal_cw": 7.7, "k": 3.06},
+    {"lines": [6, 8, 11], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [6, 8, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [6, 9, 10], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [6, 9, 11], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [6, 9, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [6, 10, 11], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [6, 10, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [6, 11, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [7, 8, 9], "ew": 2.278, "psuccess": 0.853, "optimal_cw": 7.4, "k": 3.25},
+    {"lines": [7, 8, 10], "ew": 2.658, "psuccess": 0.877, "optimal_cw": 8.1, "k": 3.05},
+    {"lines": [7, 8, 11], "ew": 2.745, "psuccess": 0.776, "optimal_cw": 9.0, "k": 3.28},
+    {"lines": [7, 8, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [7, 9, 10], "ew": 2.658, "psuccess": 0.877, "optimal_cw": 8.1, "k": 3.05},
+    {"lines": [7, 9, 11], "ew": 2.745, "psuccess": 0.776, "optimal_cw": 9.0, "k": 3.28},
+    {"lines": [7, 9, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [7, 10, 11], "ew": 2.745, "psuccess": 0.776, "optimal_cw": 9.0, "k": 3.28},
+    {"lines": [7, 10, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [7, 11, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [8, 9, 10], "ew": 2.512, "psuccess": 0.890, "optimal_cw": 7.7, "k": 3.06},
+    {"lines": [8, 9, 11], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [8, 9, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [8, 10, 11], "ew": 2.612, "psuccess": 0.852, "optimal_cw": 8.0, "k": 3.06},
+    {"lines": [8, 10, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [8, 11, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [9, 10, 11], "ew": 2.678, "psuccess": 0.712, "optimal_cw": 8.5, "k": 3.17},
+    {"lines": [9, 10, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [9, 11, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77},
+    {"lines": [10, 11, 12], "ew": 2.838, "psuccess": 0.438, "optimal_cw": 10.7, "k": 3.77}
+];
 const CS_DEFAULT_STATE = {
     progressState: {
         playerId: -1,
@@ -39,6 +207,15 @@ const CS_DEFAULT_STATE = {
         saveProgressExpectation: 0,
         saveProgressNMax50PercentSuccess: 0,
         rollingDiceCount: 0,
+        moveCounts: {},
+        value: {
+            current: 0,
+            expected: 0,
+            expectedK: 0,
+            k: 0,
+            successProb: 0,
+            needStop: false
+        },
         seriesSuccessSaveProgressProbability: 1
     },
     playersStats: {},
@@ -75,12 +252,15 @@ var cantStopBgaUserscriptData = {
     myPlayerId: -1,
     possibleOutcomesValues: null,
     lineProbabilities: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    lineWeights: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     currentLineCounts: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     bgaTableId: 0,
     winChipsCount: CS_DEFAULT_WIN_CHIPS_COUNT,
     blackChipsCount: CS_DEFAULT_BLACK_CHIPS_COUNT,
     rollDiceLog: [],
+    lineThresholdsMap: new Map(),
     parseLog: false,
+    showProgressValue: false,
 
     init: function () {
         // Check if the site was loaded correctly
@@ -107,6 +287,12 @@ var cantStopBgaUserscriptData = {
         const stats = this.calcStats();
         this.possibleOutcomesValues = stats.possibleOutcomesValues;
         this.lineProbabilities = stats.lineProbabilities;
+        this.lineWeights = stats.lineWeights;
+
+        CS_LINE_THRESHOLDS.forEach(item => {
+            const key = item.lines.join(',');
+            this.lineThresholdsMap.set(key, item);
+        });
 
         const state = this.readState();
         this.updateForBackwardCompatibility(state);
@@ -133,6 +319,7 @@ var cantStopBgaUserscriptData = {
         this.recalculateAndSaveProgressState();
 
         this.renderProgressState();
+        this.renderProgressValue();
         this.renderLineProbabilities();
         this.renderPlayersStats();
         this.renderInitMessage();
@@ -152,7 +339,11 @@ var cantStopBgaUserscriptData = {
         log(JSON.stringify(e));
         const playerId = parseInt(e.args.player_id);
         this.updateProgressStateProbability(playerId);
+        const movedLine = parseInt(e.args.column_id);
+        this.updateProgressStateMovesCount(playerId, movedLine);
+        this.updateProgressStateValue();
         this.renderProgressState();
+        this.renderProgressValue();
     },
 
     onEventRollDice: function (e) {
@@ -167,6 +358,7 @@ var cantStopBgaUserscriptData = {
         this.renderProgressState();
         this.renderLineProbabilities();
         this.renderPlayersStats();
+        this.renderProgressValue();
     },
 
     saveState: function (state) {
@@ -220,6 +412,53 @@ var cantStopBgaUserscriptData = {
         if (state.progressState.seriesSuccessSaveProgressProbability == null) {
             state.progressState.seriesSuccessSaveProgressProbability = 1;
         }
+        // 2.1.0 changes
+        if (state.progressState.moveCounts == null) {
+            state.progressState.moveCounts = {};
+        }
+        if (state.progressState.value == null) {
+            state.progressState.value = {
+                current: 0,
+                expected: 0,
+                expectedK: 0,
+                k: 0,
+                successProb: 0,
+                needStop: false
+            };
+        }
+    },
+
+    updateProgressStateValue: function () {
+        log("updateProgressStateValue");
+        const state = this.readState();
+        const progressState = state.progressState;
+        const value = progressState.value;
+        value.current = this.calculateCurrentValue(progressState.moveCounts);
+        const lines = objectKeys(progressState.moveCounts).map(line => parseInt(line));
+        const ev = this.calculateExpectedValue(lines);
+        value.expected = ev.expectedValue;
+        value.successProb = ev.successProb;
+        if (lines.length < 3) {
+            value.k = 0;
+            value.expectedK = 0;
+            value.needStop = false;
+        } else {
+            value.k = this.getLineThreshold(lines).k;
+            value.expectedK = value.expected * value.k;
+            value.needStop = value.current >= value.expectedK;
+        }
+        this.saveState(state);
+    },
+
+    updateProgressStateMovesCount: function (playerId, movedLine) {
+        log("updateProgressStateMovesCount");
+        const state = this.readState();
+        const progressState = state.progressState;
+        if (progressState.moveCounts[movedLine] == null) {
+            progressState.moveCounts[movedLine] = 0;
+        }
+        progressState.moveCounts[movedLine]++;
+        this.saveState(state);
     },
 
     updateProgressStateProbability: function (playerId) {
@@ -244,6 +483,9 @@ var cantStopBgaUserscriptData = {
         if (!playerChanged && progressState.saveProgressProbability < 1) {
             progressState.rollingDiceCount++;
             log('increment rolling dice count to ' + progressState.rollingDiceCount);
+        }
+        if (playerChanged) {
+            progressState.moveCounts = {};
         }
         this.saveState(state);
     },
@@ -374,6 +616,67 @@ var cantStopBgaUserscriptData = {
         return progressState.seriesSuccessSaveProgressProbability * progressState.saveProgressProbability;
     },
 
+    calculateCurrentValue: function (moveCounts) {
+        let currentValue = 0;
+        objectKeys(moveCounts).map(s => parseInt(s)).forEach(line => {
+            const moves = moveCounts[line];
+            currentValue += this.lineWeights[line - 1] * moves;
+        });
+        return currentValue;
+    },
+
+    getLineThreshold: function (lines) {
+        const sortedLines = [...lines].sort((a, b) => a - b);
+        const key = sortedLines.join(',');
+        return this.lineThresholdsMap.get(key);
+    },
+
+    calculateExpectedValue: function (lines) {
+        let ew = 0;
+        let successCount = 0;
+        let count = 0;
+        const linesSet = new Set(lines);
+
+        for (let a = 1; a <= 6; a++) {
+            for (let b = 1; b <= 6; b++) {
+                for (let c = 1; c <= 6; c++) {
+                    for (let d = 1; d <= 6; d++) {
+                        count++;
+                        // 3 groups
+                        const groups = [
+                            [a + b, c + d],
+                            [a + c, b + d],
+                            [a + d, b + c]
+                        ];
+
+                        let maxWg = 0;
+                        for (const group of groups) {
+                            let wg = 0;
+                            for (const s of group) {
+                                if (linesSet.has(s)) {
+                                    wg += this.lineWeights[s - 1];
+                                }
+                            }
+                            if (wg > maxWg) {
+                                maxWg = wg;
+                            }
+                        }
+
+                        ew += maxWg;
+                        if (maxWg > 0) {
+                            successCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        return {
+            expectedValue: ew / count,
+            successProb: successCount / count
+        };
+    },
+
     getUnsavedColumns: function () {
         const unsavedColumns = {};
         const activePlayerId = objectKeys(this.game.players)
@@ -479,9 +782,14 @@ var cantStopBgaUserscriptData = {
             }
         }
         const lineProbabilities = lineCounts.map(count => count / values.length)
+        const lineWeights = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        for (let i = 1; i < this.lineProbabilities.length; i++) {
+            lineWeights[i] = 1 / lineProbabilities[i];
+        }
         const stats = {
             possibleOutcomesValues: values,
             lineProbabilities: lineProbabilities,
+            lineWeights: lineWeights
         }
         log(`calc time=${Date.now() - start}ms`);
         return stats;
@@ -653,6 +961,7 @@ var cantStopBgaUserscriptData = {
     renderProgressState: function () {
         const state = this.readState();
         const progressState = state.progressState;
+        const needStop = progressState.value.needStop;
         const nMax = progressState.saveProgressNMax50PercentSuccess;
         const spExpectation = progressState.saveProgressExpectation;
         const rdCount = progressState.rollingDiceCount;
@@ -766,7 +1075,7 @@ var cantStopBgaUserscriptData = {
             `<div class="progressbar_with_info">` +
             `   <div class="progressbar_inner">` +
             `       <div class="progressbar" style="background-color: darkgray;">` +
-            `           <div class="progressbar_label" style="background-color: #0099FF; width: 80px;">` +
+            `           <div class="progressbar_label" style="background-color: ${needStop ? '#FF0000' : '#0099FF'}; width: 80px;">` +
             `               <span>${formattedSaveProgressProbability}%</span>` +
             `           </div>` +
             `           <div class="progressbar_bar" style="margin-left: 80px;">` +
@@ -792,6 +1101,17 @@ var cantStopBgaUserscriptData = {
         // const stateElement = `${stateJsonElement}${stateProgressBarElement}`;
         const stateElement = `${stateProgressBarElement}`;
         this.dojo.place(stateElement, CS_PROGRESS_STATE_PANEL_ID, 'only');
+    },
+
+    renderProgressValue: function () {
+        if (this.showProgressValue !== true) {
+            return;
+        }
+        const state = this.readState();
+        const value = state.progressState.value;
+        const progressValueElement = `<pre>${JSON.stringify(state.progressState.moveCounts, null, 2)}</pre>`
+            + `<pre>${JSON.stringify(value, null, 2)}</pre>`;
+        this.dojo.place(progressValueElement, CS_PROGRESS_VALUE_PANEL_ID, 'only');
     },
 
     renderLineProbabilities: function () {
@@ -859,6 +1179,10 @@ var cantStopBgaUserscriptData = {
         });
         const lineProbabilitiesElement = `<div id="${CS_LINE_PROBABILITIES_PANEL_ID}" style="width: 100%;"></div>`;
         this.dojo.place(lineProbabilitiesElement, CS_GAME_BOARD_WRAP_ID, 'first');
+        if (this.showProgressValue) {
+            const progressValueElement = `<div id="${CS_PROGRESS_VALUE_PANEL_ID}" style="width: 100%;"></div>`;
+            this.dojo.place(progressValueElement, CS_GAME_BOARD_WRAP_ID, 'first');
+        }
         const progressStateElement = `<div id="${CS_PROGRESS_STATE_PANEL_ID}" style="width: 100%;"></div>`;
         this.dojo.place(progressStateElement, CS_GAME_BOARD_WRAP_ID, 'first');
         const playersStatsElement = `<div id="${CS_PLAYERS_STATS_PANEL_ID}" style="width: 100%; order: 3;"></div>`;
