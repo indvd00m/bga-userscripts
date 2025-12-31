@@ -1,0 +1,26 @@
+/* ==UserStyle==
+@name bga-logs-to-the-right
+@namespace https://github.com/indvd00m/bga-userscripts/
+@description Moves game logs to the right side of the screen, allowing you to always see the most recent actions at the top without scrolling. Particularly useful on wide or ultrawide displays.
+@author indvd00m <gotoindvdum [at] gmail [dot] com>
+@license Apache License 2.0
+@version 0.9.0
+@match https://boardgamearena.com/*table=*
+@updateURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/logs-to-the-right.bga.user.css
+@downloadURL https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/logs-to-the-right.bga.user.css
+==/UserStyle== */
+
+#right-side {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    width: 485px;
+}
+
+#right-side-first-part {
+    flex: 1 1 240px;
+}
+
+#right-side-second-part {
+    flex: 1 1 240px;
+}
