@@ -1,6 +1,6 @@
-# Board Game Arena Userscripts
+# Board Game Arena Userscripts and UserCSS
 
-Userscripts to extend functionality on Board Game Arena ([BGA](http://boardgamearena.com)).
+Userscripts and UserCSS to extend functionality on Board Game Arena ([BGA](http://boardgamearena.com)).
 
 ## List of Userscripts
 
@@ -107,15 +107,36 @@ Compatibility Note: This script currently supports only English and Russian game
 
 Install: [https://github.com/.../kingdom-builder.bga.user.js](https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/kingdom-builder.bga.user.js)
 
+## List of UserCSS
+
+### Logs to the right
+
+This usercss moves game logs to the right side of the screen, allowing you to always see the most recent actions at the top without scrolling. Particularly useful on wide or ultrawide displays.
+
+Works with all games.
+
+Install: [https://github.com/.../logs-to-the-right.bga.user.css](https://github.com/indvd00m/bga-userscripts/raw/refs/heads/master/logs-to-the-right.bga.user.css)
+
 ## Installation
 
-### Using Tampermonkey
-1. Install the [Tampermonkey extension](https://www.tampermonkey.net/)
-2. Click any installation link above
+### UserScript
 
-### Other Browsers
+#### Using Tampermonkey
+1. Install the [Tampermonkey extension](https://www.tampermonkey.net/)
+2. Click any userscript installation link above
+
+#### Other Browsers
 - Safari: [Userscripts app](https://apps.apple.com/us/app/userscripts/id1463298887)
 - Firefox: [Violentmonkey](https://violentmonkey.github.io/) or [Greasemonkey](https://www.greasespot.net/)
+
+### UserCSS
+
+#### Using Stylus
+1. Install the [Stylus extension](https://add0n.com/stylus.html)
+2. Click any installation usercss link above
+
+#### Other Browsers
+- Safari: [Userscripts app](https://apps.apple.com/us/app/userscripts/id1463298887)
 
 ## Compatibility
 **Tested in**:
